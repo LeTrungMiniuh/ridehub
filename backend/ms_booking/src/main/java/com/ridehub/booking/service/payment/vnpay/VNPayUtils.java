@@ -18,6 +18,7 @@ import java.util.*;
 public class VNPayUtils {
     
     private static final String HMAC_SHA512 = "HmacSHA512";
+    private static final String VIETNAM_TIMEZONE = "Asia/Ho_Chi_Minh";
     
     /**
      * Generate HMAC SHA512 hash
@@ -75,16 +76,18 @@ public class VNPayUtils {
      */
     public static String getVNPayDate() {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone(VIETNAM_TIMEZONE));
         return formatter.format(new Date());
     }
     
     /**
-     * Generate VNPay expire date (yyyyMMddHHmmss) - 15 minutes from now
+     * Generate VNPay expire date (yyyyMMddHHmmss) - 5 minutes from now
      */
     public static String getVNPayExpireDate() {
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(VIETNAM_TIMEZONE));
         calendar.add(Calendar.MINUTE, 5);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone(VIETNAM_TIMEZONE));
         return formatter.format(calendar.getTime());
     }
     
@@ -92,8 +95,9 @@ public class VNPayUtils {
      * Generate VNPay expire date (yyyyMMddHHmmss) - 5 minutes from the given instant
      */
     public static String getVNPayExpireDate(Instant bookingExpiresAt) {
-        ZonedDateTime expireDateTime = bookingExpiresAt.atZone(ZoneId.systemDefault());
+        ZonedDateTime expireDateTime = bookingExpiresAt.atZone(ZoneId.of(VIETNAM_TIMEZONE));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone(VIETNAM_TIMEZONE));
         return formatter.format(Date.from(expireDateTime.toInstant()));
     }
     
