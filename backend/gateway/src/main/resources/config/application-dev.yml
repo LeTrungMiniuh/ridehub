@@ -18,9 +18,4 @@ server:
   port: 8080
   forward-headers-strategy: native
   sql-port: 3307
-  dev-config-folder: /home/phungvip/Desktop/work-space/ridehub/backend/ridehub-central-config
-  # dev-config-folder:  ${DEV_CONFIG_FILE:/home/phungvip/Desktop/work-space/ticket-store/backend/ticket-store-central-config/application-dev.yml}
-spring:
-  config:
-    # Import shared config first
-    import: optional:file:${server.dev-config-folder}/application-dev.yml          # Then service-specific config (will override shared)
+

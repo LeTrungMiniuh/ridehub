@@ -1,0 +1,19 @@
+POST /api/bookings/{id}/pay
+{
+  "bookingId": 0,
+  "method": "VNPAY" (Chỉ có vnpay)
+}
+Tạo vnpay url va tao transaction
+
+GET /api/payment/vnpay/callback
+Là callback mà vnpay trả về 
+trả về status ,message,transactionId,paymentStatus
+
+GET /api/payment/vnpay/query/{transactionId}
+Là api dùng để manual check thanh toán đó đã thanh toán hay chưa
+
+POST /api/payment/vnpay/refund/{transactionId}
+Là api dùng để hoàn tiền
+
+POST /api/payment/vnpay/poll/{transactionId}
+Bình thường phải đợi 2 phút server sẽ tự polling để check và tạo vé api này trigger việc đấy 

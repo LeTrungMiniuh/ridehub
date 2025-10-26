@@ -175,6 +175,13 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+  datasource:
+    url: jdbc:mysql://localhost:3306/route?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&allowLoadLocalInfile=true
+    username: root
+    password: 
+    hikari:
+      data-source-properties:
+        allowLoadLocalInfile: true
   messages:
     basename: i18n/messages
   main:

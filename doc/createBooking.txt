@@ -1,0 +1,24 @@
+POST
+/api/bookings/real-booking
+
+{
+  "tripId": 0,
+  "seats": [
+    "string"
+  ],
+  "promoCode": "string", mã khuyến mãi (hiện tại chưa có tính được khuyến mãi)
+  "customerId": 0,
+  "idemKey": "string", (một chuỗi duy nhất được tạo bởi máy khách để nhận dạng một yêu cầu API.)
+  "holdTtlSec": 0 // thời gian giữ ghế
+}
+Step
+ -- Lưu idemKey vào redis nếu chưa tồn tại nếu tồn tại thì lỗi
+ -- POST /api/seat-locks/validate-only (msroute) để check ghế có bị HOLD không
+ -- Hold  ghế
+ -- Gọi qua msroute lấy trip info và gọi qua mspromotion để lấy thông tin promotion
+ -- Tính tiền
+ -- Tạo Booking (luu expired booking  = thời gian dữ ghế)
+ -- Lưu  booking
+ -- Lưu ghế hold vào redis 
+ -- Gọi qua msroute để lock ghế
+ 

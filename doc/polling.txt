@@ -1,0 +1,13 @@
+Có 2 polling
+1 là pollPendingTransactions
+step
+-- Mỗi 2 phút sẽ check qua tất cả booking chưa thanh toán và trong thời gian hiệu lực
+-- Gọi lên vnpay để check transaction thanh toán chưa nếu rồi sẽ set là thành công và tạo vé
+
+case
+-- Trường hợp thanh toán thành công nhưng khi polling lại thì booking hết hạn hoặc bị gì đó thì thì phải check manual bằng tay
+bằng  api Post recover-expired-payment
+api này sẽ check xem transaction thanh toán thành công nhưng hết hạn và còn ghế thì sẽ tạo vé và thanh công booking
+
+2 là polling handleExpiredBookings
+-- Mỗi 1 phút sẽ check xem các booking hết hạn sẽ unlock ghế vào xóa khỏi redis

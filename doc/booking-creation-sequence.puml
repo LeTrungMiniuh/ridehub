@@ -1,0 +1,379 @@
+@startuml RideHub Real Booking Creation Sequence Diagram
+' ========= dark-theme.puml =========
+' Base + dark UI tweaks
+!theme cyborg
+
+' Global canvas & fonts
+skinparam backgroundColor #1c2128
+skinparam DefaultFontName  "Inter, JetBrains Mono, DejaVu Sans"
+skinparam DefaultFontSize  14
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam dpi 120
+
+' Lines & titles
+skinparam ArrowColor #00BCD4
+skinparam ArrowFontColor #E0E0E0
+skinparam ArrowThickness 2
+skinparam TitleFontColor #E0E0E0
+skinparam TitleFontSize 18
+skinparam LegendBackgroundColor #0f141a
+skinparam LegendBorderColor #00BCD4
+skinparam LegendFontColor #E0E0E0
+
+' Sequence defaults
+skinparam sequence {
+  ParticipantBorderColor #00BCD4
+  ParticipantBackgroundColor #263238
+  LifeLineBorderColor #607D8B
+  LifeLineBackgroundColor #37474F
+  ArrowColor #00BCD4
+  ArrowFontColor #E0E0E0
+  MessageAlignment center
+  BoxBorderColor #00BCD4
+  BoxBackgroundColor #1f2933
+  GroupBorderColor #00BCD4
+  GroupBackgroundColor #1f2933
+}
+
+' Notes
+skinparam note {
+  BackgroundColor #37474F
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+
+' Actors / Boundaries / Controls
+skinparam actor {
+  BackgroundColor #263238
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+skinparam boundary {
+  BackgroundColor #263238
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+skinparam control {
+  BackgroundColor #263238
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+
+' Storage-y things
+skinparam database {
+  BackgroundColor #263238
+  BorderColor #FF9800
+  FontColor #E0E0E0
+}
+skinparam queue {
+  BackgroundColor #263238
+  BorderColor #FF9800
+  FontColor #E0E0E0
+}
+
+' Components / classes (for non-sequence diagrams)
+skinparam component {
+  BackgroundColor #263238
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+skinparam class {
+  BackgroundColor #263238
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+skinparam package {
+  BackgroundColor #1f2933
+  BorderColor #00BCD4
+  FontColor #E0E0E0
+}
+' ========= end dark-theme.puml =========
+
+title RideHub Booking Service - Real Booking Creation Flow\nComplete End-to-End Process
+
+participant "Client\n(Frontend/Mobile App)" as Client
+participant "BookingResource\n[INSIDE ms-booking]" as BookingResource
+participant "BookingServiceImpl\n[INSIDE ms-booking]" as BookingService
+participant "Redis Cache\n[External Infrastructure]" as Redis
+participant "ms-route API\n[EXTERNAL ms-route]\nSeat Validation" as RouteValidate
+participant "ms-route API\n[EXTERNAL ms-route]\nSeat Lock" as RouteLock
+participant "PricingService\n[INSIDE ms-booking]" as PricingService
+participant "ms-promotion API\n[EXTERNAL ms-promotion]\nValidate Promotion" as PromoValidate
+participant "ms-promotion API\n[EXTERNAL ms-promotion]\nApply Promotion" as PromoApply
+participant "BookingRepository\n[INSIDE ms-booking]" as BookingRepo
+participant "PricingSnapshot\nRepository\n[INSIDE ms-booking]" as PricingRepo
+participant "AppliedPromotion\nRepository\n[INSIDE ms-booking]" as PromoRepo
+database "MySQL Database\n[EXTERNAL Database]\nms-booking DB" as DB
+participant "ms-route API\n[EXTERNAL ms-route]\nAttach Booking" as RouteAttach
+
+== 1️⃣ Idempotency Guard ==
+
+Client -> BookingResource : POST /bookings/real-booking\nCreateBookingDraftRequestVM
+activate BookingResource
+
+note right of BookingResource
+    Request contains:
+    - tripId, seats[], promoCode
+    - customerId, idemKey, holdTtlSec
+end note
+
+BookingResource -> BookingService : createRealBooking(req)
+activate BookingService
+
+BookingService -> Redis : SETIFABSENT\n"idem:booking:{idemKey}" = "LOCKED"\nTTL: 60s
+activate Redis
+Redis --> BookingService : true (new request)
+deactivate Redis
+
+alt Duplicate request detected
+    Redis --> BookingService : false (already locked)
+    BookingService --> BookingResource : IllegalStateException\n"Duplicate booking request"
+    BookingResource --> Client : 409 Conflict
+    deactivate BookingService
+    deactivate BookingResource
+end
+
+== 2️⃣ Seat Availability Validation ==
+
+BookingService -> RouteValidate : validateSeatsOnly()\nSeatValidateLockRequestDTO
+activate RouteValidate
+
+note right of RouteValidate
+    EXTERNAL ms-route service validates
+    if requested seats are still available
+    for booking. No actual locking yet.
+end note
+
+RouteValidate --> BookingService : SeatValidateLockResponseDTO\nstatus: "VALIDATED"
+deactivate RouteValidate
+
+alt Validation failed
+    BookingService --> BookingResource : SeatNotAvailableException
+    BookingResource --> Client : 409 Conflict
+    deactivate BookingService
+    deactivate BookingResource
+end
+
+== 3️⃣ Hold Seats (Temporary Lock) ==
+
+BookingService -> RouteLock : tryLockSeats()\nSeatLockRequestDTO
+activate RouteLock
+
+note right of RouteLock
+    EXTERNAL ms-route service request:
+    - tripId, seats[]
+    - bookingId: 0 (not created yet)
+    - userId, idemKey
+    - holdTtlSec
+end note
+
+RouteLock --> BookingService : SeatLockResponseDTO\nstatus: "HELD"\nexpiresAt: timestamp
+deactivate RouteLock
+
+alt Seat lock failed
+    BookingService --> BookingResource : SeatNotAvailableException
+    BookingResource --> Client : 409 Conflict
+    deactivate BookingService
+    deactivate BookingResource
+end
+
+== 4️⃣ Calculate Pricing with Promotion ==
+
+BookingService -> PricingService : computeBasePrice()\ntripId, seats[]
+activate PricingService
+
+note right of PricingService
+    Calculates base price:
+    - Base fare + vehicle/floor/seat factors
+    - NO promotion logic here
+end note
+
+PricingService --> BookingService : BasePricingResult\nbasePrice, pricingSnapshot
+deactivate PricingService
+
+alt promoCode provided
+    BookingService -> PromoValidate : validatePromotion()\npromoCode, tripId, totalAmount
+    activate PromoValidate
+    
+    note right of PromoValidate
+        EXTERNAL ms-promotion service
+        validates if promo code is:
+        - Active and not expired
+        - Valid for this route/trip
+        - Within usage limits
+        - Meets all conditions
+    end note
+    
+    PromoValidate --> BookingService : PromotionValidationResult\nisValid, promotionDetails
+    deactivate PromoValidate
+    
+    alt Promotion is valid
+        BookingService -> PromoApply : applyPromotion()\npromoCode, basePrice, bookingDetails
+        activate PromoApply
+        
+        note right of PromoApply
+            EXTERNAL ms-promotion service
+            Calculates discount amount
+            Updates usage count if applied
+            Returns applied promotion details
+        end note
+        
+        PromoApply --> BookingService : PromotionApplicationResult\ndiscountAmount, appliedPromotion
+        deactivate PromoApply
+        
+        BookingService -> BookingService : calculateFinalPrice()\nbasePrice - discountAmount
+    else Promotion invalid
+        note right of BookingService
+            Promotion validation failed
+            Continue with base price only
+        end note
+    end
+end
+
+== 5️⃣ Persist Booking (DRAFT Status) ==
+
+BookingService -> BookingService : generateBookingCode()\n"RH-XXXX-XXXX"
+
+BookingService -> BookingRepo : save(booking)
+activate BookingRepo
+BookingRepo -> DB : INSERT INTO booking\nstatus: "DRAFT"
+activate DB
+DB --> BookingRepo
+deactivate DB
+BookingRepo --> BookingService : Booking (with ID)
+deactivate BookingRepo
+
+note right of BookingService
+    Set:
+    - lockGroupId = idemKey
+    - expiresAt = min(hold.expiresAt, now+5min)
+end note
+
+== 6️⃣ Store Session Data in Redis ==
+
+BookingService -> Redis : SET "booking:sess:{id}" = "AWAITING_LOCK"\nTTL: 5min
+activate Redis
+Redis --> BookingService
+deactivate Redis
+
+BookingService -> Redis : SET "booking:seats:{id}" = "seat1,seat2,seat3"\nTTL: 5min
+activate Redis
+Redis --> BookingService
+deactivate Redis
+
+== 7️⃣ Attach Booking to Held Seats ==
+
+BookingService -> RouteAttach : attachBooking()\nAttachBookingRequestDTO
+activate RouteAttach
+
+note right of RouteAttach
+    EXTERNAL ms-route service
+    Associates the booking ID
+    with the previously held seats
+    using lockGroupId
+end note
+
+RouteAttach --> BookingService : SeatLockActionResponseDTO\nstatus: "ATTACHED"
+deactivate RouteAttach
+
+alt Attach failed
+    note over BookingService
+        CRITICAL: Cleanup required
+        - Cancel seat locks
+        - Delete booking
+        - Clear Redis session
+    end note
+    BookingService -> RouteLock : cancelSeatLocks()
+    BookingService -> BookingRepo : delete(booking)
+    BookingService -> Redis : DELETE session keys
+    BookingService --> BookingResource : SeatNotAvailableException
+    BookingResource --> Client : 409 Conflict
+    deactivate BookingService
+    deactivate BookingResource
+end
+
+== 8️⃣ Persist Pricing Snapshot ==
+
+BookingService -> PricingRepo : save(pricingSnapshot)
+activate PricingRepo
+PricingRepo -> DB : INSERT INTO pricing_snapshot
+activate DB
+DB --> PricingRepo
+deactivate DB
+PricingRepo --> BookingService
+deactivate PricingRepo
+
+== 9️⃣ Persist Applied Promotion (if any) ==
+
+alt Promotion was applied
+    BookingService -> PromoRepo : save(appliedPromotion)
+    activate PromoRepo
+    PromoRepo -> DB : INSERT INTO applied_promotion
+    activate DB
+    DB --> PromoRepo
+    deactivate DB
+    PromoRepo --> BookingService
+    deactivate PromoRepo
+end
+
+== 🔟 Finalize Booking Status ==
+
+BookingService -> BookingRepo : save(booking)\nstatus: "AWAITING_PAYMENT"
+activate BookingRepo
+BookingRepo -> DB : UPDATE booking SET status = 'AWAITING_PAYMENT'
+activate DB
+DB --> BookingRepo
+deactivate DB
+BookingRepo --> BookingService
+deactivate BookingRepo
+
+BookingService -> Redis : SET "booking:sess:{id}" = "AWAITING_PAYMENT"\nTTL: 20min
+activate Redis
+Redis --> BookingService
+deactivate Redis
+
+== 1️⃣1️⃣ Return Response ==
+
+BookingService -> BookingService : build BookingDraftResultVM
+note right of BookingService
+    Response includes:
+    - bookingId, bookingCode
+    - status: "AWAITING_PAYMENT"
+    - totalAmount (final price after promotion)
+    - basePrice, pricingSnapshot
+    - appliedPromotion (if any), promoApplied
+end note
+
+BookingService --> BookingResource : BookingDraftResultVM
+deactivate BookingService
+
+BookingResource --> Client : 201 Created\nLocation: /api/bookings/{id}
+deactivate BookingResource
+
+== Error Handling & Cleanup ==
+
+note over BookingService, Redis
+    If any step fails after seat lock:
+    1. Cancel seat locks via ms-route
+    2. Delete booking from database
+    3. Clear Redis session keys
+    4. Return appropriate error
+    
+    Special cases:
+    - Promotion service unavailable: Continue with base price
+    - Promotion validation failed: Return validation error
+    - Seat lock timeout: Automatic cleanup by scheduler
+end note
+
+== Next Steps (Not Shown) ==
+
+note over Client
+    After successful booking creation:
+    1. Client calls POST /api/payments/initiate
+    2. User completes payment via VNPay
+    3. VNPay webhook updates booking to CONFIRMED
+    4. Tickets are generated and sent to user
+end note
+
+@enduml

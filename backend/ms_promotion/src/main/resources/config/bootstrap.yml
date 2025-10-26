@@ -12,6 +12,18 @@ spring:
     # Either way, it can be overridden by `--spring.profiles.active` value passed in the commandline or `-Dspring.profiles.active` set in `JAVA_OPTS`
     active: "@spring.profiles.active@"
   cloud:
+    vault:
+      uri: http://appf4s.io.vn:8200
+      token: root
+      scheme: http
+      kv:
+        enabled: true
+        backend: secret
+        application-name: common-kafka
+      # Import infrastructure secrets
+      configuration:
+        infrastructure: secret/infrastructure
+
     consul:
       host: consul.appf4s.io.vn
       port: 443
@@ -29,6 +41,8 @@ spring:
         port: 8500
         health-check-path: /management/health
         health-check-interval: 15s
+  config:
+    import: vault://secret/infrastructure,vault://secret/common-kafka
   docker:
     compose:
       enabled: false

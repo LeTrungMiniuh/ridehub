@@ -1,0 +1,234 @@
+@startuml RideHub Booking Service VNPay Polling Sequence Diagram
+
+!theme cyborg
+skinparam sequence {
+    ParticipantBorderColor #00BCD4
+    ParticipantBackgroundColor #263238
+    LifeLineBorderColor #607D8B
+    LifeLineBackgroundColor #37474F
+    ArrowColor #00BCD4
+    ArrowFontColor #E0E0E0
+    MessageAlignment center
+}
+skinparam note {
+    BackgroundColor #37474F
+    BorderColor #00BCD4
+    FontColor #E0E0E0
+}
+skinparam actor {
+    BackgroundColor #263238
+    BorderColor #00BCD4
+    FontColor #E0E0E0
+}
+skinparam database {
+    BackgroundColor #263238
+    BorderColor #FF9800
+    FontColor #E0E0E0
+}
+
+title RideHub Booking Service - VNPay Polling Payment Processing\nScheduled Task Flow
+
+participant "Scheduler\n@Scheduled(60s)" as Scheduler
+participant "BookingScheduler\n[INSIDE ms-booking]\nhandleExpiredBookings()" as BookingScheduler
+participant "VNPayPollingService\n[INSIDE ms-booking]\npollPendingTransactions()" as VNPayPolling
+participant "PaymentTransaction\nRepository\n[INSIDE ms-booking]" as PaymentRepo
+participant "VNPayService\n[INSIDE ms-booking]\nqueryTransaction()" as VNPayService
+participant "PaymentService\n[INSIDE ms-booking]\nprocessWebhook()" as PaymentService
+participant "VNPay Gateway\n[EXTERNAL Payment Provider]\n3rd Party API" as VNPayGateway
+database "MySQL Database\n[EXTERNAL Database]\nms-booking DB" as DB
+database "Redis Cache\n[EXTERNAL Infrastructure]" as Redis
+
+== Scheduled Polling Cycle (Every 2 Minutes) ==
+
+Scheduler -> VNPayPolling : @Scheduled(fixedRate = 120000)\npollPendingTransactions()
+activate VNPayPolling
+
+note right of VNPayPolling
+    Find VNPay transactions with status:
+    - INITIATED
+    - PROCESSING
+    Created within last 24 hours
+    (EXTERNAL VNPay provider)
+end note
+
+VNPayPolling -> PaymentRepo : findByMethodAndStatusInAndCreatedAtAfter()
+activate PaymentRepo
+PaymentRepo --> VNPayPolling : List<PaymentTransaction>\npendingTransactions
+deactivate PaymentRepo
+
+loop For each pending transaction
+    VNPayPolling -> VNPayPolling : isBookingExpired(transaction)
+    activate VNPayPolling
+    
+    alt Booking has expired
+        note right of VNPayPolling
+            CRITICAL: Check VNPay status first
+            to prevent race condition where
+            payment succeeded but DB was down
+        end note
+        
+        VNPayPolling -> VNPayService : queryTransaction(tx, "127.0.0.1")
+        activate VNPayService
+        
+        VNPayService -> VNPayGateway : POST querydr\n(transaction details)
+        activate VNPayGateway
+        VNPayGateway --> VNPayService : Query Response
+        deactivate VNPayGateway
+        
+        VNPayService --> VNPayPolling : VNPayQueryResult
+        deactivate VNPayService
+        
+        alt Payment actually succeeded (00/00)
+            note over VNPayPolling
+                🚨 CRITICAL ISSUE:
+                Payment succeeded but booking expired!
+                Mark for manual recovery
+            end note
+            VNPayPolling -> PaymentRepo : save(transaction)\nstatus: PAYMENT_SUCCESS_BUT_BOOKING_EXPIRED
+            activate PaymentRepo
+            PaymentRepo --> VNPayPolling
+            deactivate PaymentRepo
+            
+        else Payment failed or query failed
+            VNPayPolling -> PaymentRepo : save(transaction)\nstatus: FAILED or REQUIRES_MANUAL_REVIEW
+            activate PaymentRepo
+            PaymentRepo --> VNPayPolling
+            deactivate PaymentRepo
+        end
+        
+        VNPayPolling -> VNPayPolling : cleanupPollingTracking()
+        
+    else Booking not expired and should poll
+        VNPayPolling -> VNPayPolling : shouldPollTransaction()
+        note right of VNPayPolling
+            Check:
+            - Max 30 attempts
+            - Rate limit (90s between polls)
+        end note
+        
+        alt Should poll transaction
+            VNPayPolling -> VNPayService : queryTransaction(tx, "127.0.0.1")
+            activate VNPayService
+            
+            VNPayService -> VNPayGateway : POST querydr\n(transactionId, orderRef, createDate)
+            activate VNPayGateway
+            VNPayGateway --> VNPayService : Response with status
+            deactivate VNPayGateway
+            
+            VNPayService --> VNPayPolling : VNPayQueryResult\n(success, responseCode, status)
+            deactivate VNPayService
+            
+            alt Query successful and status changed
+                VNPayPolling -> VNPayPolling : determinePaymentStatus(queryResult)
+                note right of VNPayPolling
+                    Response Codes:
+                    00 = Success
+                    07/10 = Processing  
+                    09 = Refunded
+                    Others = Failed
+                end note
+                
+                VNPayPolling -> VNPayPolling : synthesizeWebhookEvent()
+                note right of VNPayPolling
+                    Build webhook payload mimicking
+                    VNPay IPN format
+                end note
+                
+                VNPayPolling -> PaymentService : processWebhook("VNPAY", payload, signature)
+                activate PaymentService
+                
+                PaymentService -> PaymentRepo : Update transaction status
+                activate PaymentRepo
+                PaymentRepo --> PaymentService
+                deactivate PaymentRepo
+                
+                PaymentService -> DB : Update booking status
+                activate DB
+                DB --> PaymentService
+                deactivate DB
+                
+                PaymentService --> VNPayPolling : "Webhook processed"
+                deactivate PaymentService
+                
+                VNPayPolling -> VNPayPolling : cleanupPollingTracking()\n(for completed transactions)
+                
+            else Duplicate request (code=94)
+                note right of VNPayPolling
+                    Back off polling to avoid
+                    repeated duplicate requests
+                end note
+                VNPayPolling -> VNPayPolling : Increase attempt count for backoff
+            end
+        end
+    end
+end
+
+VNPayPolling --> Scheduler : Polling cycle completed
+deactivate VNPayPolling
+
+== Expired Bookings Cleanup (Every Minute) ==
+
+Scheduler -> BookingScheduler : @Scheduled(fixedRate = 60000)\nhandleExpiredBookings()
+activate BookingScheduler
+
+BookingScheduler -> PaymentRepo : findExpiredAwaitingPaymentBookings(now)
+activate PaymentRepo
+PaymentRepo --> BookingScheduler : List<Booking> expiredBookings
+deactivate PaymentRepo
+
+loop For each expired booking
+    BookingScheduler -> BookingScheduler : cancelSeatLocks(booking)
+    note right of BookingScheduler
+        Load seat numbers from Redis
+        Call EXTERNAL ms-route API to cancel locks
+    end note
+    
+    BookingScheduler -> Redis : GET "booking:seats:{bookingId}"
+    activate Redis
+    Redis --> BookingScheduler : List<String> seatNumbers
+    deactivate Redis
+    
+    BookingScheduler -> BookingScheduler : seatLockResourceMsrouteApi.cancelSeatLocks()
+    note over BookingScheduler
+        EXTERNAL ms-route API call
+        to release seat locks
+    end note
+    
+    alt Seat lock cancellation successful
+        BookingScheduler -> PaymentRepo : save(booking)\nstatus: CANCELED
+        activate PaymentRepo
+        PaymentRepo --> BookingScheduler
+        deactivate PaymentRepo
+        
+        BookingScheduler -> Redis : DELETE "booking:sess:{id}"\nDELETE "booking:seats:{id}"
+        activate Redis
+        Redis --> BookingScheduler
+        deactivate Redis
+        
+    else Seat lock cancellation failed
+        BookingScheduler -> Redis : SET "booking:review:{id}"\n(mark for manual review)
+        activate Redis
+        Redis --> BookingScheduler
+        deactivate Redis
+    end
+end
+
+BookingScheduler --> Scheduler : Expired bookings cleanup completed
+deactivate BookingScheduler
+
+== Polling Tracking Cleanup (Every Hour) ==
+
+Scheduler -> VNPayPolling : @Scheduled(fixedRate = 3600000)\ncleanupPollingTracking()
+activate VNPayPolling
+
+note right of VNPayPolling
+    Remove tracking entries older than 2 hours
+    to prevent memory leaks
+end note
+
+VNPayPolling -> VNPayPolling : Remove old entries from\npollingAttempts & lastPollTime maps
+
+VNPayPolling --> Scheduler : Tracking cleanup completed
+deactivate VNPayPolling
+
+@enduml

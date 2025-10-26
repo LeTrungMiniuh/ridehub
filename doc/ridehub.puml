@@ -7,6 +7,28 @@ skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 
+!theme cyborg
+skinparam class {
+    BackgroundColor #263238
+    BorderColor #00BCD4
+    FontColor #E0E0E0
+}
+skinparam package {
+    BackgroundColor #37474F
+    BorderColor #00BCD4
+    FontColor #E0E0E0
+}
+skinparam enum {
+    BackgroundColor #1B5E20
+    BorderColor #4CAF50
+    FontColor #E0E0E0
+}
+skinparam note {
+    BackgroundColor #37474F
+    BorderColor #00BCD4
+    FontColor #E0E0E0
+}
+
 ' =============================
 '              ENUMS
 ' =============================

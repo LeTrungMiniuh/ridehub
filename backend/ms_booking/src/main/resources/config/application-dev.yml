@@ -19,7 +19,7 @@ server:
   forward-headers-strategy: native
   sql-port: ${SQL_PORT:3309}
   sql-name: ${SQL_NAME:booking}
-  dev-config-folder: /home/phungvip/Desktop/work-space/ridehub/backend/ridehub-central-config
+
 
 # Consul SSH Tunnel configuration for ms_booking
 tunnel:
@@ -27,9 +27,6 @@ tunnel:
   service-name: msbooking
   
 spring:
-  config:
-    # Import shared config first
-    import: optional:file:${server.dev-config-folder}/application-dev.yml    # Then service-specific config (will override shared)
   # ===================================================================
   # DEV profile - fixed and tidied
   # ===================================================================

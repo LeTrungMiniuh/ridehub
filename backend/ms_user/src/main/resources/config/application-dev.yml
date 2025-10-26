@@ -19,7 +19,7 @@ server:
   forward-headers-strategy: native
   sql-port: ${SQL_PORT:3308}
   sql-name: ${SQL_NAME:user}
-  dev-config-folder: /home/phungvip/Desktop/work-space/ridehub/backend/ridehub-central-config
+
 
 # Consul SSH Tunnel configuration for ms_user
 tunnel:
@@ -27,9 +27,6 @@ tunnel:
   service-name: msuser
 
 spring:
-  config:
-    # Import shared config first
-    import: optional:file:${server.dev-config-folder}/application-dev.yml
   # ===================================================================
   # DEV profile - fixed and tidied
   # ===================================================================
