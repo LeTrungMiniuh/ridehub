@@ -14,7 +14,7 @@ spring:
   cloud:
     vault:
       uri: http://appf4s.io.vn:8200
-      token: root
+      token: f4security
       scheme: http
       kv:
         enabled: true
