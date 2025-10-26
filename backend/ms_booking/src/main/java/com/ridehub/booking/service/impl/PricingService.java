@@ -42,13 +42,16 @@ public class PricingService {
     private final PromotionResourceMspromotionApi promotionResourceMspromotionApi;
     private final TripResourceMsrouteApi tripResourceMsrouteApi;
     private final StringRedisTemplate redis;
+    private final ObjectMapper objectMapper;
 
     public PricingService(
             PromotionResourceMspromotionApi promotionResourceMspromotionApi,
-            TripResourceMsrouteApi tripResourceMsrouteApi, StringRedisTemplate redis) {
+            TripResourceMsrouteApi tripResourceMsrouteApi, StringRedisTemplate redis,
+            ObjectMapper objectMapper) {
         this.promotionResourceMspromotionApi = promotionResourceMspromotionApi;
         this.tripResourceMsrouteApi = tripResourceMsrouteApi;
         this.redis = redis;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -79,12 +82,12 @@ public class PricingService {
             try {
                 String cached = redis.opsForValue().get(promoKey);
                 if (cached != null) {
-                    detail = new ObjectMapper().readValue(cached, PromotionDetailDTO.class);
+                    detail = objectMapper.readValue(cached, PromotionDetailDTO.class);
                     LOG.debug("Promo {} found in Redis cache", promoCode);
                 } else {
                     detail = promotionResourceMspromotionApi.getPromotionDetailByCode(promoCode);
                     if (detail != null && detail.getId() != null) {
-                        String json = new ObjectMapper().writeValueAsString(detail);
+                        String json = objectMapper.writeValueAsString(detail);
                         redis.opsForValue().set(promoKey, json, Duration.ofMinutes(5));
                         LOG.debug("Promo {} cached in Redis", promoCode);
                     }
