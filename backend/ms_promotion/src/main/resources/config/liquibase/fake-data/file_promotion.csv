@@ -1,11 +1,7 @@
 id;bucket;object_key;content_type;size;is_banner;created_at;updated_at;is_deleted;deleted_at;deleted_by;promotion_id
-1;beneath following cricket;hope;zowie eek plumber;13117;true;2025-09-22T22:45:01;2025-09-22T15:55:02;false;2025-09-22T23:22:19;2f93c412-7064-49bd-8af0-aa093834b0aa;1
-2;brilliant;quirkily encode;circle;22674;false;2025-09-23T03:13:58;2025-09-22T14:12:09;false;2025-09-22T17:56:35;66747f6c-f681-4f66-a996-4af2c779aebd;2
-3;giant;who interestingly depart;unconscious uselessly;21082;true;2025-09-22T20:21:24;2025-09-22T18:30:02;true;2025-09-22T14:11:15;f3e2e786-1ec0-482d-a55a-83e54a3f7398;3
-4;license per next;er minus;brr daily;24268;false;2025-09-22T14:06:51;2025-09-23T12:54:07;true;2025-09-23T04:19:54;da9a62bf-58a7-471f-8c99-294ebcebc748;4
-5;more pinion during;instead yahoo including;holster supportive scrutinise;17600;true;2025-09-22T19:32:19;2025-09-22T17:26:47;true;2025-09-22T18:26:54;b781aa27-1dfa-4c2b-b528-ad2ce49b36b8;5
-6;follower cavernous illiterate;tightly phew clonk;gah;2717;false;2025-09-23T10:14:00;2025-09-23T11:48:08;false;2025-09-23T09:34:02;117d08a5-2ca0-496e-80af-7bc0002047d6;6
-7;deliquesce;stylish mockingly cross;midst bah if;14853;true;2025-09-23T07:00:42;2025-09-23T11:23:56;true;2025-09-23T09:35:10;92343f02-a8c1-4a3f-940e-fe961a8e29ab;7
-8;bah;after;even;12054;false;2025-09-22T22:16:14;2025-09-22T21:45:54;false;2025-09-23T12:28:43;acdfbb55-793e-4754-a18b-adf46258667f;8
-9;yearly hawk around;ick whole;uncomfortable;15805;true;2025-09-23T12:18:47;2025-09-23T06:33:43;false;2025-09-22T16:03:26;6254e9b5-492d-4e43-a6dd-c16d715c8c37;9
-10;shakily;vary concerned meanwhile;concentration past plump;16149;false;2025-09-23T02:58:20;2025-09-23T05:04:49;true;2025-09-23T13:57:00;27169719-14b2-464e-a8ec-a8c9adca4be2;10
+1;promotions;summer2025_banner.jpg;image/jpeg;1906742;true;2025-10-26T20:28:22.356098830;;false;;\N;1500
+2;marketing;winter25_logo.png;image/png;3542844;false;2025-10-26T20:28:22.359843280;;false;;\N;1501
+3;banners;earlybird_flyer.pdf;application/pdf;2899644;false;2025-10-26T20:28:22.359914605;;false;;\N;1502
+4;images;flashsale_banner.gif;image/gif;3279559;true;2025-10-26T20:28:22.359992542;;false;;\N;1503
+5;documents;loyalty10_card.jpg;image/jpeg;3305108;false;2025-10-26T20:28:22.360121495;;false;;\N;1504
+6;assets;newuser20_welcome.png;image/png;685139;false;2025-10-26T20:28:22.360171860;;false;;\N;1505
