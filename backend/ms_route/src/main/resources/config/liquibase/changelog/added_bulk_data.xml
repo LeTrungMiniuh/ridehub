@@ -12,7 +12,7 @@
   <changeSet id="msroute-00001-province" author="jhipster">
     <comment>Load province</comment>
     <sql>
-      LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/province.csv'
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/province.csv'
       INTO TABLE province
       FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
       LINES TERMINATED BY '\n'
@@ -48,7 +48,7 @@
   <changeSet id="msroute-00002-district" author="jhipster">
     <comment>Load district</comment>
     <sql>
-      LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/district.csv'
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/district.csv'
       INTO TABLE district
       FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
       LINES TERMINATED BY '\n'
@@ -83,7 +83,7 @@
   <changeSet id="msroute-00003-ward" author="jhipster">
     <comment>Load ward</comment>
     <sql>
-      LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/ward.csv'
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/ward.csv'
       INTO TABLE ward
       FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
       LINES TERMINATED BY '\n'
@@ -118,7 +118,7 @@
   <changeSet id="msroute-00004-address" author="jhipster">
     <comment>Load address</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/address.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/address.csv'
     IGNORE                 -- skip rows that would violate PK/unique instead of failing the batch
     INTO TABLE address
     FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
@@ -155,7 +155,7 @@
   <changeSet id="msroute-00005-station" author="jhipster">
     <comment>Load station</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/station.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/station.csv'
     INTO TABLE station
     FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
@@ -189,7 +189,7 @@
   <changeSet id="msroute-00006-seat-map" author="jhipster">
     <comment>Load seat_map</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/seat_map.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/seat_map.csv'
     INTO TABLE seat_map
     CHARACTER SET utf8mb4
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '"'
@@ -227,7 +227,7 @@
   <changeSet id="msroute-00007-floor" author="jhipster">
     <comment>Load floor</comment>
     <sql splitStatements="false">
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/floor.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/floor.csv'
     INTO TABLE floor
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
@@ -259,7 +259,7 @@
   <changeSet id="msroute-00008-seat" author="jhipster">
     <comment>Load seat</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/seat.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/seat.csv'
     INTO TABLE seat
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
@@ -295,7 +295,7 @@
   <changeSet id="msroute-00009-staff" author="jhipster">
     <comment>Load staff</comment>
     <sql>
-      LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/staff.csv'
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/staff.csv'
       INTO TABLE staff
       FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
       LINES TERMINATED BY '\n'
@@ -330,7 +330,7 @@
   <changeSet id="msroute-00010-driver" author="jhipster">
     <comment>Load driver</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/driver.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/driver.csv'
     INTO TABLE driver
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
@@ -362,7 +362,7 @@
   <changeSet id="msroute-00011-attendant" author="jhipster">
     <comment>Load attendant</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/attendant.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/attendant.csv'
     INTO TABLE attendant
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
@@ -391,7 +391,7 @@
   <changeSet id="msroute-00012-vehicle" author="jhipster">
     <comment>Load vehicle</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/vehicle.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/vehicle.csv'
     INTO TABLE vehicle
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
@@ -425,7 +425,7 @@
   <changeSet id="msroute-00013-route" author="jhipster">
     <comment>Load route</comment>
     <sql>
-      LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/route.csv'
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/route.csv'
       INTO TABLE route
       FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
       LINES TERMINATED BY '\n'
@@ -458,7 +458,7 @@
   <changeSet id="msroute-00014-trip" author="jhipster">
     <comment>Load trip</comment>
     <sql>
-    LOAD DATA LOCAL INFILE 'src/main/resources/config/liquibase/msroute/trip.csv'
+    LOAD DATA LOCAL INFILE '${csv_path}/msroute/trip.csv'
     INTO TABLE trip
     FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
     LINES TERMINATED BY '\n'
