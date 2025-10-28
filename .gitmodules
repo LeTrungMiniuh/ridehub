@@ -3,10 +3,6 @@
     url = https://github.com/LeTrungMiniuh/ridehub-central-common.git
     branch = main
 
-[submodule "backend/ridehub-central-config"]
-    path = backend/ridehub-central-config
-    url = https://github.com/LeTrungMiniuh/ridehub-central-config.git
-    branch = main
 [submodule "spi/keycloak-custom-reg"]
 	path = spi/keycloak-custom-reg
 	url = https://github.com/maian3333/keycloak-custom-reg.git
