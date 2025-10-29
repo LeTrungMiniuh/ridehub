@@ -1,11 +1,14 @@
 package com.ridehub.route.service;
 
 import com.ridehub.route.domain.*; // for static metamodels
+import com.ridehub.route.repository.RouteRepository;
 import com.ridehub.route.repository.TripRepository;
 import com.ridehub.route.service.criteria.SeatLockCriteria;
 import com.ridehub.route.service.criteria.TripCriteria;
+import com.ridehub.route.service.dto.RouteDTO;
 import com.ridehub.route.service.dto.SeatLockDTO;
 import com.ridehub.route.service.dto.TripDTO;
+import com.ridehub.route.service.mapper.RouteMapper;
 import com.ridehub.route.service.mapper.TripMapper;
 import com.ridehub.route.service.vm.TripDetailVM;
 import com.ridehub.route.service.vm.VehicleDetailVM;
@@ -44,17 +47,21 @@ public class TripQueryService extends QueryService<Trip> {
         private static final Logger LOG = LoggerFactory.getLogger(TripQueryService.class);
 
         private final TripRepository tripRepository;
-
         private final TripMapper tripMapper;
         private final VehicleQueryService vehicleQueryService;
         private final SeatLockQueryService seatLockQueryService;
+        private final RouteRepository routeRepository;
+        private final RouteMapper routeMapper;
 
         public TripQueryService(TripRepository tripRepository, TripMapper tripMapper,
-                        VehicleQueryService vehicleQueryService, SeatLockQueryService seatLockQueryService) {
+                        VehicleQueryService vehicleQueryService, SeatLockQueryService seatLockQueryService,
+                        RouteRepository routeRepository, RouteMapper routeMapper) {
                 this.tripRepository = tripRepository;
                 this.tripMapper = tripMapper;
                 this.vehicleQueryService = vehicleQueryService;
                 this.seatLockQueryService = seatLockQueryService;
+                this.routeRepository = routeRepository;
+                this.routeMapper = routeMapper;
         }
 
         /**
@@ -96,7 +103,16 @@ public class TripQueryService extends QueryService<Trip> {
 
                 // 2️⃣ Convert entity -> DTO
                 TripDTO tripDTO = tripMapper.toDto(trip);
-                // 2) Vehicle detail (null-safe)
+                
+                // 2) Set full route DTO (null-safe)
+                if (trip.getRoute() != null && trip.getRoute().getId() != null) {
+                        RouteDTO routeDTO = routeRepository.findById(trip.getRoute().getId())
+                                .map(routeMapper::toDto)
+                                .orElse(null);
+                        tripDTO.setRoute(routeDTO);
+                }
+                
+                // 3) Vehicle detail (null-safe)
                 VehicleDetailVM vehicleDetail = new VehicleDetailVM(null, List.of(), Map.of());
                 if (trip.getVehicle() != null && trip.getVehicle().getId() != null) {
                         vehicleDetail = vehicleQueryService
@@ -197,47 +213,50 @@ public class TripQueryService extends QueryService<Trip> {
                                                                                 .join(District_.province, JoinType.LEFT)
                                                                                 .get(Province_.provinceCode)));
                         }
+                }
+                return specification;
         }
-        return specification;
-    }
 
-    /**
-     * Check if a trip exists by criteria.
-     * 
-     * @param criteria The object which holds all the filters, which entities should match.
-     * @return true if entity exists, false otherwise.
-     */
-    @Transactional(readOnly = true)
-    public boolean existsByCriteria(TripCriteria criteria) {
-        LOG.debug("exists by criteria : {}", criteria);
-        final Specification<Trip> specification = createSpecification(criteria);
-        return tripRepository.exists(specification);
-    }
+        /**
+         * Check if a trip exists by criteria.
+         * 
+         * @param criteria The object which holds all the filters, which entities should
+         *                 match.
+         * @return true if entity exists, false otherwise.
+         */
+        @Transactional(readOnly = true)
+        public boolean existsByCriteria(TripCriteria criteria) {
+                LOG.debug("exists by criteria : {}", criteria);
+                final Specification<Trip> specification = createSpecification(criteria);
+                return tripRepository.exists(specification);
+        }
 
-    /**
-     * Find a single trip by criteria.
-     * 
-     * @param criteria The object which holds all the filters, which entities should match.
-     * @return optional entity.
-     */
-    @Transactional(readOnly = true)
-    public Optional<Trip> findOneByCriteria(TripCriteria criteria) {
-        LOG.debug("find one by criteria : {}", criteria);
-        final Specification<Trip> specification = createSpecification(criteria);
-        return tripRepository.findOne(specification);
-    }
+        /**
+         * Find a single trip by criteria.
+         * 
+         * @param criteria The object which holds all the filters, which entities should
+         *                 match.
+         * @return optional entity.
+         */
+        @Transactional(readOnly = true)
+        public Optional<Trip> findOneByCriteria(TripCriteria criteria) {
+                LOG.debug("find one by criteria : {}", criteria);
+                final Specification<Trip> specification = createSpecification(criteria);
+                return tripRepository.findOne(specification);
+        }
 
-    /**
-     * Find trips by criteria.
-     * 
-     * @param criteria The object which holds all the filters, which entities should match.
-     * @return list of entities.
-     */
-    @Transactional(readOnly = true)
-    public List<Trip> findByCriteria(TripCriteria criteria) {
-        LOG.debug("find by criteria : {}", criteria);
-        final Specification<Trip> specification = createSpecification(criteria);
-        return tripRepository.findAll(specification);
-    }
+        /**
+         * Find trips by criteria.
+         * 
+         * @param criteria The object which holds all the filters, which entities should
+         *                 match.
+         * @return list of entities.
+         */
+        @Transactional(readOnly = true)
+        public List<Trip> findByCriteria(TripCriteria criteria) {
+                LOG.debug("find by criteria : {}", criteria);
+                final Specification<Trip> specification = createSpecification(criteria);
+                return tripRepository.findAll(specification);
+        }
 
 }
