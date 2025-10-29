@@ -15,7 +15,7 @@ enum VehicleType { STANDARD_BUS_VIP, STANDARD_BUS_NORMAL, LIMOUSINE }
 enum LockStatus { HELD, EXPIRED, COMMITTED }
 enum SeatType { SLEEPER, NORMAL }
 
-// New: schedule-driven pricing occasion
+// Schedule-driven pricing occasion
 enum OccasionType { NORMAL, WEEKEND, HOLIDAY, PEAK, OFF_PEAK, TET }
 
 // From Avro enums (for cross-service communication)
@@ -27,7 +27,6 @@ enum TransportType { TRAIN, BUS }
 
 // ======================================================
 /* Applications */
- // (unchanged except entity lists reflect new entities)
 // ======================================================
 
 application {
@@ -76,8 +75,8 @@ application {
     serverPort 8082
     enableSwaggerCodegen true
   }
-  // ADDED: Schedule, ScheduleTimeSlot ; REMOVED: Trip.baseFare (moved to Route)
-  entities Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, Trip, Staff, Driver, Attendant, SeatLock, FileRoute
+  // UPDATED: added ScheduleOccasion; Schedule no longer keeps occasion/occasionFactor
+  entities Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, ScheduleOccasion, Trip, Staff, Driver, Attendant, SeatLock, FileRoute
 }
 
 application {
@@ -321,14 +320,12 @@ entity Seat {
   deletedBy UUID
 }
 
-/* NEW: Schedule & ScheduleTimeSlot to generate multiple trips per day */
+/* UPDATED: Schedule (occasion removed) */
 entity Schedule {
   scheduleCode String required unique
   startDate LocalDate
   endDate LocalDate
   daysOfWeek String // e.g. "MON,WED,FRI"
-  occasion OccasionType
-  occasionFactor BigDecimal
   active Boolean required
   createdAt Instant required
   updatedAt Instant
@@ -337,6 +334,18 @@ entity Schedule {
   deletedBy UUID
 }
 
+/* NEW: normalized per-schedule occasion rules */
+entity ScheduleOccasion {
+  occasion OccasionType required
+  occasionFactor BigDecimal required
+  createdAt Instant required
+  updatedAt Instant
+  isDeleted Boolean
+  deletedAt Instant
+  deletedBy UUID
+}
+
+/* Keep multi-time-per-day capability */
 entity ScheduleTimeSlot {
   slotCode String required unique
   departureTime LocalTime required
@@ -351,10 +360,12 @@ entity ScheduleTimeSlot {
   deletedBy UUID
 }
 
+/* UPDATED: Trip carries finalized occasionFactor */
 entity Trip {
   tripCode String required unique
   departureTime Instant required
   arrivalTime Instant required
+  occasionFactor BigDecimal required // resolved from schedule/occasion at generation time
   // baseFare removed; now on Route
   createdAt Instant required
   updatedAt Instant
@@ -365,16 +376,17 @@ entity Trip {
 
 // Relationships inside ms_route
 relationship OneToMany {
-  Route{schedules}           to Schedule{route required},
-  Schedule{timeSlots}        to ScheduleTimeSlot{schedule required}
+  Route{schedules}            to Schedule{route required},
+  Schedule{timeSlots}         to ScheduleTimeSlot{schedule required},
+  Schedule{occasionRules}     to ScheduleOccasion{schedule required}
 }
 
 relationship ManyToOne {
-  Floor{seatMap required}    to SeatMap,
-  Seat{floor required}       to Floor,
-  Trip{route required}       to Route,
-  Trip{vehicle required}     to Vehicle,
-  Trip{slot required}        to ScheduleTimeSlot  // NEW: Trip generated from slot
+  Floor{seatMap required}     to SeatMap,
+  Seat{floor required}        to Floor,
+  Trip{route required}        to Route,
+  Trip{vehicle required}      to Vehicle,
+  Trip{slot required}         to ScheduleTimeSlot
 }
 
 entity Staff {
@@ -528,7 +540,7 @@ entity PricingSnapshot {
   vehicleFactor BigDecimal
   floorFactor BigDecimal
   seatFactor BigDecimal
-  scheduleOccasionFactor BigDecimal       // NEW
+  scheduleOccasionFactor BigDecimal       // copy of Trip.occasionFactor at booking time
   finalPrice BigDecimal required
   createdAt Instant required
   updatedAt Instant
@@ -719,7 +731,7 @@ relationship OneToMany {
 
 microservice AppUser, Profile, FileUser with ms_user
 
-microservice Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, Trip, Staff, Driver, Attendant, SeatLock, FileRoute with ms_route
+microservice Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, ScheduleOccasion, Trip, Staff, Driver, Attendant, SeatLock, FileRoute with ms_route
 
 microservice Booking, Ticket, Invoice, PaymentTransaction, AppliedPromotion, PricingSnapshot, PaymentWebhookLog, FileBooking with ms_booking
 microservice Promotion, BuyNGetMFree, PercentOffTotal, ConditionByRoute, ConditionByDate, ConditionByLocation, ConditionRouteItem, ConditionDateItem, ConditionLocationItem, FilePromotion with ms_promotion
@@ -754,4 +766,5 @@ deployment {
 // - Consider Outbox tables in ms_route/ms_booking for Kafka publish-after-commit.
 // - Add proper indexes: Trip(departureTime, route_id, slot_id), Booking(bookingCode), PaymentWebhookLog(payloadHash).
 // - Pricing formula at booking time:
-//   final = Route.baseFare * Vehicle.typeFactor * Floor.priceFactorFloor * Seat.priceFactor * Schedule.occasionFactor - promos
+//   final = Route.baseFare * Vehicle.typeFactor * Floor.priceFactorFloor * Seat.priceFactor * Trip.occasionFactor - promos
+// - When generating Trip from Schedule(+TimeSlot), resolve applicable ScheduleOccasion rule and copy its occasionFactor to Trip.

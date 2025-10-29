@@ -7,28 +7,6 @@ skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 
-!theme cyborg
-skinparam class {
-    BackgroundColor #263238
-    BorderColor #00BCD4
-    FontColor #E0E0E0
-}
-skinparam package {
-    BackgroundColor #37474F
-    BorderColor #00BCD4
-    FontColor #E0E0E0
-}
-skinparam enum {
-    BackgroundColor #1B5E20
-    BorderColor #4CAF50
-    FontColor #E0E0E0
-}
-skinparam note {
-    BackgroundColor #37474F
-    BorderColor #00BCD4
-    FontColor #E0E0E0
-}
-
 ' =============================
 '              ENUMS
 ' =============================
@@ -286,10 +264,22 @@ package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock, Schedul
     +startDate: LocalDate
     +endDate: LocalDate
     +daysOfWeek: String ' e.g. "MON,WED,FRI"
+    +active: Boolean
+  }
+
+  ' NEW: normalized per-schedule occasion rules
+  class ScheduleOccasion extends BaseEntity {
+    +occasion: OccasionType
+    +occasionFactor: BigDecimal
+  }
+
+  ' NEW: Keep multi-time-per-day capability
+  class ScheduleTimeSlot extends BaseEntity {
+    +slotCode: String {unique}
     +departureTime: LocalTime
     +arrivalTime: LocalTime
-    +occasion: OccasionType
-    +occasionFactor: BigDecimal ' multiplies price depending on occasion
+    +bufferMinutes: Integer
+    +sequence: Integer
     +active: Boolean
   }
 
@@ -297,6 +287,7 @@ package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock, Schedul
     +tripCode: String {unique}
     +departureTime: Instant
     +arrivalTime: Instant
+    +occasionFactor: BigDecimal ' resolved from schedule/occasion at generation time
     ' baseFare removed; now on Route
   }
 
@@ -354,9 +345,12 @@ Floor "1" o-- "1..*" Seat : "has seats"
 
 ' Schedule & Trip
 Route "1" o-- "0..*" Schedule : "schedules"
+Schedule "1" o-- "0..*" ScheduleTimeSlot : "timeSlots"
+Schedule "1" o-- "0..*" ScheduleOccasion : "occasionRules"
 Schedule "1" o-- "0..*" Trip : "generates trips"
 Trip "*" -- "1" Route : "on route"
 Trip "*" -- "1" Vehicle : "uses vehicle"
+Trip "*" -- "1" ScheduleTimeSlot : "slot"
 Trip "*" -- "1" Driver : "driven by"
 Trip "*" -- "0..1" Attendant : "attended by"
 
@@ -479,8 +473,8 @@ Ticket ..> Seat : "references seatId"
 
 ' Pricing dependencies (updated)
 PricingService ..> Route : "reads baseFare"
-PricingService ..> Trip : "reads scheduleId, times"
-PricingService ..> Schedule : "reads occasion & factor"
+PricingService ..> Trip : "reads occasionFactor"
+PricingService ..> ScheduleTimeSlot : "reads times"
 PricingService ..> Vehicle : "reads typeFactor"
 PricingService ..> Floor : "reads priceFactorFloor"
 PricingService ..> Seat : "reads priceFactor"
@@ -596,7 +590,7 @@ note bottom of PricingService
     × Vehicle.typeFactor
     × Floor.priceFactorFloor
     × Seat.priceFactor
-    × Schedule.occasionFactor
+    × Trip.occasionFactor
   
   Then apply promotions from ms-promotion.
   Store final calculation in PricingSnapshot
