@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20251010121649"
+    "changelogDate": "20251029032724"
   },
   "applications": ["ms_booking"],
   "clientRootFolder": "ms_booking",
@@ -22,12 +22,12 @@
     {
       "fieldName": "method",
       "fieldType": "PaymentMethod",
-      "fieldValues": "VNPAY,MOMO,ZALOPAY,CREDIT_CARD,BANK_TRANSFER"
+      "fieldValues": "VNPAY,CREDIT_CARD,BANK_TRANSFER"
     },
     {
       "fieldName": "status",
       "fieldType": "PaymentStatus",
-      "fieldValues": "INITIATED,PROCESSING,SUCCESS,FAILED,REFUNDED"
+      "fieldValues": "INITIATED,PROCESSING,SUCCESS,FAILED,REFUNDED,PAYMENT_SUCCESS_BUT_BOOKING_EXPIRED,REQUIRES_MANUAL_REVIEW"
     },
     {
       "fieldName": "amount",

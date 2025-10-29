@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20251010121349"
+    "changelogDate": "20251029032424"
   },
   "applications": ["ms_booking"],
   "clientRootFolder": "ms_booking",
@@ -16,7 +16,7 @@
       "fieldName": "status",
       "fieldType": "BookingStatus",
       "fieldValidateRules": ["required"],
-      "fieldValues": "DRAFT,AWAITING_PAYMENT,PAID,CONFIRMED,CANCELED,REFUNDED"
+      "fieldValues": "DRAFT,AWAITING_PAYMENT,PAID,CONFIRMED,CANCELED,REFUNDED,RECOVERY_FAILED_SEAT_LOCKS"
     },
     {
       "fieldName": "quantity",

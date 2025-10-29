@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20251010121849"
+    "changelogDate": "20251029032924"
   },
   "applications": ["ms_booking"],
   "clientRootFolder": "ms_booking",
@@ -22,6 +22,10 @@
     },
     {
       "fieldName": "seatFactor",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "scheduleOccasionFactor",
       "fieldType": "BigDecimal"
     },
     {

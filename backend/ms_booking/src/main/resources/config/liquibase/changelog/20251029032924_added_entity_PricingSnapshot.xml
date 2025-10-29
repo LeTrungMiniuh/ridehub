@@ -7,45 +7,30 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity Booking.
+        Added the entity PricingSnapshot.
     -->
-    <changeSet id="20251010121349-1" author="jhipster">
-        <createTable tableName="booking">
+    <changeSet id="20251029032924-1" author="jhipster">
+        <createTable tableName="pricing_snapshot">
             <column name="id" type="bigint" autoIncrement="true" startWith="1500">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="booking_code" type="varchar(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="ux_booking__booking_code" />
-            </column>
-            <column name="status" type="varchar(255)">
+            <column name="base_fare" type="decimal(21,2)">
                 <constraints nullable="false" />
             </column>
-            <column name="quantity" type="integer">
+            <column name="vehicle_factor" type="decimal(21,2)">
                 <constraints nullable="true" />
             </column>
-            <column name="total_amount" type="decimal(21,2)">
+            <column name="floor_factor" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="seat_factor" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="schedule_occasion_factor" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="final_price" type="decimal(21,2)">
                 <constraints nullable="false" />
-            </column>
-            <column name="booked_at" type="${datetimeType}">
-                <constraints nullable="false" />
-            </column>
-            <column name="customer_id" type="${uuidType}">
-                <constraints nullable="false" />
-            </column>
-            <column name="idempotency_key" type="varchar(80)">
-                <constraints nullable="true" />
-            </column>
-            <column name="trip_id" type="bigint">
-                <constraints nullable="false" />
-            </column>
-            <column name="lock_group_id" type="varchar(36)">
-                <constraints nullable="true" />
-            </column>
-            <column name="expires_at" type="${datetimeType}">
-                <constraints nullable="true" />
-            </column>
-            <column name="timeout_minutes" type="integer">
-                <constraints nullable="true" />
             </column>
             <column name="created_at" type="${datetimeType}">
                 <constraints nullable="false" />
@@ -62,19 +47,14 @@
             <column name="deleted_by" type="${uuidType}">
                 <constraints nullable="true" />
             </column>
-            <column name="invoice_id" type="bigint">
-                <constraints nullable="true" unique="true" uniqueConstraintName="ux_booking__invoice_id" />
-            </column>
-            <column name="payment_transaction_id" type="bigint">
-                <constraints nullable="true" unique="true" uniqueConstraintName="ux_booking__payment_transaction_id" />
+            <column name="booking_id" type="bigint">
+                <constraints nullable="false" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
-        <dropDefaultValue tableName="booking" columnName="booked_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="booking" columnName="expires_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="booking" columnName="created_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="booking" columnName="updated_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="booking" columnName="deleted_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="pricing_snapshot" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="pricing_snapshot" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="pricing_snapshot" columnName="deleted_at" columnDataType="${datetimeType}"/>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
@@ -87,29 +67,25 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20251010121349-1-data" author="jhipster" context="faker">
+    <changeSet id="20251029032924-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/booking.csv"
+                  file="config/liquibase/fake-data/pricing_snapshot.csv"
                   separator=";"
-                  tableName="booking"
+                  tableName="pricing_snapshot"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="booking_code" type="string"/>
-            <column name="status" type="string"/>
-            <column name="quantity" type="numeric"/>
-            <column name="total_amount" type="numeric"/>
-            <column name="booked_at" type="date"/>
-            <column name="customer_id" type="string"/>
-            <column name="idempotency_key" type="string"/>
-            <column name="trip_id" type="numeric"/>
-            <column name="lock_group_id" type="string"/>
-            <column name="expires_at" type="date"/>
-            <column name="timeout_minutes" type="numeric"/>
+            <column name="base_fare" type="numeric"/>
+            <column name="vehicle_factor" type="numeric"/>
+            <column name="floor_factor" type="numeric"/>
+            <column name="seat_factor" type="numeric"/>
+            <column name="schedule_occasion_factor" type="numeric"/>
+            <column name="final_price" type="numeric"/>
             <column name="created_at" type="date"/>
             <column name="updated_at" type="date"/>
             <column name="is_deleted" type="boolean"/>
             <column name="deleted_at" type="date"/>
             <column name="deleted_by" type="string"/>
+            <column name="booking_id" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

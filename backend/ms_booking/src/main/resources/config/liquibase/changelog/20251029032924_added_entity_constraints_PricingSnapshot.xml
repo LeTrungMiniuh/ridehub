@@ -6,20 +6,13 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
     <!--
-        Added the constraints for entity Ticket.
+        Added the constraints for entity PricingSnapshot.
     -->
-    <changeSet id="20251010121449-2" author="jhipster">
-
-        <addForeignKeyConstraint baseColumnNames="qr_code_img_id"
-                                 baseTableName="ticket"
-                                 constraintName="fk_ticket__qr_code_img_id"
-                                 referencedColumnNames="id"
-                                 referencedTableName="file_booking"
-                                 />
+    <changeSet id="20251029032924-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="booking_id"
-                                 baseTableName="ticket"
-                                 constraintName="fk_ticket__booking_id"
+                                 baseTableName="pricing_snapshot"
+                                 constraintName="fk_pricing_snapshot__booking_id"
                                  referencedColumnNames="id"
                                  referencedTableName="booking"
                                  />

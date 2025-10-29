@@ -24,6 +24,8 @@ public class PricingSnapshotDTO implements Serializable {
 
     private BigDecimal seatFactor;
 
+    private BigDecimal scheduleOccasionFactor;
+
     @NotNull
     private BigDecimal finalPrice;
 
@@ -79,6 +81,14 @@ public class PricingSnapshotDTO implements Serializable {
 
     public void setSeatFactor(BigDecimal seatFactor) {
         this.seatFactor = seatFactor;
+    }
+
+    public BigDecimal getScheduleOccasionFactor() {
+        return scheduleOccasionFactor;
+    }
+
+    public void setScheduleOccasionFactor(BigDecimal scheduleOccasionFactor) {
+        this.scheduleOccasionFactor = scheduleOccasionFactor;
     }
 
     public BigDecimal getFinalPrice() {
@@ -167,6 +177,7 @@ public class PricingSnapshotDTO implements Serializable {
             ", vehicleFactor=" + getVehicleFactor() +
             ", floorFactor=" + getFloorFactor() +
             ", seatFactor=" + getSeatFactor() +
+            ", scheduleOccasionFactor=" + getScheduleOccasionFactor() +
             ", finalPrice=" + getFinalPrice() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +

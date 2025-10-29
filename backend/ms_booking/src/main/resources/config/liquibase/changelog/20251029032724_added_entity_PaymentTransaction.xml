@@ -7,26 +7,35 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity Invoice.
+        Added the entity PaymentTransaction.
     -->
-    <changeSet id="20251010121549-1" author="jhipster">
-        <createTable tableName="invoice">
+    <changeSet id="20251029032724-1" author="jhipster">
+        <createTable tableName="payment_transaction">
             <column name="id" type="bigint" autoIncrement="true" startWith="1500">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="invoice_no" type="varchar(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="ux_invoice__invoice_no" />
+            <column name="transaction_id" type="varchar(80)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_payment_transaction__transaction_id" />
             </column>
-            <column name="issued_at" type="${datetimeType}">
+            <column name="order_ref" type="varchar(80)">
                 <constraints nullable="true" />
             </column>
-            <column name="gross_amount" type="decimal(21,2)">
+            <column name="method" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="vat_amount" type="decimal(21,2)">
+            <column name="status" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="net_amount" type="decimal(21,2)">
+            <column name="amount" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="time" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="gateway_create_date" type="varchar(14)">
+                <constraints nullable="true" />
+            </column>
+            <column name="gateway_note" type="varchar(1024)">
                 <constraints nullable="true" />
             </column>
             <column name="created_at" type="${datetimeType}">
@@ -46,10 +55,10 @@
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
-        <dropDefaultValue tableName="invoice" columnName="issued_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="invoice" columnName="created_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="invoice" columnName="updated_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="invoice" columnName="deleted_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="payment_transaction" columnName="time" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="payment_transaction" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="payment_transaction" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="payment_transaction" columnName="deleted_at" columnDataType="${datetimeType}"/>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
@@ -62,18 +71,21 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20251010121549-1-data" author="jhipster" context="faker">
+    <changeSet id="20251029032724-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/invoice.csv"
+                  file="config/liquibase/fake-data/payment_transaction.csv"
                   separator=";"
-                  tableName="invoice"
+                  tableName="payment_transaction"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="invoice_no" type="string"/>
-            <column name="issued_at" type="date"/>
-            <column name="gross_amount" type="numeric"/>
-            <column name="vat_amount" type="numeric"/>
-            <column name="net_amount" type="numeric"/>
+            <column name="transaction_id" type="string"/>
+            <column name="order_ref" type="string"/>
+            <column name="method" type="string"/>
+            <column name="status" type="string"/>
+            <column name="amount" type="numeric"/>
+            <column name="time" type="date"/>
+            <column name="gateway_create_date" type="string"/>
+            <column name="gateway_note" type="string"/>
             <column name="created_at" type="date"/>
             <column name="updated_at" type="date"/>
             <column name="is_deleted" type="boolean"/>

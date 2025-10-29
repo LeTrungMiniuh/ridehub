@@ -140,6 +140,7 @@ class PaymentTransactionResourceIT {
         return new PaymentTransaction()
             .transactionId(UPDATED_TRANSACTION_ID)
             .orderRef(UPDATED_ORDER_REF)
+            .method(UPDATED_METHOD)
             .status(UPDATED_STATUS)
             .amount(UPDATED_AMOUNT)
             .time(UPDATED_TIME)

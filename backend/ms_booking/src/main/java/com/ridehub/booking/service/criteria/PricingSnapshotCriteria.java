@@ -32,6 +32,8 @@ public class PricingSnapshotCriteria implements Serializable, Criteria {
 
     private BigDecimalFilter seatFactor;
 
+    private BigDecimalFilter scheduleOccasionFactor;
+
     private BigDecimalFilter finalPrice;
 
     private InstantFilter createdAt;
@@ -56,6 +58,7 @@ public class PricingSnapshotCriteria implements Serializable, Criteria {
         this.vehicleFactor = other.optionalVehicleFactor().map(BigDecimalFilter::copy).orElse(null);
         this.floorFactor = other.optionalFloorFactor().map(BigDecimalFilter::copy).orElse(null);
         this.seatFactor = other.optionalSeatFactor().map(BigDecimalFilter::copy).orElse(null);
+        this.scheduleOccasionFactor = other.optionalScheduleOccasionFactor().map(BigDecimalFilter::copy).orElse(null);
         this.finalPrice = other.optionalFinalPrice().map(BigDecimalFilter::copy).orElse(null);
         this.createdAt = other.optionalCreatedAt().map(InstantFilter::copy).orElse(null);
         this.updatedAt = other.optionalUpdatedAt().map(InstantFilter::copy).orElse(null);
@@ -164,6 +167,25 @@ public class PricingSnapshotCriteria implements Serializable, Criteria {
 
     public void setSeatFactor(BigDecimalFilter seatFactor) {
         this.seatFactor = seatFactor;
+    }
+
+    public BigDecimalFilter getScheduleOccasionFactor() {
+        return scheduleOccasionFactor;
+    }
+
+    public Optional<BigDecimalFilter> optionalScheduleOccasionFactor() {
+        return Optional.ofNullable(scheduleOccasionFactor);
+    }
+
+    public BigDecimalFilter scheduleOccasionFactor() {
+        if (scheduleOccasionFactor == null) {
+            setScheduleOccasionFactor(new BigDecimalFilter());
+        }
+        return scheduleOccasionFactor;
+    }
+
+    public void setScheduleOccasionFactor(BigDecimalFilter scheduleOccasionFactor) {
+        this.scheduleOccasionFactor = scheduleOccasionFactor;
     }
 
     public BigDecimalFilter getFinalPrice() {
@@ -333,6 +355,7 @@ public class PricingSnapshotCriteria implements Serializable, Criteria {
             Objects.equals(vehicleFactor, that.vehicleFactor) &&
             Objects.equals(floorFactor, that.floorFactor) &&
             Objects.equals(seatFactor, that.seatFactor) &&
+            Objects.equals(scheduleOccasionFactor, that.scheduleOccasionFactor) &&
             Objects.equals(finalPrice, that.finalPrice) &&
             Objects.equals(createdAt, that.createdAt) &&
             Objects.equals(updatedAt, that.updatedAt) &&
@@ -352,6 +375,7 @@ public class PricingSnapshotCriteria implements Serializable, Criteria {
             vehicleFactor,
             floorFactor,
             seatFactor,
+            scheduleOccasionFactor,
             finalPrice,
             createdAt,
             updatedAt,
@@ -372,6 +396,7 @@ public class PricingSnapshotCriteria implements Serializable, Criteria {
             optionalVehicleFactor().map(f -> "vehicleFactor=" + f + ", ").orElse("") +
             optionalFloorFactor().map(f -> "floorFactor=" + f + ", ").orElse("") +
             optionalSeatFactor().map(f -> "seatFactor=" + f + ", ").orElse("") +
+            optionalScheduleOccasionFactor().map(f -> "scheduleOccasionFactor=" + f + ", ").orElse("") +
             optionalFinalPrice().map(f -> "finalPrice=" + f + ", ").orElse("") +
             optionalCreatedAt().map(f -> "createdAt=" + f + ", ").orElse("") +
             optionalUpdatedAt().map(f -> "updatedAt=" + f + ", ").orElse("") +

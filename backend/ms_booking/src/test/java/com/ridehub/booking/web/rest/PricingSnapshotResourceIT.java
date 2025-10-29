@@ -57,6 +57,10 @@ class PricingSnapshotResourceIT {
     private static final BigDecimal UPDATED_SEAT_FACTOR = new BigDecimal(2);
     private static final BigDecimal SMALLER_SEAT_FACTOR = new BigDecimal(1 - 1);
 
+    private static final BigDecimal DEFAULT_SCHEDULE_OCCASION_FACTOR = new BigDecimal(1);
+    private static final BigDecimal UPDATED_SCHEDULE_OCCASION_FACTOR = new BigDecimal(2);
+    private static final BigDecimal SMALLER_SCHEDULE_OCCASION_FACTOR = new BigDecimal(1 - 1);
+
     private static final BigDecimal DEFAULT_FINAL_PRICE = new BigDecimal(1);
     private static final BigDecimal UPDATED_FINAL_PRICE = new BigDecimal(2);
     private static final BigDecimal SMALLER_FINAL_PRICE = new BigDecimal(1 - 1);
@@ -113,6 +117,7 @@ class PricingSnapshotResourceIT {
             .vehicleFactor(DEFAULT_VEHICLE_FACTOR)
             .floorFactor(DEFAULT_FLOOR_FACTOR)
             .seatFactor(DEFAULT_SEAT_FACTOR)
+            .scheduleOccasionFactor(DEFAULT_SCHEDULE_OCCASION_FACTOR)
             .finalPrice(DEFAULT_FINAL_PRICE)
             .createdAt(DEFAULT_CREATED_AT)
             .updatedAt(DEFAULT_UPDATED_AT)
@@ -144,6 +149,7 @@ class PricingSnapshotResourceIT {
             .vehicleFactor(UPDATED_VEHICLE_FACTOR)
             .floorFactor(UPDATED_FLOOR_FACTOR)
             .seatFactor(UPDATED_SEAT_FACTOR)
+            .scheduleOccasionFactor(UPDATED_SCHEDULE_OCCASION_FACTOR)
             .finalPrice(UPDATED_FINAL_PRICE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
@@ -298,6 +304,7 @@ class PricingSnapshotResourceIT {
             .andExpect(jsonPath("$.[*].vehicleFactor").value(hasItem(sameNumber(DEFAULT_VEHICLE_FACTOR))))
             .andExpect(jsonPath("$.[*].floorFactor").value(hasItem(sameNumber(DEFAULT_FLOOR_FACTOR))))
             .andExpect(jsonPath("$.[*].seatFactor").value(hasItem(sameNumber(DEFAULT_SEAT_FACTOR))))
+            .andExpect(jsonPath("$.[*].scheduleOccasionFactor").value(hasItem(sameNumber(DEFAULT_SCHEDULE_OCCASION_FACTOR))))
             .andExpect(jsonPath("$.[*].finalPrice").value(hasItem(sameNumber(DEFAULT_FINAL_PRICE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
@@ -322,6 +329,7 @@ class PricingSnapshotResourceIT {
             .andExpect(jsonPath("$.vehicleFactor").value(sameNumber(DEFAULT_VEHICLE_FACTOR)))
             .andExpect(jsonPath("$.floorFactor").value(sameNumber(DEFAULT_FLOOR_FACTOR)))
             .andExpect(jsonPath("$.seatFactor").value(sameNumber(DEFAULT_SEAT_FACTOR)))
+            .andExpect(jsonPath("$.scheduleOccasionFactor").value(sameNumber(DEFAULT_SCHEDULE_OCCASION_FACTOR)))
             .andExpect(jsonPath("$.finalPrice").value(sameNumber(DEFAULT_FINAL_PRICE)))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
             .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
@@ -666,6 +674,94 @@ class PricingSnapshotResourceIT {
 
     @Test
     @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor equals to
+        defaultPricingSnapshotFiltering(
+            "scheduleOccasionFactor.equals=" + DEFAULT_SCHEDULE_OCCASION_FACTOR,
+            "scheduleOccasionFactor.equals=" + UPDATED_SCHEDULE_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor in
+        defaultPricingSnapshotFiltering(
+            "scheduleOccasionFactor.in=" + DEFAULT_SCHEDULE_OCCASION_FACTOR + "," + UPDATED_SCHEDULE_OCCASION_FACTOR,
+            "scheduleOccasionFactor.in=" + UPDATED_SCHEDULE_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor is not null
+        defaultPricingSnapshotFiltering("scheduleOccasionFactor.specified=true", "scheduleOccasionFactor.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor is greater than or equal to
+        defaultPricingSnapshotFiltering(
+            "scheduleOccasionFactor.greaterThanOrEqual=" + DEFAULT_SCHEDULE_OCCASION_FACTOR,
+            "scheduleOccasionFactor.greaterThanOrEqual=" + UPDATED_SCHEDULE_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor is less than or equal to
+        defaultPricingSnapshotFiltering(
+            "scheduleOccasionFactor.lessThanOrEqual=" + DEFAULT_SCHEDULE_OCCASION_FACTOR,
+            "scheduleOccasionFactor.lessThanOrEqual=" + SMALLER_SCHEDULE_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsLessThanSomething() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor is less than
+        defaultPricingSnapshotFiltering(
+            "scheduleOccasionFactor.lessThan=" + UPDATED_SCHEDULE_OCCASION_FACTOR,
+            "scheduleOccasionFactor.lessThan=" + DEFAULT_SCHEDULE_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllPricingSnapshotsByScheduleOccasionFactorIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
+
+        // Get all the pricingSnapshotList where scheduleOccasionFactor is greater than
+        defaultPricingSnapshotFiltering(
+            "scheduleOccasionFactor.greaterThan=" + SMALLER_SCHEDULE_OCCASION_FACTOR,
+            "scheduleOccasionFactor.greaterThan=" + DEFAULT_SCHEDULE_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
     void getAllPricingSnapshotsByFinalPriceIsEqualToSomething() throws Exception {
         // Initialize the database
         insertedPricingSnapshot = pricingSnapshotRepository.saveAndFlush(pricingSnapshot);
@@ -948,6 +1044,7 @@ class PricingSnapshotResourceIT {
             .andExpect(jsonPath("$.[*].vehicleFactor").value(hasItem(sameNumber(DEFAULT_VEHICLE_FACTOR))))
             .andExpect(jsonPath("$.[*].floorFactor").value(hasItem(sameNumber(DEFAULT_FLOOR_FACTOR))))
             .andExpect(jsonPath("$.[*].seatFactor").value(hasItem(sameNumber(DEFAULT_SEAT_FACTOR))))
+            .andExpect(jsonPath("$.[*].scheduleOccasionFactor").value(hasItem(sameNumber(DEFAULT_SCHEDULE_OCCASION_FACTOR))))
             .andExpect(jsonPath("$.[*].finalPrice").value(hasItem(sameNumber(DEFAULT_FINAL_PRICE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
@@ -1006,6 +1103,7 @@ class PricingSnapshotResourceIT {
             .vehicleFactor(UPDATED_VEHICLE_FACTOR)
             .floorFactor(UPDATED_FLOOR_FACTOR)
             .seatFactor(UPDATED_SEAT_FACTOR)
+            .scheduleOccasionFactor(UPDATED_SCHEDULE_OCCASION_FACTOR)
             .finalPrice(UPDATED_FINAL_PRICE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
@@ -1107,9 +1205,10 @@ class PricingSnapshotResourceIT {
         partialUpdatedPricingSnapshot.setId(pricingSnapshot.getId());
 
         partialUpdatedPricingSnapshot
-            .finalPrice(UPDATED_FINAL_PRICE)
+            .scheduleOccasionFactor(UPDATED_SCHEDULE_OCCASION_FACTOR)
+            .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
-            .isDeleted(UPDATED_IS_DELETED)
+            .deletedAt(UPDATED_DELETED_AT)
             .deletedBy(UPDATED_DELETED_BY);
 
         restPricingSnapshotMockMvc
@@ -1147,6 +1246,7 @@ class PricingSnapshotResourceIT {
             .vehicleFactor(UPDATED_VEHICLE_FACTOR)
             .floorFactor(UPDATED_FLOOR_FACTOR)
             .seatFactor(UPDATED_SEAT_FACTOR)
+            .scheduleOccasionFactor(UPDATED_SCHEDULE_OCCASION_FACTOR)
             .finalPrice(UPDATED_FINAL_PRICE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)

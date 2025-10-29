@@ -41,6 +41,9 @@ public class PricingSnapshot implements Serializable {
     @Column(name = "seat_factor", precision = 21, scale = 2)
     private BigDecimal seatFactor;
 
+    @Column(name = "schedule_occasion_factor", precision = 21, scale = 2)
+    private BigDecimal scheduleOccasionFactor;
+
     @NotNull
     @Column(name = "final_price", precision = 21, scale = 2, nullable = false)
     private BigDecimal finalPrice;
@@ -132,6 +135,19 @@ public class PricingSnapshot implements Serializable {
 
     public void setSeatFactor(BigDecimal seatFactor) {
         this.seatFactor = seatFactor;
+    }
+
+    public BigDecimal getScheduleOccasionFactor() {
+        return this.scheduleOccasionFactor;
+    }
+
+    public PricingSnapshot scheduleOccasionFactor(BigDecimal scheduleOccasionFactor) {
+        this.setScheduleOccasionFactor(scheduleOccasionFactor);
+        return this;
+    }
+
+    public void setScheduleOccasionFactor(BigDecimal scheduleOccasionFactor) {
+        this.scheduleOccasionFactor = scheduleOccasionFactor;
     }
 
     public BigDecimal getFinalPrice() {
@@ -253,6 +269,7 @@ public class PricingSnapshot implements Serializable {
             ", vehicleFactor=" + getVehicleFactor() +
             ", floorFactor=" + getFloorFactor() +
             ", seatFactor=" + getSeatFactor() +
+            ", scheduleOccasionFactor=" + getScheduleOccasionFactor() +
             ", finalPrice=" + getFinalPrice() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +

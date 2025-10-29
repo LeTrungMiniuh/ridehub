@@ -7,26 +7,32 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity PricingSnapshot.
+        Added the entity AppliedPromotion.
     -->
-    <changeSet id="20251010121849-1" author="jhipster">
-        <createTable tableName="pricing_snapshot">
+    <changeSet id="20251029032824-1" author="jhipster">
+        <createTable tableName="applied_promotion">
             <column name="id" type="bigint" autoIncrement="true" startWith="1500">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="base_fare" type="decimal(21,2)">
+            <column name="promotion_id" type="bigint">
                 <constraints nullable="false" />
             </column>
-            <column name="vehicle_factor" type="decimal(21,2)">
+            <column name="promotion_code" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="floor_factor" type="decimal(21,2)">
+            <column name="policy_type" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="seat_factor" type="decimal(21,2)">
+            <column name="percent" type="integer">
                 <constraints nullable="true" />
             </column>
-            <column name="final_price" type="decimal(21,2)">
+            <column name="max_off" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="discount_amount" type="decimal(21,2)">
+                <constraints nullable="false" />
+            </column>
+            <column name="applied_at" type="${datetimeType}">
                 <constraints nullable="false" />
             </column>
             <column name="created_at" type="${datetimeType}">
@@ -49,9 +55,10 @@
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
-        <dropDefaultValue tableName="pricing_snapshot" columnName="created_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="pricing_snapshot" columnName="updated_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="pricing_snapshot" columnName="deleted_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="applied_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="deleted_at" columnDataType="${datetimeType}"/>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
@@ -64,18 +71,20 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20251010121849-1-data" author="jhipster" context="faker">
+    <changeSet id="20251029032824-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/pricing_snapshot.csv"
+                  file="config/liquibase/fake-data/applied_promotion.csv"
                   separator=";"
-                  tableName="pricing_snapshot"
+                  tableName="applied_promotion"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="base_fare" type="numeric"/>
-            <column name="vehicle_factor" type="numeric"/>
-            <column name="floor_factor" type="numeric"/>
-            <column name="seat_factor" type="numeric"/>
-            <column name="final_price" type="numeric"/>
+            <column name="promotion_id" type="numeric"/>
+            <column name="promotion_code" type="string"/>
+            <column name="policy_type" type="string"/>
+            <column name="percent" type="numeric"/>
+            <column name="max_off" type="numeric"/>
+            <column name="discount_amount" type="numeric"/>
+            <column name="applied_at" type="date"/>
             <column name="created_at" type="date"/>
             <column name="updated_at" type="date"/>
             <column name="is_deleted" type="boolean"/>

@@ -18,7 +18,6 @@ import com.ridehub.booking.web.rest.errors.SeatNotAvailableException;
 import com.ridehub.msroute.client.api.SeatLockResourceMsrouteApi;
 import com.ridehub.msroute.client.model.AttachBookingRequestDTO;
 import com.ridehub.msroute.client.model.SeatLockActionRequestDTO;
-import com.ridehub.msroute.client.model.SeatLockActionResponseDTO;
 import com.ridehub.msroute.client.model.SeatLockRequestDTO;
 import com.ridehub.msroute.client.model.SeatLockResponseDTO;
 import com.ridehub.msroute.client.model.SeatValidateLockRequestDTO;

@@ -70,6 +70,12 @@ public class PricingSnapshotAsserts {
                     .isEqualTo(expected.getSeatFactor())
             )
             .satisfies(a ->
+                assertThat(a.getScheduleOccasionFactor())
+                    .as("check scheduleOccasionFactor")
+                    .usingComparator(bigDecimalCompareTo)
+                    .isEqualTo(expected.getScheduleOccasionFactor())
+            )
+            .satisfies(a ->
                 assertThat(a.getFinalPrice())
                     .as("check finalPrice")
                     .usingComparator(bigDecimalCompareTo)

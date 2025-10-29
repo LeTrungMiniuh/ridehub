@@ -76,6 +76,7 @@ public class PricingSnapshotQueryService extends QueryService<PricingSnapshot> {
                 buildRangeSpecification(criteria.getVehicleFactor(), PricingSnapshot_.vehicleFactor),
                 buildRangeSpecification(criteria.getFloorFactor(), PricingSnapshot_.floorFactor),
                 buildRangeSpecification(criteria.getSeatFactor(), PricingSnapshot_.seatFactor),
+                buildRangeSpecification(criteria.getScheduleOccasionFactor(), PricingSnapshot_.scheduleOccasionFactor),
                 buildRangeSpecification(criteria.getFinalPrice(), PricingSnapshot_.finalPrice),
                 buildRangeSpecification(criteria.getCreatedAt(), PricingSnapshot_.createdAt),
                 buildRangeSpecification(criteria.getUpdatedAt(), PricingSnapshot_.updatedAt),

@@ -80,6 +80,7 @@ class PricingSnapshotCriteriaTest {
         pricingSnapshotCriteria.vehicleFactor();
         pricingSnapshotCriteria.floorFactor();
         pricingSnapshotCriteria.seatFactor();
+        pricingSnapshotCriteria.scheduleOccasionFactor();
         pricingSnapshotCriteria.finalPrice();
         pricingSnapshotCriteria.createdAt();
         pricingSnapshotCriteria.updatedAt();
@@ -98,6 +99,7 @@ class PricingSnapshotCriteriaTest {
                 condition.apply(criteria.getVehicleFactor()) &&
                 condition.apply(criteria.getFloorFactor()) &&
                 condition.apply(criteria.getSeatFactor()) &&
+                condition.apply(criteria.getScheduleOccasionFactor()) &&
                 condition.apply(criteria.getFinalPrice()) &&
                 condition.apply(criteria.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt()) &&
@@ -121,6 +123,7 @@ class PricingSnapshotCriteriaTest {
                 condition.apply(criteria.getVehicleFactor(), copy.getVehicleFactor()) &&
                 condition.apply(criteria.getFloorFactor(), copy.getFloorFactor()) &&
                 condition.apply(criteria.getSeatFactor(), copy.getSeatFactor()) &&
+                condition.apply(criteria.getScheduleOccasionFactor(), copy.getScheduleOccasionFactor()) &&
                 condition.apply(criteria.getFinalPrice(), copy.getFinalPrice()) &&
                 condition.apply(criteria.getCreatedAt(), copy.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt(), copy.getUpdatedAt()) &&
