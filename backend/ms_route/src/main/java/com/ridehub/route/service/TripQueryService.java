@@ -197,8 +197,47 @@ public class TripQueryService extends QueryService<Trip> {
                                                                                 .join(District_.province, JoinType.LEFT)
                                                                                 .get(Province_.provinceCode)));
                         }
-                }
-                return specification;
         }
+        return specification;
+    }
+
+    /**
+     * Check if a trip exists by criteria.
+     * 
+     * @param criteria The object which holds all the filters, which entities should match.
+     * @return true if entity exists, false otherwise.
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByCriteria(TripCriteria criteria) {
+        LOG.debug("exists by criteria : {}", criteria);
+        final Specification<Trip> specification = createSpecification(criteria);
+        return tripRepository.exists(specification);
+    }
+
+    /**
+     * Find a single trip by criteria.
+     * 
+     * @param criteria The object which holds all the filters, which entities should match.
+     * @return optional entity.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Trip> findOneByCriteria(TripCriteria criteria) {
+        LOG.debug("find one by criteria : {}", criteria);
+        final Specification<Trip> specification = createSpecification(criteria);
+        return tripRepository.findOne(specification);
+    }
+
+    /**
+     * Find trips by criteria.
+     * 
+     * @param criteria The object which holds all the filters, which entities should match.
+     * @return list of entities.
+     */
+    @Transactional(readOnly = true)
+    public List<Trip> findByCriteria(TripCriteria criteria) {
+        LOG.debug("find by criteria : {}", criteria);
+        final Specification<Trip> specification = createSpecification(criteria);
+        return tripRepository.findAll(specification);
+    }
 
 }

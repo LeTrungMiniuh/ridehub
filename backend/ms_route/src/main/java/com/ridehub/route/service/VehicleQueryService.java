@@ -124,6 +124,18 @@ public class VehicleQueryService extends QueryService<Vehicle> {
     }
 
     /**
+     * Find all vehicles using direct repository access.
+     * This is more efficient than using empty criteria.
+     * 
+     * @return list of all vehicles
+     */
+    @Transactional(readOnly = true)
+    public List<Vehicle> findAll() {
+        LOG.debug("find all vehicles");
+        return vehicleRepository.findAll();
+    }
+
+    /**
      * Function to convert {@link VehicleCriteria} to a {@link Specification}
      * 
      * @param criteria The object which holds all the filters, which the entities
@@ -140,8 +152,7 @@ public class VehicleQueryService extends QueryService<Vehicle> {
                     buildSpecification(criteria.getType(), Vehicle_.type),
                     buildRangeSpecification(criteria.getTypeFactor(), Vehicle_.typeFactor),
                     buildStringSpecification(criteria.getPlateNumber(), Vehicle_.plateNumber),
-                    buildStringSpecification(criteria.getBrand(), Vehicle_.brand),
-                    buildStringSpecification(criteria.getDescription(), Vehicle_.description),
+                    buildStringSpecification(criteria.getBrand(), Vehicle_.description),
                     buildSpecification(criteria.getStatus(), Vehicle_.status),
                     buildRangeSpecification(criteria.getCreatedAt(), Vehicle_.createdAt),
                     buildRangeSpecification(criteria.getUpdatedAt(), Vehicle_.updatedAt),

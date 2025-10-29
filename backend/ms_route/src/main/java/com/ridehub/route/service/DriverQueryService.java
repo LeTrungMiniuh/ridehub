@@ -49,15 +49,28 @@ public class DriverQueryService extends QueryService<Driver> {
     }
 
     /**
-     * Return the number of matching entities in the database.
+     * Return number of matching entities in database.
      * @param criteria The object which holds all the filters, which the entities should match.
-     * @return the number of matching entities.
+     * @return number of matching entities.
      */
     @Transactional(readOnly = true)
     public long countByCriteria(DriverCriteria criteria) {
         LOG.debug("count by criteria : {}", criteria);
         final Specification<Driver> specification = createSpecification(criteria);
         return driverRepository.count(specification);
+    }
+
+    /**
+     * Find driver entities by criteria.
+     * 
+     * @param criteria The object which holds all the filters, which entities should match.
+     * @return list of driver entities.
+     */
+    @Transactional(readOnly = true)
+    public List<Driver> findEntitiesByCriteria(DriverCriteria criteria) {
+        LOG.debug("find entities by criteria : {}", criteria);
+        final Specification<Driver> specification = createSpecification(criteria);
+        return driverRepository.findAll(specification);
     }
 
     /**

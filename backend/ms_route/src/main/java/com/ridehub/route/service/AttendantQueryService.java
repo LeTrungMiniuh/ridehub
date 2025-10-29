@@ -82,4 +82,17 @@ public class AttendantQueryService extends QueryService<Attendant> {
         }
         return specification;
     }
+
+    /**
+     * Find attendant entities by criteria.
+     * 
+     * @param criteria The object which holds all the filters, which entities should match.
+     * @return list of attendant entities.
+     */
+    @Transactional(readOnly = true)
+    public List<Attendant> findEntitiesByCriteria(AttendantCriteria criteria) {
+        LOG.debug("find entities by criteria : {}", criteria);
+        final Specification<Attendant> specification = createSpecification(criteria);
+        return attendantRepository.findAll(specification);
+    }
 }
