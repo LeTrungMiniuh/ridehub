@@ -112,7 +112,7 @@
         <dependency>
             <groupId>com.ridehub.clients</groupId>
             <artifactId>client-open-feign-avro</artifactId>
-            <version>2.2.3</version>
+            <version>2.2.4</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/io.confluent/kafka-avro-serializer -->
         <dependency>

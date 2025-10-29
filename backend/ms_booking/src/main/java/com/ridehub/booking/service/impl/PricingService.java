@@ -64,13 +64,14 @@ public class PricingService {
         // === 1️⃣ Trip lookup (no cache yet) ===
         TripDetailVM tripVM = tripResourceMsrouteApi.getTripDetail(tripId);
 
-        BigDecimal baseFare = nn(tripVM.getTripDTO().getBaseFare(), BigDecimal.ZERO);
+        BigDecimal baseFare = nn(tripVM.getTripDTO().getRoute().getBaseFare(), BigDecimal.ZERO);
         BigDecimal vehicleFactor = nn(tripVM.getDetailVM().getVehicle().getTypeFactor(), BigDecimal.ONE);
+        BigDecimal occasionFactor = nn(tripVM.getTripDTO().getOccasionFactor(), BigDecimal.ONE);
         Long routeId = tripVM.getTripDTO().getRoute().getId();
         LocalDate travelDate = toLocalDate(tripVM.getTripDTO().getDepartureTime());
 
         // === 3️⃣ Compute total base price ===
-        List<BigDecimal> perSeatPrices = computeSeatPrices(tripVM, seatNos, baseFare, vehicleFactor);
+        List<BigDecimal> perSeatPrices = computeSeatPrices(tripVM, seatNos, baseFare, vehicleFactor, occasionFactor);
         BigDecimal total = perSeatPrices.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // === 4️⃣ Try promo cache (Redis) ===
@@ -108,6 +109,7 @@ public class PricingService {
         PricingSnapshotDTO snap = new PricingSnapshotDTO();
         snap.setBaseFare(baseFare);
         snap.setVehicleFactor(vehicleFactor);
+        snap.setScheduleOccasionFactor(occasionFactor);
         snap.setFloorFactor(BigDecimal.ONE);
         snap.setSeatFactor(BigDecimal.ONE);
         snap.setFinalPrice(total);
@@ -229,7 +231,7 @@ public class PricingService {
     // =========================
     // ---- helper: compute per-seat prices ----
     private List<BigDecimal> computeSeatPrices(
-            TripDetailVM tripVM, List<String> seatNos, BigDecimal baseFare, BigDecimal vehicleFactor) {
+            TripDetailVM tripVM, List<String> seatNos, BigDecimal baseFare, BigDecimal vehicleFactor, BigDecimal occasionFactor) {
 
         Map<Long, BigDecimal> floorFactorById = new HashMap<>();
         tripVM.getDetailVM().getFloors()
@@ -248,7 +250,7 @@ public class PricingService {
             Long floorId = seat.getFloor().getId();
             BigDecimal floorFactor = floorFactorById.getOrDefault(floorId, BigDecimal.ONE);
             BigDecimal seatFactor = nn(seat.getPriceFactor(), BigDecimal.ONE);
-            perSeat.add(baseFare.multiply(vehicleFactor).multiply(floorFactor).multiply(seatFactor));
+            perSeat.add(baseFare.multiply(vehicleFactor).multiply(occasionFactor).multiply(floorFactor).multiply(seatFactor));
         }
         return perSeat;
     }
