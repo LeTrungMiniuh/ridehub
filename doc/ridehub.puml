@@ -1,5 +1,5 @@
 @startuml
-title RideHub – 4 Microservices\n(Updated from JDL - DB per service, Central Redis, Single Kafka, OAuth2 via Keycloak)
+title RideHub – 4 Microservices\n(Updated: baseFare moved to Route; added Schedule with occasion pricing)
 
 left to right direction
 hide methods
@@ -92,6 +92,16 @@ enum LockStatus {
 enum SeatType {
   SLEEPER
   NORMAL
+}
+
+' New: Occasion type for schedule-driven pricing
+enum OccasionType {
+  NORMAL
+  WEEKEND
+  HOLIDAY
+  PEAK
+  OFF_PEAK
+  TET
 }
 
 ' From Avro enums (for cross-service communication)
@@ -190,7 +200,7 @@ FileUser ..> MINIO : "stored in"
 ' =============================
 '          MS-ROUTE
 ' =============================
-package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock)" as MS_ROUTE {
+package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock, Schedule)" as MS_ROUTE {
 
   ' ----- Vietnam Address Hierarchy -----
   class Province extends BaseEntity {
@@ -241,6 +251,7 @@ package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock)" as MS_
   class Route extends BaseEntity {
     +routeCode: String {unique}
     +distanceKm: BigDecimal
+    +baseFare: BigDecimal ' moved from Trip
   }
 
   class Vehicle extends BaseEntity {
@@ -269,11 +280,24 @@ package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock)" as MS_
     +type: SeatType
   }
 
+  ' New: Schedule to generate Trips and affect pricing
+  class Schedule extends BaseEntity {
+    +scheduleCode: String {unique}
+    +startDate: LocalDate
+    +endDate: LocalDate
+    +daysOfWeek: String ' e.g. "MON,WED,FRI"
+    +departureTime: LocalTime
+    +arrivalTime: LocalTime
+    +occasion: OccasionType
+    +occasionFactor: BigDecimal ' multiplies price depending on occasion
+    +active: Boolean
+  }
+
   class Trip extends BaseEntity {
     +tripCode: String {unique}
     +departureTime: Instant
     +arrivalTime: Instant
-    +baseFare: BigDecimal
+    ' baseFare removed; now on Route
   }
 
   ' ---- Staff ----
@@ -328,7 +352,9 @@ Vehicle "1" -- "1" SeatMap : "uses"
 SeatMap "1" o-- "1..*" Floor : "has floors"
 Floor "1" o-- "1..*" Seat : "has seats"
 
-' Trip
+' Schedule & Trip
+Route "1" o-- "0..*" Schedule : "schedules"
+Schedule "1" o-- "0..*" Trip : "generates trips"
 Trip "*" -- "1" Route : "on route"
 Trip "*" -- "1" Vehicle : "uses vehicle"
 Trip "*" -- "1" Driver : "driven by"
@@ -402,6 +428,7 @@ package "ms-booking\n(Bookings, Tickets, Payments, Invoices)" as MS_BOOK {
     +vehicleFactor: BigDecimal
     +floorFactor: BigDecimal
     +seatFactor: BigDecimal
+    +scheduleOccasionFactor: BigDecimal
     +finalPrice: BigDecimal
   }
 
@@ -450,8 +477,10 @@ Ticket ..> Trip : "references tripId"
 Ticket ..> Route : "references routeId"
 Ticket ..> Seat : "references seatId"
 
-' Pricing dependencies
-PricingService ..> Trip : "reads baseFare"
+' Pricing dependencies (updated)
+PricingService ..> Route : "reads baseFare"
+PricingService ..> Trip : "reads scheduleId, times"
+PricingService ..> Schedule : "reads occasion & factor"
 PricingService ..> Vehicle : "reads typeFactor"
 PricingService ..> Floor : "reads priceFactorFloor"
 PricingService ..> Seat : "reads priceFactor"
@@ -561,16 +590,17 @@ MS_PROMO ..> PROMODB : "MySQL DB"
 '            NOTES
 ' =============================
 note bottom of PricingService
-  **Ticket Pricing Formula:**
+  **Ticket Pricing Formula (updated):**
   
-  price = Trip.baseFare
+  price = Route.baseFare
     × Vehicle.typeFactor
     × Floor.priceFactorFloor
     × Seat.priceFactor
+    × Schedule.occasionFactor
   
   Then apply promotions from ms-promotion.
   Store final calculation in PricingSnapshot
-  to prevent price drift.
+  (also store scheduleOccasionFactor) to prevent price drift.
 end note
 
 note bottom of SeatLock

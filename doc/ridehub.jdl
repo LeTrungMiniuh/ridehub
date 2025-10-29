@@ -10,10 +10,13 @@ enum PaymentStatus { INITIATED, PROCESSING, SUCCESS, FAILED, REFUNDED, PAYMENT_S
 // From ms_route domain enums
 enum StaffStatus { ACTIVE, INACTIVE }
 enum Gender { MALE, FEMALE, OTHER }
-enum VehicleStatus { ACTIVE, MAINTENANCE, RETIRED } // Hoạt động / Bảo trì / Đã ngừng
+enum VehicleStatus { ACTIVE, MAINTENANCE, RETIRED }
 enum VehicleType { STANDARD_BUS_VIP, STANDARD_BUS_NORMAL, LIMOUSINE }
-enum LockStatus { HELD, EXPIRED, COMMITTED } // NEW
+enum LockStatus { HELD, EXPIRED, COMMITTED }
 enum SeatType { SLEEPER, NORMAL }
+
+// New: schedule-driven pricing occasion
+enum OccasionType { NORMAL, WEEKEND, HOLIDAY, PEAK, OFF_PEAK, TET }
 
 // From Avro enums (for cross-service communication)
 enum AvroBookingStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }
@@ -23,7 +26,8 @@ enum AvroPaymentStatus { PENDING, COMPLETED, FAILED, REFUNDED }
 enum TransportType { TRAIN, BUS }
 
 // ======================================================
-// Applications
+/* Applications */
+ // (unchanged except entity lists reflect new entities)
 // ======================================================
 
 application {
@@ -72,8 +76,8 @@ application {
     serverPort 8082
     enableSwaggerCodegen true
   }
-  // Removed TripSeat from the entities list
-  entities Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Trip, Staff, Driver, Attendant, SeatLock, FileRoute
+  // ADDED: Schedule, ScheduleTimeSlot ; REMOVED: Trip.baseFare (moved to Route)
+  entities Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, Trip, Staff, Driver, Attendant, SeatLock, FileRoute
 }
 
 application {
@@ -151,7 +155,6 @@ relationship OneToOne {
   AppUser{profile} to Profile{user required}
 }
 
-// ---- File storage (ms_user)
 entity FileUser {
   bucket String required
   objectKey String required
@@ -173,7 +176,7 @@ relationship OneToOne {
 // =============================
 
 entity Province {
-  provinceCode String required unique   // <-- thêm unique
+  provinceCode String required unique
   name String required
   nameEn String
   fullName String
@@ -189,7 +192,7 @@ entity Province {
 }
 
 entity District {
-  districtCode String required unique   // <-- thêm unique
+  districtCode String required unique
   name String required
   nameEn String
   fullName String
@@ -204,7 +207,7 @@ entity District {
 }
 
 entity Ward {
-  wardCode String required unique       // <-- thêm unique
+  wardCode String required unique
   name String required
   nameEn String
   fullName String
@@ -254,6 +257,8 @@ relationship OneToOne {
 entity Route {
   routeCode String required unique maxlength(40)
   distanceKm BigDecimal
+  // moved from Trip:
+  baseFare BigDecimal required
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -281,7 +286,7 @@ entity Vehicle {
   plateNumber String required unique
   brand String
   description String
-  status VehicleStatus required   // <-- NEW
+  status VehicleStatus required
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -308,7 +313,37 @@ entity Seat {
   rowNo Integer
   colNo Integer
   priceFactor BigDecimal
-  type SeatType   // <--- added
+  type SeatType
+  createdAt Instant required
+  updatedAt Instant
+  isDeleted Boolean
+  deletedAt Instant
+  deletedBy UUID
+}
+
+/* NEW: Schedule & ScheduleTimeSlot to generate multiple trips per day */
+entity Schedule {
+  scheduleCode String required unique
+  startDate LocalDate
+  endDate LocalDate
+  daysOfWeek String // e.g. "MON,WED,FRI"
+  occasion OccasionType
+  occasionFactor BigDecimal
+  active Boolean required
+  createdAt Instant required
+  updatedAt Instant
+  isDeleted Boolean
+  deletedAt Instant
+  deletedBy UUID
+}
+
+entity ScheduleTimeSlot {
+  slotCode String required unique
+  departureTime LocalTime required
+  arrivalTime LocalTime required
+  bufferMinutes Integer
+  sequence Integer
+  active Boolean required
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -317,10 +352,10 @@ entity Seat {
 }
 
 entity Trip {
-  tripCode String required unique       // <-- thêm required unique
+  tripCode String required unique
   departureTime Instant required
   arrivalTime Instant required
-  baseFare BigDecimal required
+  // baseFare removed; now on Route
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -328,14 +363,18 @@ entity Trip {
   deletedBy UUID
 }
 
-// REMOVED entity TripSeat (per UML)
+// Relationships inside ms_route
+relationship OneToMany {
+  Route{schedules}           to Schedule{route required},
+  Schedule{timeSlots}        to ScheduleTimeSlot{schedule required}
+}
 
-// Adjusted relationship block: removed TripSeat{trip required}
 relationship ManyToOne {
-  Floor{seatMap required} to SeatMap,
-  Seat{floor required}    to Floor,
-  Trip{route required}    to Route,
-  Trip{vehicle required}  to Vehicle
+  Floor{seatMap required}    to SeatMap,
+  Seat{floor required}       to Floor,
+  Trip{route required}       to Route,
+  Trip{vehicle required}     to Vehicle,
+  Trip{slot required}        to ScheduleTimeSlot  // NEW: Trip generated from slot
 }
 
 entity Staff {
@@ -385,7 +424,7 @@ entity SeatLock {
   status LockStatus required
   expiresAt Instant required
   idempotencyKey String unique maxlength(80)
-  bookingId Long // NEW: makes dedupe & audits much easier
+  bookingId Long
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -393,8 +432,6 @@ entity SeatLock {
   deletedBy UUID
 }
 
-
-// ---- File storage (ms_route)
 entity FileRoute {
   bucket String required
   objectKey String required
@@ -408,8 +445,8 @@ entity FileRoute {
 }
 
 relationship ManyToOne {
-  Station{stationImg} to FileRoute
-  Vehicle{vehicleImg} to FileRoute
+  Station{stationImg} to FileRoute,
+  Vehicle{vehicleImg} to FileRoute,
   SeatMap{seatMapImg} to FileRoute
 }
 
@@ -428,9 +465,9 @@ entity Ticket {
   timeFrom Instant
   timeTo Instant
   checkedIn Boolean
-  tripId Long required        // was UUID
-  routeId Long required       // was UUID
-  seatId Long required        // was UUID
+  tripId Long required
+  routeId Long required
+  seatId Long required
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -448,16 +485,14 @@ entity Booking {
   idempotencyKey String maxlength(80)
   tripId Long required
   lockGroupId String maxlength(36)
-  expiresAt Instant                 // <— add
-  timeoutMinutes Integer            // <— add
+  expiresAt Instant
+  timeoutMinutes Integer
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
   deletedAt Instant
   deletedBy UUID
 }
-
-
 
 entity Invoice {
   invoiceNo String required unique
@@ -473,8 +508,8 @@ entity Invoice {
 }
 
 entity PaymentTransaction {
-  transactionId String required unique maxlength(80) // provider TXN id (webhook)
-  orderRef String maxlength(80) // NEW: what you send to gateway (use bookingCode)
+  transactionId String required unique maxlength(80)
+  orderRef String maxlength(80)
   method PaymentMethod
   status PaymentStatus
   amount BigDecimal
@@ -489,10 +524,11 @@ entity PaymentTransaction {
 }
 
 entity PricingSnapshot {
-  baseFare BigDecimal required
+  baseFare BigDecimal required            // from Route at booking time
   vehicleFactor BigDecimal
   floorFactor BigDecimal
   seatFactor BigDecimal
+  scheduleOccasionFactor BigDecimal       // NEW
   finalPrice BigDecimal required
   createdAt Instant required
   updatedAt Instant
@@ -502,7 +538,7 @@ entity PricingSnapshot {
 }
 
 entity AppliedPromotion {
-  promotionId Long required   // was UUID
+  promotionId Long required
   promotionCode String
   policyType String
   percent Integer
@@ -528,7 +564,6 @@ entity PaymentWebhookLog {
   deletedBy UUID
 }
 
-// ---- File storage (ms_booking)
 entity FileBooking {
   bucket String required
   objectKey String required
@@ -546,15 +581,15 @@ relationship OneToOne {
 }
 
 relationship OneToMany {
-  Booking{tickets}            to Ticket{booking required},
-  Booking{appliedPromos}      to AppliedPromotion{booking required}
-  Booking{pricingSnapshots}   to PricingSnapshot{booking required},
+  Booking{tickets}             to Ticket{booking required},
+  Booking{appliedPromos}       to AppliedPromotion{booking required},
+  Booking{pricingSnapshots}    to PricingSnapshot{booking required},
   PaymentTransaction{webhooks} to PaymentWebhookLog{paymentTransaction required}
 }
 
 relationship OneToOne {
-  Booking{invoice}            to Invoice{booking required},
-  Booking{paymentTransaction} to PaymentTransaction{booking}
+  Booking{invoice}             to Invoice{booking required},
+  Booking{paymentTransaction}  to PaymentTransaction{booking}
 }
 
 // =============================
@@ -621,7 +656,7 @@ entity ConditionByLocation {
 }
 
 entity ConditionRouteItem {
-  routeId Long required       // was UUID
+  routeId Long required
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -640,9 +675,9 @@ entity ConditionDateItem {
 }
 
 entity ConditionLocationItem {
-  provinceId Long             // was UUID
-  districtId Long             // was UUID
-  wardId Long                 // was UUID
+  provinceId Long
+  districtId Long
+  wardId Long
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -650,13 +685,12 @@ entity ConditionLocationItem {
   deletedBy UUID
 }
 
-// ---- File storage (ms_promotion)
 entity FilePromotion {
   bucket String required
   objectKey String required
   contentType String
   size Long
-  isBanner Boolean       // <— add this if you want to pick one as the banner
+  isBanner Boolean
   createdAt Instant required
   updatedAt Instant
   isDeleted Boolean
@@ -685,8 +719,7 @@ relationship OneToMany {
 
 microservice AppUser, Profile, FileUser with ms_user
 
-// Removed TripSeat in mapping
-microservice Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Trip, Staff, Driver, Attendant, SeatLock, FileRoute with ms_route
+microservice Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, Trip, Staff, Driver, Attendant, SeatLock, FileRoute with ms_route
 
 microservice Booking, Ticket, Invoice, PaymentTransaction, AppliedPromotion, PricingSnapshot, PaymentWebhookLog, FileBooking with ms_booking
 microservice Promotion, BuyNGetMFree, PercentOffTotal, ConditionByRoute, ConditionByDate, ConditionByLocation, ConditionRouteItem, ConditionDateItem, ConditionLocationItem, FilePromotion with ms_promotion
@@ -719,4 +752,6 @@ deployment {
 
 // - Create composite unique on SeatLock(tripId, seatNo) when status in (HELD, COMMITTED) via Liquibase/Flyway.
 // - Consider Outbox tables in ms_route/ms_booking for Kafka publish-after-commit.
-// - Add proper indexes: Trip(departureTime, route_id), Booking(bookingCode), PaymentWebhookLog(payloadHash).
+// - Add proper indexes: Trip(departureTime, route_id, slot_id), Booking(bookingCode), PaymentWebhookLog(payloadHash).
+// - Pricing formula at booking time:
+//   final = Route.baseFare * Vehicle.typeFactor * Floor.priceFactorFloor * Seat.priceFactor * Schedule.occasionFactor - promos
