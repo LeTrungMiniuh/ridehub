@@ -1,6 +1,5 @@
 package com.ridehub.route.service.criteria;
 
-import com.ridehub.route.domain.enumeration.OccasionType;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,23 +20,6 @@ import tech.jhipster.service.filter.*;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class ScheduleCriteria implements Serializable, Criteria {
 
-    /**
-     * Class for filtering OccasionType
-     */
-    public static class OccasionTypeFilter extends Filter<OccasionType> {
-
-        public OccasionTypeFilter() {}
-
-        public OccasionTypeFilter(OccasionTypeFilter filter) {
-            super(filter);
-        }
-
-        @Override
-        public OccasionTypeFilter copy() {
-            return new OccasionTypeFilter(this);
-        }
-    }
-
     private static final long serialVersionUID = 1L;
 
     private LongFilter id;
@@ -49,10 +31,6 @@ public class ScheduleCriteria implements Serializable, Criteria {
     private LocalDateFilter endDate;
 
     private StringFilter daysOfWeek;
-
-    private OccasionTypeFilter occasion;
-
-    private BigDecimalFilter occasionFactor;
 
     private BooleanFilter active;
 
@@ -68,6 +46,8 @@ public class ScheduleCriteria implements Serializable, Criteria {
 
     private LongFilter timeSlotsId;
 
+    private LongFilter occasionRuleId;
+
     private LongFilter routeId;
 
     private Boolean distinct;
@@ -80,8 +60,6 @@ public class ScheduleCriteria implements Serializable, Criteria {
         this.startDate = other.optionalStartDate().map(LocalDateFilter::copy).orElse(null);
         this.endDate = other.optionalEndDate().map(LocalDateFilter::copy).orElse(null);
         this.daysOfWeek = other.optionalDaysOfWeek().map(StringFilter::copy).orElse(null);
-        this.occasion = other.optionalOccasion().map(OccasionTypeFilter::copy).orElse(null);
-        this.occasionFactor = other.optionalOccasionFactor().map(BigDecimalFilter::copy).orElse(null);
         this.active = other.optionalActive().map(BooleanFilter::copy).orElse(null);
         this.createdAt = other.optionalCreatedAt().map(InstantFilter::copy).orElse(null);
         this.updatedAt = other.optionalUpdatedAt().map(InstantFilter::copy).orElse(null);
@@ -89,6 +67,7 @@ public class ScheduleCriteria implements Serializable, Criteria {
         this.deletedAt = other.optionalDeletedAt().map(InstantFilter::copy).orElse(null);
         this.deletedBy = other.optionalDeletedBy().map(UUIDFilter::copy).orElse(null);
         this.timeSlotsId = other.optionalTimeSlotsId().map(LongFilter::copy).orElse(null);
+        this.occasionRuleId = other.optionalOccasionRuleId().map(LongFilter::copy).orElse(null);
         this.routeId = other.optionalRouteId().map(LongFilter::copy).orElse(null);
         this.distinct = other.distinct;
     }
@@ -191,44 +170,6 @@ public class ScheduleCriteria implements Serializable, Criteria {
 
     public void setDaysOfWeek(StringFilter daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
-    }
-
-    public OccasionTypeFilter getOccasion() {
-        return occasion;
-    }
-
-    public Optional<OccasionTypeFilter> optionalOccasion() {
-        return Optional.ofNullable(occasion);
-    }
-
-    public OccasionTypeFilter occasion() {
-        if (occasion == null) {
-            setOccasion(new OccasionTypeFilter());
-        }
-        return occasion;
-    }
-
-    public void setOccasion(OccasionTypeFilter occasion) {
-        this.occasion = occasion;
-    }
-
-    public BigDecimalFilter getOccasionFactor() {
-        return occasionFactor;
-    }
-
-    public Optional<BigDecimalFilter> optionalOccasionFactor() {
-        return Optional.ofNullable(occasionFactor);
-    }
-
-    public BigDecimalFilter occasionFactor() {
-        if (occasionFactor == null) {
-            setOccasionFactor(new BigDecimalFilter());
-        }
-        return occasionFactor;
-    }
-
-    public void setOccasionFactor(BigDecimalFilter occasionFactor) {
-        this.occasionFactor = occasionFactor;
     }
 
     public BooleanFilter getActive() {
@@ -364,6 +305,25 @@ public class ScheduleCriteria implements Serializable, Criteria {
         this.timeSlotsId = timeSlotsId;
     }
 
+    public LongFilter getOccasionRuleId() {
+        return occasionRuleId;
+    }
+
+    public Optional<LongFilter> optionalOccasionRuleId() {
+        return Optional.ofNullable(occasionRuleId);
+    }
+
+    public LongFilter occasionRuleId() {
+        if (occasionRuleId == null) {
+            setOccasionRuleId(new LongFilter());
+        }
+        return occasionRuleId;
+    }
+
+    public void setOccasionRuleId(LongFilter occasionRuleId) {
+        this.occasionRuleId = occasionRuleId;
+    }
+
     public LongFilter getRouteId() {
         return routeId;
     }
@@ -417,8 +377,6 @@ public class ScheduleCriteria implements Serializable, Criteria {
             Objects.equals(startDate, that.startDate) &&
             Objects.equals(endDate, that.endDate) &&
             Objects.equals(daysOfWeek, that.daysOfWeek) &&
-            Objects.equals(occasion, that.occasion) &&
-            Objects.equals(occasionFactor, that.occasionFactor) &&
             Objects.equals(active, that.active) &&
             Objects.equals(createdAt, that.createdAt) &&
             Objects.equals(updatedAt, that.updatedAt) &&
@@ -426,6 +384,7 @@ public class ScheduleCriteria implements Serializable, Criteria {
             Objects.equals(deletedAt, that.deletedAt) &&
             Objects.equals(deletedBy, that.deletedBy) &&
             Objects.equals(timeSlotsId, that.timeSlotsId) &&
+            Objects.equals(occasionRuleId, that.occasionRuleId) &&
             Objects.equals(routeId, that.routeId) &&
             Objects.equals(distinct, that.distinct)
         );
@@ -439,8 +398,6 @@ public class ScheduleCriteria implements Serializable, Criteria {
             startDate,
             endDate,
             daysOfWeek,
-            occasion,
-            occasionFactor,
             active,
             createdAt,
             updatedAt,
@@ -448,6 +405,7 @@ public class ScheduleCriteria implements Serializable, Criteria {
             deletedAt,
             deletedBy,
             timeSlotsId,
+            occasionRuleId,
             routeId,
             distinct
         );
@@ -462,8 +420,6 @@ public class ScheduleCriteria implements Serializable, Criteria {
             optionalStartDate().map(f -> "startDate=" + f + ", ").orElse("") +
             optionalEndDate().map(f -> "endDate=" + f + ", ").orElse("") +
             optionalDaysOfWeek().map(f -> "daysOfWeek=" + f + ", ").orElse("") +
-            optionalOccasion().map(f -> "occasion=" + f + ", ").orElse("") +
-            optionalOccasionFactor().map(f -> "occasionFactor=" + f + ", ").orElse("") +
             optionalActive().map(f -> "active=" + f + ", ").orElse("") +
             optionalCreatedAt().map(f -> "createdAt=" + f + ", ").orElse("") +
             optionalUpdatedAt().map(f -> "updatedAt=" + f + ", ").orElse("") +
@@ -471,6 +427,7 @@ public class ScheduleCriteria implements Serializable, Criteria {
             optionalDeletedAt().map(f -> "deletedAt=" + f + ", ").orElse("") +
             optionalDeletedBy().map(f -> "deletedBy=" + f + ", ").orElse("") +
             optionalTimeSlotsId().map(f -> "timeSlotsId=" + f + ", ").orElse("") +
+            optionalOccasionRuleId().map(f -> "occasionRuleId=" + f + ", ").orElse("") +
             optionalRouteId().map(f -> "routeId=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";

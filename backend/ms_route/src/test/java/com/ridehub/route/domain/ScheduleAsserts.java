@@ -1,6 +1,5 @@
 package com.ridehub.route.domain;
 
-import static com.ridehub.route.domain.AssertUtils.bigDecimalCompareTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ScheduleAsserts {
@@ -52,13 +51,6 @@ public class ScheduleAsserts {
             .satisfies(a -> assertThat(a.getStartDate()).as("check startDate").isEqualTo(expected.getStartDate()))
             .satisfies(a -> assertThat(a.getEndDate()).as("check endDate").isEqualTo(expected.getEndDate()))
             .satisfies(a -> assertThat(a.getDaysOfWeek()).as("check daysOfWeek").isEqualTo(expected.getDaysOfWeek()))
-            .satisfies(a -> assertThat(a.getOccasion()).as("check occasion").isEqualTo(expected.getOccasion()))
-            .satisfies(a ->
-                assertThat(a.getOccasionFactor())
-                    .as("check occasionFactor")
-                    .usingComparator(bigDecimalCompareTo)
-                    .isEqualTo(expected.getOccasionFactor())
-            )
             .satisfies(a -> assertThat(a.getActive()).as("check active").isEqualTo(expected.getActive()))
             .satisfies(a -> assertThat(a.getCreatedAt()).as("check createdAt").isEqualTo(expected.getCreatedAt()))
             .satisfies(a -> assertThat(a.getUpdatedAt()).as("check updatedAt").isEqualTo(expected.getUpdatedAt()))
@@ -76,6 +68,7 @@ public class ScheduleAsserts {
     public static void assertScheduleUpdatableRelationshipsEquals(Schedule expected, Schedule actual) {
         assertThat(actual)
             .as("Verify Schedule relationships")
+            .satisfies(a -> assertThat(a.getOccasionRule()).as("check occasionRule").isEqualTo(expected.getOccasionRule()))
             .satisfies(a -> assertThat(a.getRoute()).as("check route").isEqualTo(expected.getRoute()));
     }
 }

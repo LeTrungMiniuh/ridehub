@@ -1,6 +1,7 @@
 package com.ridehub.route.domain;
 
 import static com.ridehub.route.domain.RouteTestSamples.*;
+import static com.ridehub.route.domain.ScheduleOccasionTestSamples.*;
 import static com.ridehub.route.domain.ScheduleTestSamples.*;
 import static com.ridehub.route.domain.ScheduleTimeSlotTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +47,18 @@ class ScheduleTest {
         schedule.setTimeSlots(new HashSet<>());
         assertThat(schedule.getTimeSlots()).doesNotContain(scheduleTimeSlotBack);
         assertThat(scheduleTimeSlotBack.getSchedule()).isNull();
+    }
+
+    @Test
+    void occasionRuleTest() {
+        Schedule schedule = getScheduleRandomSampleGenerator();
+        ScheduleOccasion scheduleOccasionBack = getScheduleOccasionRandomSampleGenerator();
+
+        schedule.setOccasionRule(scheduleOccasionBack);
+        assertThat(schedule.getOccasionRule()).isEqualTo(scheduleOccasionBack);
+
+        schedule.occasionRule(null);
+        assertThat(schedule.getOccasionRule()).isNull();
     }
 
     @Test

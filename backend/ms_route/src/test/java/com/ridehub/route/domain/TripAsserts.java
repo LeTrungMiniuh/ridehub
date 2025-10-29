@@ -1,5 +1,6 @@
 package com.ridehub.route.domain;
 
+import static com.ridehub.route.domain.AssertUtils.bigDecimalCompareTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TripAsserts {
@@ -50,6 +51,12 @@ public class TripAsserts {
             .satisfies(a -> assertThat(a.getTripCode()).as("check tripCode").isEqualTo(expected.getTripCode()))
             .satisfies(a -> assertThat(a.getDepartureTime()).as("check departureTime").isEqualTo(expected.getDepartureTime()))
             .satisfies(a -> assertThat(a.getArrivalTime()).as("check arrivalTime").isEqualTo(expected.getArrivalTime()))
+            .satisfies(a ->
+                assertThat(a.getOccasionFactor())
+                    .as("check occasionFactor")
+                    .usingComparator(bigDecimalCompareTo)
+                    .isEqualTo(expected.getOccasionFactor())
+            )
             .satisfies(a -> assertThat(a.getCreatedAt()).as("check createdAt").isEqualTo(expected.getCreatedAt()))
             .satisfies(a -> assertThat(a.getUpdatedAt()).as("check updatedAt").isEqualTo(expected.getUpdatedAt()))
             .satisfies(a -> assertThat(a.getIsDeleted()).as("check isDeleted").isEqualTo(expected.getIsDeleted()))

@@ -76,8 +76,6 @@ public class ScheduleQueryService extends QueryService<Schedule> {
                 buildRangeSpecification(criteria.getStartDate(), Schedule_.startDate),
                 buildRangeSpecification(criteria.getEndDate(), Schedule_.endDate),
                 buildStringSpecification(criteria.getDaysOfWeek(), Schedule_.daysOfWeek),
-                buildSpecification(criteria.getOccasion(), Schedule_.occasion),
-                buildRangeSpecification(criteria.getOccasionFactor(), Schedule_.occasionFactor),
                 buildSpecification(criteria.getActive(), Schedule_.active),
                 buildRangeSpecification(criteria.getCreatedAt(), Schedule_.createdAt),
                 buildRangeSpecification(criteria.getUpdatedAt(), Schedule_.updatedAt),
@@ -86,6 +84,9 @@ public class ScheduleQueryService extends QueryService<Schedule> {
                 buildSpecification(criteria.getDeletedBy(), Schedule_.deletedBy),
                 buildSpecification(criteria.getTimeSlotsId(), root ->
                     root.join(Schedule_.timeSlots, JoinType.LEFT).get(ScheduleTimeSlot_.id)
+                ),
+                buildSpecification(criteria.getOccasionRuleId(), root ->
+                    root.join(Schedule_.occasionRule, JoinType.LEFT).get(ScheduleOccasion_.id)
                 ),
                 buildSpecification(criteria.getRouteId(), root -> root.join(Schedule_.route, JoinType.LEFT).get(Route_.id))
             );

@@ -80,8 +80,6 @@ class ScheduleCriteriaTest {
         scheduleCriteria.startDate();
         scheduleCriteria.endDate();
         scheduleCriteria.daysOfWeek();
-        scheduleCriteria.occasion();
-        scheduleCriteria.occasionFactor();
         scheduleCriteria.active();
         scheduleCriteria.createdAt();
         scheduleCriteria.updatedAt();
@@ -89,6 +87,7 @@ class ScheduleCriteriaTest {
         scheduleCriteria.deletedAt();
         scheduleCriteria.deletedBy();
         scheduleCriteria.timeSlotsId();
+        scheduleCriteria.occasionRuleId();
         scheduleCriteria.routeId();
         scheduleCriteria.distinct();
     }
@@ -101,8 +100,6 @@ class ScheduleCriteriaTest {
                 condition.apply(criteria.getStartDate()) &&
                 condition.apply(criteria.getEndDate()) &&
                 condition.apply(criteria.getDaysOfWeek()) &&
-                condition.apply(criteria.getOccasion()) &&
-                condition.apply(criteria.getOccasionFactor()) &&
                 condition.apply(criteria.getActive()) &&
                 condition.apply(criteria.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt()) &&
@@ -110,6 +107,7 @@ class ScheduleCriteriaTest {
                 condition.apply(criteria.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy()) &&
                 condition.apply(criteria.getTimeSlotsId()) &&
+                condition.apply(criteria.getOccasionRuleId()) &&
                 condition.apply(criteria.getRouteId()) &&
                 condition.apply(criteria.getDistinct()),
             "every filter matches"
@@ -124,8 +122,6 @@ class ScheduleCriteriaTest {
                 condition.apply(criteria.getStartDate(), copy.getStartDate()) &&
                 condition.apply(criteria.getEndDate(), copy.getEndDate()) &&
                 condition.apply(criteria.getDaysOfWeek(), copy.getDaysOfWeek()) &&
-                condition.apply(criteria.getOccasion(), copy.getOccasion()) &&
-                condition.apply(criteria.getOccasionFactor(), copy.getOccasionFactor()) &&
                 condition.apply(criteria.getActive(), copy.getActive()) &&
                 condition.apply(criteria.getCreatedAt(), copy.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt(), copy.getUpdatedAt()) &&
@@ -133,6 +129,7 @@ class ScheduleCriteriaTest {
                 condition.apply(criteria.getDeletedAt(), copy.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy(), copy.getDeletedBy()) &&
                 condition.apply(criteria.getTimeSlotsId(), copy.getTimeSlotsId()) &&
+                condition.apply(criteria.getOccasionRuleId(), copy.getOccasionRuleId()) &&
                 condition.apply(criteria.getRouteId(), copy.getRouteId()) &&
                 condition.apply(criteria.getDistinct(), copy.getDistinct()),
             "every filter matches"

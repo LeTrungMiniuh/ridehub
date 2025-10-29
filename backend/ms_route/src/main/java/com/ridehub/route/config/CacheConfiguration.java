@@ -95,6 +95,8 @@ public class CacheConfiguration {
             createCache(cm, com.ridehub.route.domain.Schedule.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Schedule.class.getName() + ".timeSlots", jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.ScheduleTimeSlot.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.route.domain.ScheduleOccasion.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.route.domain.ScheduleOccasion.class.getName() + ".schedules", jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Trip.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Staff.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Driver.class.getName(), jcacheConfiguration);

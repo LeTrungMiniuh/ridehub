@@ -1,9 +1,7 @@
 package com.ridehub.route.service.dto;
 
-import com.ridehub.route.domain.enumeration.OccasionType;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -26,10 +24,6 @@ public class ScheduleDTO implements Serializable {
 
     private String daysOfWeek;
 
-    private OccasionType occasion;
-
-    private BigDecimal occasionFactor;
-
     @NotNull
     private Boolean active;
 
@@ -43,6 +37,9 @@ public class ScheduleDTO implements Serializable {
     private Instant deletedAt;
 
     private UUID deletedBy;
+
+    @NotNull
+    private ScheduleOccasionDTO occasionRule;
 
     @NotNull
     private RouteDTO route;
@@ -85,22 +82,6 @@ public class ScheduleDTO implements Serializable {
 
     public void setDaysOfWeek(String daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
-    }
-
-    public OccasionType getOccasion() {
-        return occasion;
-    }
-
-    public void setOccasion(OccasionType occasion) {
-        this.occasion = occasion;
-    }
-
-    public BigDecimal getOccasionFactor() {
-        return occasionFactor;
-    }
-
-    public void setOccasionFactor(BigDecimal occasionFactor) {
-        this.occasionFactor = occasionFactor;
     }
 
     public Boolean getActive() {
@@ -151,6 +132,14 @@ public class ScheduleDTO implements Serializable {
         this.deletedBy = deletedBy;
     }
 
+    public ScheduleOccasionDTO getOccasionRule() {
+        return occasionRule;
+    }
+
+    public void setOccasionRule(ScheduleOccasionDTO occasionRule) {
+        this.occasionRule = occasionRule;
+    }
+
     public RouteDTO getRoute() {
         return route;
     }
@@ -189,14 +178,13 @@ public class ScheduleDTO implements Serializable {
             ", startDate='" + getStartDate() + "'" +
             ", endDate='" + getEndDate() + "'" +
             ", daysOfWeek='" + getDaysOfWeek() + "'" +
-            ", occasion='" + getOccasion() + "'" +
-            ", occasionFactor=" + getOccasionFactor() +
             ", active='" + getActive() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +
             ", deletedAt='" + getDeletedAt() + "'" +
             ", deletedBy='" + getDeletedBy() + "'" +
+            ", occasionRule=" + getOccasionRule() +
             ", route=" + getRoute() +
             "}";
     }

@@ -7,4 +7,4 @@ jhipster:
     authentication:
       jwt:
         # secret key which should be base64 encoded and changed in production
-        base64-secret: YzMzNjI4ZDRlYWFiMmEyNDI5MmU1YWVjZmE5MDI5OTVmZmUxOGM4OTNkOTlkYWU1YTEwOWNiZDAwYzY3YzM0NDhhYjU2YzU3N2NlODE2YWI1YWRjMzAwMmRjNTQwMzZhM2Y2MGY4OWRhZGVkMzk4N2YwNDE4OTY2ZjkxZGUwYzM=
+        base64-secret: NjljMDQ1MTZiMjljNTk1NzlmNzIxYjU2OWJjN2ZmYWI2MzRlZDlhYjdlYWYxY2U2YzFhYjc3NTNkZTNkMDUyMGY1MTQxYTFmMmYyN2EzZGM1Nzg3NDA5NDBmMDY5YTBiYmViMDYwZDcyYzgwMzc1MThlOGI2MTIzNjhmMmFmMDU=

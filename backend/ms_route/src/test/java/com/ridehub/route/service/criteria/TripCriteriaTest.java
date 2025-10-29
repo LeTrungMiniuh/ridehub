@@ -79,6 +79,7 @@ class TripCriteriaTest {
         tripCriteria.tripCode();
         tripCriteria.departureTime();
         tripCriteria.arrivalTime();
+        tripCriteria.occasionFactor();
         tripCriteria.createdAt();
         tripCriteria.updatedAt();
         tripCriteria.isDeleted();
@@ -99,6 +100,7 @@ class TripCriteriaTest {
                 condition.apply(criteria.getTripCode()) &&
                 condition.apply(criteria.getDepartureTime()) &&
                 condition.apply(criteria.getArrivalTime()) &&
+                condition.apply(criteria.getOccasionFactor()) &&
                 condition.apply(criteria.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt()) &&
                 condition.apply(criteria.getIsDeleted()) &&
@@ -121,6 +123,7 @@ class TripCriteriaTest {
                 condition.apply(criteria.getTripCode(), copy.getTripCode()) &&
                 condition.apply(criteria.getDepartureTime(), copy.getDepartureTime()) &&
                 condition.apply(criteria.getArrivalTime(), copy.getArrivalTime()) &&
+                condition.apply(criteria.getOccasionFactor(), copy.getOccasionFactor()) &&
                 condition.apply(criteria.getCreatedAt(), copy.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt(), copy.getUpdatedAt()) &&
                 condition.apply(criteria.getIsDeleted(), copy.getIsDeleted()) &&

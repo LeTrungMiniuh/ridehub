@@ -30,6 +30,8 @@ public class TripCriteria implements Serializable, Criteria {
 
     private InstantFilter arrivalTime;
 
+    private BigDecimalFilter occasionFactor;
+
     private InstantFilter createdAt;
 
     private InstantFilter updatedAt;
@@ -69,6 +71,7 @@ public class TripCriteria implements Serializable, Criteria {
         this.tripCode = other.optionalTripCode().map(StringFilter::copy).orElse(null);
         this.departureTime = other.optionalDepartureTime().map(InstantFilter::copy).orElse(null);
         this.arrivalTime = other.optionalArrivalTime().map(InstantFilter::copy).orElse(null);
+        this.occasionFactor = other.optionalOccasionFactor().map(BigDecimalFilter::copy).orElse(null);
         this.createdAt = other.optionalCreatedAt().map(InstantFilter::copy).orElse(null);
         this.updatedAt = other.optionalUpdatedAt().map(InstantFilter::copy).orElse(null);
         this.isDeleted = other.optionalIsDeleted().map(BooleanFilter::copy).orElse(null);
@@ -238,6 +241,25 @@ public class TripCriteria implements Serializable, Criteria {
 
     public void setArrivalTime(InstantFilter arrivalTime) {
         this.arrivalTime = arrivalTime;
+    }
+
+    public BigDecimalFilter getOccasionFactor() {
+        return occasionFactor;
+    }
+
+    public Optional<BigDecimalFilter> optionalOccasionFactor() {
+        return Optional.ofNullable(occasionFactor);
+    }
+
+    public BigDecimalFilter occasionFactor() {
+        if (occasionFactor == null) {
+            setOccasionFactor(new BigDecimalFilter());
+        }
+        return occasionFactor;
+    }
+
+    public void setOccasionFactor(BigDecimalFilter occasionFactor) {
+        this.occasionFactor = occasionFactor;
     }
 
     public InstantFilter getCreatedAt() {
@@ -463,6 +485,7 @@ public class TripCriteria implements Serializable, Criteria {
             Objects.equals(tripCode, that.tripCode) &&
             Objects.equals(departureTime, that.departureTime) &&
             Objects.equals(arrivalTime, that.arrivalTime) &&
+            Objects.equals(occasionFactor, that.occasionFactor) &&
             Objects.equals(createdAt, that.createdAt) &&
             Objects.equals(updatedAt, that.updatedAt) &&
             Objects.equals(isDeleted, that.isDeleted) &&
@@ -484,6 +507,7 @@ public class TripCriteria implements Serializable, Criteria {
             tripCode,
             departureTime,
             arrivalTime,
+            occasionFactor,
             createdAt,
             updatedAt,
             isDeleted,
@@ -506,6 +530,7 @@ public class TripCriteria implements Serializable, Criteria {
             optionalTripCode().map(f -> "tripCode=" + f + ", ").orElse("") +
             optionalDepartureTime().map(f -> "departureTime=" + f + ", ").orElse("") +
             optionalArrivalTime().map(f -> "arrivalTime=" + f + ", ").orElse("") +
+            optionalOccasionFactor().map(f -> "occasionFactor=" + f + ", ").orElse("") +
             optionalCreatedAt().map(f -> "createdAt=" + f + ", ").orElse("") +
             optionalUpdatedAt().map(f -> "updatedAt=" + f + ", ").orElse("") +
             optionalIsDeleted().map(f -> "isDeleted=" + f + ", ").orElse("") +

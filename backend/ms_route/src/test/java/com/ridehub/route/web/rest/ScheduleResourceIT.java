@@ -2,7 +2,6 @@ package com.ridehub.route.web.rest;
 
 import static com.ridehub.route.domain.ScheduleAsserts.*;
 import static com.ridehub.route.web.rest.TestUtil.createUpdateProxyForBean;
-import static com.ridehub.route.web.rest.TestUtil.sameNumber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -13,12 +12,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ridehub.route.IntegrationTest;
 import com.ridehub.route.domain.Route;
 import com.ridehub.route.domain.Schedule;
-import com.ridehub.route.domain.enumeration.OccasionType;
+import com.ridehub.route.domain.ScheduleOccasion;
 import com.ridehub.route.repository.ScheduleRepository;
 import com.ridehub.route.service.dto.ScheduleDTO;
 import com.ridehub.route.service.mapper.ScheduleMapper;
 import jakarta.persistence.EntityManager;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -57,13 +55,6 @@ class ScheduleResourceIT {
 
     private static final String DEFAULT_DAYS_OF_WEEK = "AAAAAAAAAA";
     private static final String UPDATED_DAYS_OF_WEEK = "BBBBBBBBBB";
-
-    private static final OccasionType DEFAULT_OCCASION = OccasionType.NORMAL;
-    private static final OccasionType UPDATED_OCCASION = OccasionType.WEEKEND;
-
-    private static final BigDecimal DEFAULT_OCCASION_FACTOR = new BigDecimal(1);
-    private static final BigDecimal UPDATED_OCCASION_FACTOR = new BigDecimal(2);
-    private static final BigDecimal SMALLER_OCCASION_FACTOR = new BigDecimal(1 - 1);
 
     private static final Boolean DEFAULT_ACTIVE = false;
     private static final Boolean UPDATED_ACTIVE = true;
@@ -120,14 +111,22 @@ class ScheduleResourceIT {
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE)
             .daysOfWeek(DEFAULT_DAYS_OF_WEEK)
-            .occasion(DEFAULT_OCCASION)
-            .occasionFactor(DEFAULT_OCCASION_FACTOR)
             .active(DEFAULT_ACTIVE)
             .createdAt(DEFAULT_CREATED_AT)
             .updatedAt(DEFAULT_UPDATED_AT)
             .isDeleted(DEFAULT_IS_DELETED)
             .deletedAt(DEFAULT_DELETED_AT)
             .deletedBy(DEFAULT_DELETED_BY);
+        // Add required entity
+        ScheduleOccasion scheduleOccasion;
+        if (TestUtil.findAll(em, ScheduleOccasion.class).isEmpty()) {
+            scheduleOccasion = ScheduleOccasionResourceIT.createEntity();
+            em.persist(scheduleOccasion);
+            em.flush();
+        } else {
+            scheduleOccasion = TestUtil.findAll(em, ScheduleOccasion.class).get(0);
+        }
+        schedule.setOccasionRule(scheduleOccasion);
         // Add required entity
         Route route;
         if (TestUtil.findAll(em, Route.class).isEmpty()) {
@@ -153,14 +152,22 @@ class ScheduleResourceIT {
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE)
             .daysOfWeek(UPDATED_DAYS_OF_WEEK)
-            .occasion(UPDATED_OCCASION)
-            .occasionFactor(UPDATED_OCCASION_FACTOR)
             .active(UPDATED_ACTIVE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
             .deletedAt(UPDATED_DELETED_AT)
             .deletedBy(UPDATED_DELETED_BY);
+        // Add required entity
+        ScheduleOccasion scheduleOccasion;
+        if (TestUtil.findAll(em, ScheduleOccasion.class).isEmpty()) {
+            scheduleOccasion = ScheduleOccasionResourceIT.createUpdatedEntity();
+            em.persist(scheduleOccasion);
+            em.flush();
+        } else {
+            scheduleOccasion = TestUtil.findAll(em, ScheduleOccasion.class).get(0);
+        }
+        updatedSchedule.setOccasionRule(scheduleOccasion);
         // Add required entity
         Route route;
         if (TestUtil.findAll(em, Route.class).isEmpty()) {
@@ -298,8 +305,6 @@ class ScheduleResourceIT {
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
             .andExpect(jsonPath("$.[*].daysOfWeek").value(hasItem(DEFAULT_DAYS_OF_WEEK)))
-            .andExpect(jsonPath("$.[*].occasion").value(hasItem(DEFAULT_OCCASION.toString())))
-            .andExpect(jsonPath("$.[*].occasionFactor").value(hasItem(sameNumber(DEFAULT_OCCASION_FACTOR))))
             .andExpect(jsonPath("$.[*].active").value(hasItem(DEFAULT_ACTIVE)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
@@ -324,8 +329,6 @@ class ScheduleResourceIT {
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
             .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()))
             .andExpect(jsonPath("$.daysOfWeek").value(DEFAULT_DAYS_OF_WEEK))
-            .andExpect(jsonPath("$.occasion").value(DEFAULT_OCCASION.toString()))
-            .andExpect(jsonPath("$.occasionFactor").value(sameNumber(DEFAULT_OCCASION_FACTOR)))
             .andExpect(jsonPath("$.active").value(DEFAULT_ACTIVE))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
             .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
@@ -603,121 +606,6 @@ class ScheduleResourceIT {
 
     @Test
     @Transactional
-    void getAllSchedulesByOccasionIsEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasion equals to
-        defaultScheduleFiltering("occasion.equals=" + DEFAULT_OCCASION, "occasion.equals=" + UPDATED_OCCASION);
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionIsInShouldWork() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasion in
-        defaultScheduleFiltering("occasion.in=" + DEFAULT_OCCASION + "," + UPDATED_OCCASION, "occasion.in=" + UPDATED_OCCASION);
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasion is not null
-        defaultScheduleFiltering("occasion.specified=true", "occasion.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor equals to
-        defaultScheduleFiltering("occasionFactor.equals=" + DEFAULT_OCCASION_FACTOR, "occasionFactor.equals=" + UPDATED_OCCASION_FACTOR);
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsInShouldWork() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor in
-        defaultScheduleFiltering(
-            "occasionFactor.in=" + DEFAULT_OCCASION_FACTOR + "," + UPDATED_OCCASION_FACTOR,
-            "occasionFactor.in=" + UPDATED_OCCASION_FACTOR
-        );
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor is not null
-        defaultScheduleFiltering("occasionFactor.specified=true", "occasionFactor.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsGreaterThanOrEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor is greater than or equal to
-        defaultScheduleFiltering(
-            "occasionFactor.greaterThanOrEqual=" + DEFAULT_OCCASION_FACTOR,
-            "occasionFactor.greaterThanOrEqual=" + UPDATED_OCCASION_FACTOR
-        );
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsLessThanOrEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor is less than or equal to
-        defaultScheduleFiltering(
-            "occasionFactor.lessThanOrEqual=" + DEFAULT_OCCASION_FACTOR,
-            "occasionFactor.lessThanOrEqual=" + SMALLER_OCCASION_FACTOR
-        );
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsLessThanSomething() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor is less than
-        defaultScheduleFiltering(
-            "occasionFactor.lessThan=" + UPDATED_OCCASION_FACTOR,
-            "occasionFactor.lessThan=" + DEFAULT_OCCASION_FACTOR
-        );
-    }
-
-    @Test
-    @Transactional
-    void getAllSchedulesByOccasionFactorIsGreaterThanSomething() throws Exception {
-        // Initialize the database
-        insertedSchedule = scheduleRepository.saveAndFlush(schedule);
-
-        // Get all the scheduleList where occasionFactor is greater than
-        defaultScheduleFiltering(
-            "occasionFactor.greaterThan=" + SMALLER_OCCASION_FACTOR,
-            "occasionFactor.greaterThan=" + DEFAULT_OCCASION_FACTOR
-        );
-    }
-
-    @Test
-    @Transactional
     void getAllSchedulesByActiveIsEqualToSomething() throws Exception {
         // Initialize the database
         insertedSchedule = scheduleRepository.saveAndFlush(schedule);
@@ -898,6 +786,28 @@ class ScheduleResourceIT {
 
     @Test
     @Transactional
+    void getAllSchedulesByOccasionRuleIsEqualToSomething() throws Exception {
+        ScheduleOccasion occasionRule;
+        if (TestUtil.findAll(em, ScheduleOccasion.class).isEmpty()) {
+            scheduleRepository.saveAndFlush(schedule);
+            occasionRule = ScheduleOccasionResourceIT.createEntity();
+        } else {
+            occasionRule = TestUtil.findAll(em, ScheduleOccasion.class).get(0);
+        }
+        em.persist(occasionRule);
+        em.flush();
+        schedule.setOccasionRule(occasionRule);
+        scheduleRepository.saveAndFlush(schedule);
+        Long occasionRuleId = occasionRule.getId();
+        // Get all the scheduleList where occasionRule equals to occasionRuleId
+        defaultScheduleShouldBeFound("occasionRuleId.equals=" + occasionRuleId);
+
+        // Get all the scheduleList where occasionRule equals to (occasionRuleId + 1)
+        defaultScheduleShouldNotBeFound("occasionRuleId.equals=" + (occasionRuleId + 1));
+    }
+
+    @Test
+    @Transactional
     void getAllSchedulesByRouteIsEqualToSomething() throws Exception {
         Route route;
         if (TestUtil.findAll(em, Route.class).isEmpty()) {
@@ -936,8 +846,6 @@ class ScheduleResourceIT {
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
             .andExpect(jsonPath("$.[*].daysOfWeek").value(hasItem(DEFAULT_DAYS_OF_WEEK)))
-            .andExpect(jsonPath("$.[*].occasion").value(hasItem(DEFAULT_OCCASION.toString())))
-            .andExpect(jsonPath("$.[*].occasionFactor").value(hasItem(sameNumber(DEFAULT_OCCASION_FACTOR))))
             .andExpect(jsonPath("$.[*].active").value(hasItem(DEFAULT_ACTIVE)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
@@ -996,8 +904,6 @@ class ScheduleResourceIT {
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE)
             .daysOfWeek(UPDATED_DAYS_OF_WEEK)
-            .occasion(UPDATED_OCCASION)
-            .occasionFactor(UPDATED_OCCASION_FACTOR)
             .active(UPDATED_ACTIVE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
@@ -1098,10 +1004,10 @@ class ScheduleResourceIT {
 
         partialUpdatedSchedule
             .endDate(UPDATED_END_DATE)
-            .occasion(UPDATED_OCCASION)
             .active(UPDATED_ACTIVE)
-            .createdAt(UPDATED_CREATED_AT)
-            .isDeleted(UPDATED_IS_DELETED);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .isDeleted(UPDATED_IS_DELETED)
+            .deletedBy(UPDATED_DELETED_BY);
 
         restScheduleMockMvc
             .perform(
@@ -1135,8 +1041,6 @@ class ScheduleResourceIT {
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE)
             .daysOfWeek(UPDATED_DAYS_OF_WEEK)
-            .occasion(UPDATED_OCCASION)
-            .occasionFactor(UPDATED_OCCASION_FACTOR)
             .active(UPDATED_ACTIVE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)

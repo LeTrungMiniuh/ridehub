@@ -2,6 +2,7 @@ package com.ridehub.route.service.dto;
 
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,6 +23,9 @@ public class TripDTO implements Serializable {
 
     @NotNull
     private Instant arrivalTime;
+
+    @NotNull
+    private BigDecimal occasionFactor;
 
     @NotNull
     private Instant createdAt;
@@ -78,6 +82,14 @@ public class TripDTO implements Serializable {
 
     public void setArrivalTime(Instant arrivalTime) {
         this.arrivalTime = arrivalTime;
+    }
+
+    public BigDecimal getOccasionFactor() {
+        return occasionFactor;
+    }
+
+    public void setOccasionFactor(BigDecimal occasionFactor) {
+        this.occasionFactor = occasionFactor;
     }
 
     public Instant getCreatedAt() {
@@ -189,6 +201,7 @@ public class TripDTO implements Serializable {
             ", tripCode='" + getTripCode() + "'" +
             ", departureTime='" + getDepartureTime() + "'" +
             ", arrivalTime='" + getArrivalTime() + "'" +
+            ", occasionFactor=" + getOccasionFactor() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +

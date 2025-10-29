@@ -178,6 +178,7 @@ public class RouteQueryService extends QueryService<Route> {
                                         buildRangeSpecification(criteria.getId(), Route_.id),
                                         buildStringSpecification(criteria.getRouteCode(), Route_.routeCode),
                                         buildRangeSpecification(criteria.getDistanceKm(), Route_.distanceKm),
+                                        buildRangeSpecification(criteria.getBaseFare(), Route_.baseFare),
                                         buildRangeSpecification(criteria.getCreatedAt(), Route_.createdAt),
                                         buildRangeSpecification(criteria.getUpdatedAt(), Route_.updatedAt),
                                         buildSpecification(criteria.getIsDeleted(), Route_.isDeleted),

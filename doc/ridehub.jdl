@@ -336,7 +336,7 @@ entity Schedule {
 
 /* NEW: normalized per-schedule occasion rules */
 entity ScheduleOccasion {
-  occasion OccasionType required
+  occasion OccasionType required unique
   occasionFactor BigDecimal required
   createdAt Instant required
   updatedAt Instant
@@ -377,11 +377,11 @@ entity Trip {
 // Relationships inside ms_route
 relationship OneToMany {
   Route{schedules}            to Schedule{route required},
-  Schedule{timeSlots}         to ScheduleTimeSlot{schedule required},
-  Schedule{occasionRules}     to ScheduleOccasion{schedule required}
+  Schedule{timeSlots}         to ScheduleTimeSlot{schedule required}
 }
 
 relationship ManyToOne {
+  Schedule{occasionRule required} to ScheduleOccasion{schedule},
   Floor{seatMap required}     to SeatMap,
   Seat{floor required}        to Floor,
   Trip{route required}        to Route,

@@ -2,6 +2,7 @@ package com.ridehub.route.web.rest;
 
 import static com.ridehub.route.domain.TripAsserts.*;
 import static com.ridehub.route.web.rest.TestUtil.createUpdateProxyForBean;
+import static com.ridehub.route.web.rest.TestUtil.sameNumber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -20,6 +21,7 @@ import com.ridehub.route.repository.TripRepository;
 import com.ridehub.route.service.dto.TripDTO;
 import com.ridehub.route.service.mapper.TripMapper;
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
@@ -51,6 +53,10 @@ class TripResourceIT {
 
     private static final Instant DEFAULT_ARRIVAL_TIME = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_ARRIVAL_TIME = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    private static final BigDecimal DEFAULT_OCCASION_FACTOR = new BigDecimal(1);
+    private static final BigDecimal UPDATED_OCCASION_FACTOR = new BigDecimal(2);
+    private static final BigDecimal SMALLER_OCCASION_FACTOR = new BigDecimal(1 - 1);
 
     private static final Instant DEFAULT_CREATED_AT = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_CREATED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -103,6 +109,7 @@ class TripResourceIT {
             .tripCode(DEFAULT_TRIP_CODE)
             .departureTime(DEFAULT_DEPARTURE_TIME)
             .arrivalTime(DEFAULT_ARRIVAL_TIME)
+            .occasionFactor(DEFAULT_OCCASION_FACTOR)
             .createdAt(DEFAULT_CREATED_AT)
             .updatedAt(DEFAULT_UPDATED_AT)
             .isDeleted(DEFAULT_IS_DELETED)
@@ -162,6 +169,7 @@ class TripResourceIT {
             .tripCode(UPDATED_TRIP_CODE)
             .departureTime(UPDATED_DEPARTURE_TIME)
             .arrivalTime(UPDATED_ARRIVAL_TIME)
+            .occasionFactor(UPDATED_OCCASION_FACTOR)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -318,6 +326,23 @@ class TripResourceIT {
 
     @Test
     @Transactional
+    void checkOccasionFactorIsRequired() throws Exception {
+        long databaseSizeBeforeTest = getRepositoryCount();
+        // set the field null
+        trip.setOccasionFactor(null);
+
+        // Create the Trip, which fails.
+        TripDTO tripDTO = tripMapper.toDto(trip);
+
+        restTripMockMvc
+            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(tripDTO)))
+            .andExpect(status().isBadRequest());
+
+        assertSameRepositoryCount(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
     void checkCreatedAtIsRequired() throws Exception {
         long databaseSizeBeforeTest = getRepositoryCount();
         // set the field null
@@ -348,6 +373,7 @@ class TripResourceIT {
             .andExpect(jsonPath("$.[*].tripCode").value(hasItem(DEFAULT_TRIP_CODE)))
             .andExpect(jsonPath("$.[*].departureTime").value(hasItem(DEFAULT_DEPARTURE_TIME.toString())))
             .andExpect(jsonPath("$.[*].arrivalTime").value(hasItem(DEFAULT_ARRIVAL_TIME.toString())))
+            .andExpect(jsonPath("$.[*].occasionFactor").value(hasItem(sameNumber(DEFAULT_OCCASION_FACTOR))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))
@@ -370,6 +396,7 @@ class TripResourceIT {
             .andExpect(jsonPath("$.tripCode").value(DEFAULT_TRIP_CODE))
             .andExpect(jsonPath("$.departureTime").value(DEFAULT_DEPARTURE_TIME.toString()))
             .andExpect(jsonPath("$.arrivalTime").value(DEFAULT_ARRIVAL_TIME.toString()))
+            .andExpect(jsonPath("$.occasionFactor").value(sameNumber(DEFAULT_OCCASION_FACTOR)))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
             .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
             .andExpect(jsonPath("$.isDeleted").value(DEFAULT_IS_DELETED))
@@ -506,6 +533,88 @@ class TripResourceIT {
 
         // Get all the tripList where arrivalTime is not null
         defaultTripFiltering("arrivalTime.specified=true", "arrivalTime.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor equals to
+        defaultTripFiltering("occasionFactor.equals=" + DEFAULT_OCCASION_FACTOR, "occasionFactor.equals=" + UPDATED_OCCASION_FACTOR);
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor in
+        defaultTripFiltering(
+            "occasionFactor.in=" + DEFAULT_OCCASION_FACTOR + "," + UPDATED_OCCASION_FACTOR,
+            "occasionFactor.in=" + UPDATED_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor is not null
+        defaultTripFiltering("occasionFactor.specified=true", "occasionFactor.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor is greater than or equal to
+        defaultTripFiltering(
+            "occasionFactor.greaterThanOrEqual=" + DEFAULT_OCCASION_FACTOR,
+            "occasionFactor.greaterThanOrEqual=" + UPDATED_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor is less than or equal to
+        defaultTripFiltering(
+            "occasionFactor.lessThanOrEqual=" + DEFAULT_OCCASION_FACTOR,
+            "occasionFactor.lessThanOrEqual=" + SMALLER_OCCASION_FACTOR
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsLessThanSomething() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor is less than
+        defaultTripFiltering("occasionFactor.lessThan=" + UPDATED_OCCASION_FACTOR, "occasionFactor.lessThan=" + DEFAULT_OCCASION_FACTOR);
+    }
+
+    @Test
+    @Transactional
+    void getAllTripsByOccasionFactorIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        insertedTrip = tripRepository.saveAndFlush(trip);
+
+        // Get all the tripList where occasionFactor is greater than
+        defaultTripFiltering(
+            "occasionFactor.greaterThan=" + SMALLER_OCCASION_FACTOR,
+            "occasionFactor.greaterThan=" + DEFAULT_OCCASION_FACTOR
+        );
     }
 
     @Test
@@ -785,6 +894,7 @@ class TripResourceIT {
             .andExpect(jsonPath("$.[*].tripCode").value(hasItem(DEFAULT_TRIP_CODE)))
             .andExpect(jsonPath("$.[*].departureTime").value(hasItem(DEFAULT_DEPARTURE_TIME.toString())))
             .andExpect(jsonPath("$.[*].arrivalTime").value(hasItem(DEFAULT_ARRIVAL_TIME.toString())))
+            .andExpect(jsonPath("$.[*].occasionFactor").value(hasItem(sameNumber(DEFAULT_OCCASION_FACTOR))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))
@@ -841,6 +951,7 @@ class TripResourceIT {
             .tripCode(UPDATED_TRIP_CODE)
             .departureTime(UPDATED_DEPARTURE_TIME)
             .arrivalTime(UPDATED_ARRIVAL_TIME)
+            .occasionFactor(UPDATED_OCCASION_FACTOR)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -938,7 +1049,7 @@ class TripResourceIT {
         Trip partialUpdatedTrip = new Trip();
         partialUpdatedTrip.setId(trip.getId());
 
-        partialUpdatedTrip.deletedAt(UPDATED_DELETED_AT);
+        partialUpdatedTrip.isDeleted(UPDATED_IS_DELETED).deletedBy(UPDATED_DELETED_BY);
 
         restTripMockMvc
             .perform(
@@ -971,6 +1082,7 @@ class TripResourceIT {
             .tripCode(UPDATED_TRIP_CODE)
             .departureTime(UPDATED_DEPARTURE_TIME)
             .arrivalTime(UPDATED_ARRIVAL_TIME)
+            .occasionFactor(UPDATED_OCCASION_FACTOR)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)

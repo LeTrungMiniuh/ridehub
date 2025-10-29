@@ -1,11 +1,9 @@
 package com.ridehub.route.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.ridehub.route.domain.enumeration.OccasionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -45,13 +43,6 @@ public class Schedule implements Serializable {
     @Column(name = "days_of_week")
     private String daysOfWeek;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "occasion")
-    private OccasionType occasion;
-
-    @Column(name = "occasion_factor", precision = 21, scale = 2)
-    private BigDecimal occasionFactor;
-
     @NotNull
     @Column(name = "active", nullable = false)
     private Boolean active;
@@ -77,6 +68,11 @@ public class Schedule implements Serializable {
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "schedule" }, allowSetters = true)
     private Set<ScheduleTimeSlot> timeSlots = new HashSet<>();
+
+    @ManyToOne(optional = false)
+    @NotNull
+    @JsonIgnoreProperties(value = { "schedules" }, allowSetters = true)
+    private ScheduleOccasion occasionRule;
 
     @ManyToOne(optional = false)
     @NotNull
@@ -148,32 +144,6 @@ public class Schedule implements Serializable {
 
     public void setDaysOfWeek(String daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
-    }
-
-    public OccasionType getOccasion() {
-        return this.occasion;
-    }
-
-    public Schedule occasion(OccasionType occasion) {
-        this.setOccasion(occasion);
-        return this;
-    }
-
-    public void setOccasion(OccasionType occasion) {
-        this.occasion = occasion;
-    }
-
-    public BigDecimal getOccasionFactor() {
-        return this.occasionFactor;
-    }
-
-    public Schedule occasionFactor(BigDecimal occasionFactor) {
-        this.setOccasionFactor(occasionFactor);
-        return this;
-    }
-
-    public void setOccasionFactor(BigDecimal occasionFactor) {
-        this.occasionFactor = occasionFactor;
     }
 
     public Boolean getActive() {
@@ -285,6 +255,19 @@ public class Schedule implements Serializable {
         return this;
     }
 
+    public ScheduleOccasion getOccasionRule() {
+        return this.occasionRule;
+    }
+
+    public void setOccasionRule(ScheduleOccasion scheduleOccasion) {
+        this.occasionRule = scheduleOccasion;
+    }
+
+    public Schedule occasionRule(ScheduleOccasion scheduleOccasion) {
+        this.setOccasionRule(scheduleOccasion);
+        return this;
+    }
+
     public Route getRoute() {
         return this.route;
     }
@@ -326,8 +309,6 @@ public class Schedule implements Serializable {
             ", startDate='" + getStartDate() + "'" +
             ", endDate='" + getEndDate() + "'" +
             ", daysOfWeek='" + getDaysOfWeek() + "'" +
-            ", occasion='" + getOccasion() + "'" +
-            ", occasionFactor=" + getOccasionFactor() +
             ", active='" + getActive() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +

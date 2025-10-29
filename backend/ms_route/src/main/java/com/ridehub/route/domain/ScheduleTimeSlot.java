@@ -69,7 +69,7 @@ public class ScheduleTimeSlot implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-    @JsonIgnoreProperties(value = { "timeSlots", "route" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "timeSlots", "occasionRule", "route" }, allowSetters = true)
     private Schedule schedule;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

@@ -65,7 +65,7 @@ public class Route implements Serializable {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "route")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @org.springframework.data.annotation.Transient
-    @JsonIgnoreProperties(value = { "timeSlots", "route" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "timeSlots", "occasionRules", "route" }, allowSetters = true)
     private Set<Schedule> schedules = new HashSet<>();
 
     @ManyToOne(optional = false)

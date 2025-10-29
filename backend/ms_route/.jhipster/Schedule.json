@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20251028235622"
+    "changelogDate": "20251029044655"
   },
   "applications": ["ms_route"],
   "clientRootFolder": "ms_route",
@@ -23,15 +23,6 @@
     {
       "fieldName": "daysOfWeek",
       "fieldType": "String"
-    },
-    {
-      "fieldName": "occasion",
-      "fieldType": "OccasionType",
-      "fieldValues": "NORMAL,WEEKEND,HOLIDAY,PEAK,OFF_PEAK,TET"
-    },
-    {
-      "fieldName": "occasionFactor",
-      "fieldType": "BigDecimal"
     },
     {
       "fieldName": "active",
@@ -70,6 +61,14 @@
       "relationshipName": "timeSlots",
       "relationshipSide": "left",
       "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "scheduleOccasion",
+      "otherEntityRelationshipName": "schedule",
+      "relationshipName": "occasionRule",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
     },
     {
       "otherEntityName": "route",

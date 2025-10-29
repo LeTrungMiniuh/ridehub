@@ -1,5 +1,5 @@
 @startuml
-title RideHub – 4 Microservices\n(Updated: baseFare moved to Route; added Schedule with occasion pricing)
+title RideHub – 4 Microservices\n(Updated: baseFare moved to Route; Schedule-ScheduleOccasion ManyToOne relationship)
 
 left to right direction
 hide methods
@@ -346,7 +346,7 @@ Floor "1" o-- "1..*" Seat : "has seats"
 ' Schedule & Trip
 Route "1" o-- "0..*" Schedule : "schedules"
 Schedule "1" o-- "0..*" ScheduleTimeSlot : "timeSlots"
-Schedule "1" o-- "0..*" ScheduleOccasion : "occasionRules"
+Schedule "*" -- "1" ScheduleOccasion : "occasionRule"
 Schedule "1" o-- "0..*" Trip : "generates trips"
 Trip "*" -- "1" Route : "on route"
 Trip "*" -- "1" Vehicle : "uses vehicle"

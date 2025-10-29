@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.Cache;
@@ -38,6 +39,10 @@ public class Trip implements Serializable {
     @NotNull
     @Column(name = "arrival_time", nullable = false)
     private Instant arrivalTime;
+
+    @NotNull
+    @Column(name = "occasion_factor", precision = 21, scale = 2, nullable = false)
+    private BigDecimal occasionFactor;
 
     @NotNull
     @Column(name = "created_at", nullable = false)
@@ -132,6 +137,19 @@ public class Trip implements Serializable {
 
     public void setArrivalTime(Instant arrivalTime) {
         this.arrivalTime = arrivalTime;
+    }
+
+    public BigDecimal getOccasionFactor() {
+        return this.occasionFactor;
+    }
+
+    public Trip occasionFactor(BigDecimal occasionFactor) {
+        this.setOccasionFactor(occasionFactor);
+        return this;
+    }
+
+    public void setOccasionFactor(BigDecimal occasionFactor) {
+        this.occasionFactor = occasionFactor;
     }
 
     public Instant getCreatedAt() {
@@ -291,6 +309,7 @@ public class Trip implements Serializable {
             ", tripCode='" + getTripCode() + "'" +
             ", departureTime='" + getDepartureTime() + "'" +
             ", arrivalTime='" + getArrivalTime() + "'" +
+            ", occasionFactor=" + getOccasionFactor() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +
