@@ -40,6 +40,7 @@ public class Schedule implements Serializable {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Pattern(regexp = "^[1-7,]*$", message = "Days must be comma-separated numbers 1-7 (Monday=1, Sunday=7)")
     @Column(name = "days_of_week")
     private String daysOfWeek;
 
