@@ -3,7 +3,6 @@ jhipster jdl ../doc/ridehub.jdl  --skip-install --force
 
 cd ../
 ./git-restore.sh
-./cleanup_changelogs.sh
 
 
 gh api user/repository_invitations --jq '.[] | "\(.repository.full_name) from \(.inviter.login)"'
