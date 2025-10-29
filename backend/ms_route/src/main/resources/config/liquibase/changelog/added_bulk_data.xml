@@ -478,14 +478,18 @@
       @updated_at,
       @is_deleted,
       @deleted_at,
-      @deleted_by
+      @deleted_by,
+      occasion_factor,
+      slot_id
     )
-    SET updated_at  = NULLIF(@updated_at,''),
-        is_deleted  = CASE WHEN LOWER(@is_deleted) IN ('1','true','t','yes','y') THEN 1
-                           WHEN LOWER(@is_deleted) IN ('0','false','f','no','n','') THEN 0
-                           ELSE NULL END,
-        deleted_at  = NULLIF(@deleted_at,''),
-        deleted_by  = CASE WHEN @deleted_by IN ('','\\N') THEN NULL ELSE @deleted_by END,
+    SET updated_at   = NULLIF(@updated_at,''),
+        is_deleted   = CASE
+                         WHEN LOWER(@is_deleted) IN ('1','true','t','yes','y') THEN 1
+                         WHEN LOWER(@is_deleted) IN ('0','false','f','no','n','') THEN 0
+                         ELSE NULL
+                       END,
+        deleted_at   = NULLIF(@deleted_at,''),
+        deleted_by   = CASE WHEN @deleted_by IN ('','\\N') THEN NULL ELSE @deleted_by END,
         attendant_id = NULLIF(@attendant_id,'');
   </sql>
   </changeSet>
