@@ -134,7 +134,6 @@ public class TripQueryService extends QueryService<Trip> {
                                         buildStringSpecification(criteria.getTripCode(), Trip_.tripCode),
                                         buildRangeSpecification(criteria.getDepartureTime(), Trip_.departureTime),
                                         buildRangeSpecification(criteria.getArrivalTime(), Trip_.arrivalTime),
-                                        buildRangeSpecification(criteria.getBaseFare(), Trip_.baseFare),
                                         buildRangeSpecification(criteria.getCreatedAt(), Trip_.createdAt),
                                         buildRangeSpecification(criteria.getUpdatedAt(), Trip_.updatedAt),
                                         buildSpecification(criteria.getIsDeleted(), Trip_.isDeleted),

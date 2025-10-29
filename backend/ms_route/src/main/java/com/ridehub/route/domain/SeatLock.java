@@ -71,7 +71,7 @@ public class SeatLock implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-    @JsonIgnoreProperties(value = { "route", "vehicle", "driver", "attendant" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "route", "vehicle", "slot", "driver", "attendant" }, allowSetters = true)
     private Trip trip;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

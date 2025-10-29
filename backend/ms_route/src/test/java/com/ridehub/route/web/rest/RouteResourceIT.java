@@ -55,6 +55,10 @@ class RouteResourceIT {
     private static final BigDecimal UPDATED_DISTANCE_KM = new BigDecimal(2);
     private static final BigDecimal SMALLER_DISTANCE_KM = new BigDecimal(1 - 1);
 
+    private static final BigDecimal DEFAULT_BASE_FARE = new BigDecimal(1);
+    private static final BigDecimal UPDATED_BASE_FARE = new BigDecimal(2);
+    private static final BigDecimal SMALLER_BASE_FARE = new BigDecimal(1 - 1);
+
     private static final Instant DEFAULT_CREATED_AT = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_CREATED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
@@ -109,6 +113,7 @@ class RouteResourceIT {
         Route route = new Route()
             .routeCode(DEFAULT_ROUTE_CODE)
             .distanceKm(DEFAULT_DISTANCE_KM)
+            .baseFare(DEFAULT_BASE_FARE)
             .createdAt(DEFAULT_CREATED_AT)
             .updatedAt(DEFAULT_UPDATED_AT)
             .isDeleted(DEFAULT_IS_DELETED)
@@ -139,6 +144,7 @@ class RouteResourceIT {
         Route updatedRoute = new Route()
             .routeCode(UPDATED_ROUTE_CODE)
             .distanceKm(UPDATED_DISTANCE_KM)
+            .baseFare(UPDATED_BASE_FARE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -249,6 +255,27 @@ class RouteResourceIT {
 
     @Test
     @Transactional
+    void checkBaseFareIsRequired() throws Exception {
+        long databaseSizeBeforeTest = getRepositoryCount();
+        int searchDatabaseSizeBefore = IterableUtil.sizeOf(routeSearchRepository.findAll());
+        // set the field null
+        route.setBaseFare(null);
+
+        // Create the Route, which fails.
+        RouteDTO routeDTO = routeMapper.toDto(route);
+
+        restRouteMockMvc
+            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(routeDTO)))
+            .andExpect(status().isBadRequest());
+
+        assertSameRepositoryCount(databaseSizeBeforeTest);
+
+        int searchDatabaseSizeAfter = IterableUtil.sizeOf(routeSearchRepository.findAll());
+        assertThat(searchDatabaseSizeAfter).isEqualTo(searchDatabaseSizeBefore);
+    }
+
+    @Test
+    @Transactional
     void checkCreatedAtIsRequired() throws Exception {
         long databaseSizeBeforeTest = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(routeSearchRepository.findAll());
@@ -282,6 +309,7 @@ class RouteResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(route.getId().intValue())))
             .andExpect(jsonPath("$.[*].routeCode").value(hasItem(DEFAULT_ROUTE_CODE)))
             .andExpect(jsonPath("$.[*].distanceKm").value(hasItem(sameNumber(DEFAULT_DISTANCE_KM))))
+            .andExpect(jsonPath("$.[*].baseFare").value(hasItem(sameNumber(DEFAULT_BASE_FARE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))
@@ -303,6 +331,7 @@ class RouteResourceIT {
             .andExpect(jsonPath("$.id").value(route.getId().intValue()))
             .andExpect(jsonPath("$.routeCode").value(DEFAULT_ROUTE_CODE))
             .andExpect(jsonPath("$.distanceKm").value(sameNumber(DEFAULT_DISTANCE_KM)))
+            .andExpect(jsonPath("$.baseFare").value(sameNumber(DEFAULT_BASE_FARE)))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
             .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
             .andExpect(jsonPath("$.isDeleted").value(DEFAULT_IS_DELETED))
@@ -446,6 +475,76 @@ class RouteResourceIT {
 
         // Get all the routeList where distanceKm is greater than
         defaultRouteFiltering("distanceKm.greaterThan=" + SMALLER_DISTANCE_KM, "distanceKm.greaterThan=" + DEFAULT_DISTANCE_KM);
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare equals to
+        defaultRouteFiltering("baseFare.equals=" + DEFAULT_BASE_FARE, "baseFare.equals=" + UPDATED_BASE_FARE);
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare in
+        defaultRouteFiltering("baseFare.in=" + DEFAULT_BASE_FARE + "," + UPDATED_BASE_FARE, "baseFare.in=" + UPDATED_BASE_FARE);
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare is not null
+        defaultRouteFiltering("baseFare.specified=true", "baseFare.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare is greater than or equal to
+        defaultRouteFiltering("baseFare.greaterThanOrEqual=" + DEFAULT_BASE_FARE, "baseFare.greaterThanOrEqual=" + UPDATED_BASE_FARE);
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare is less than or equal to
+        defaultRouteFiltering("baseFare.lessThanOrEqual=" + DEFAULT_BASE_FARE, "baseFare.lessThanOrEqual=" + SMALLER_BASE_FARE);
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsLessThanSomething() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare is less than
+        defaultRouteFiltering("baseFare.lessThan=" + UPDATED_BASE_FARE, "baseFare.lessThan=" + DEFAULT_BASE_FARE);
+    }
+
+    @Test
+    @Transactional
+    void getAllRoutesByBaseFareIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        insertedRoute = routeRepository.saveAndFlush(route);
+
+        // Get all the routeList where baseFare is greater than
+        defaultRouteFiltering("baseFare.greaterThan=" + SMALLER_BASE_FARE, "baseFare.greaterThan=" + DEFAULT_BASE_FARE);
     }
 
     @Test
@@ -658,6 +757,7 @@ class RouteResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(route.getId().intValue())))
             .andExpect(jsonPath("$.[*].routeCode").value(hasItem(DEFAULT_ROUTE_CODE)))
             .andExpect(jsonPath("$.[*].distanceKm").value(hasItem(sameNumber(DEFAULT_DISTANCE_KM))))
+            .andExpect(jsonPath("$.[*].baseFare").value(hasItem(sameNumber(DEFAULT_BASE_FARE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))
@@ -715,6 +815,7 @@ class RouteResourceIT {
         updatedRoute
             .routeCode(UPDATED_ROUTE_CODE)
             .distanceKm(UPDATED_DISTANCE_KM)
+            .baseFare(UPDATED_BASE_FARE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -832,7 +933,7 @@ class RouteResourceIT {
         Route partialUpdatedRoute = new Route();
         partialUpdatedRoute.setId(route.getId());
 
-        partialUpdatedRoute.routeCode(UPDATED_ROUTE_CODE).deletedAt(UPDATED_DELETED_AT);
+        partialUpdatedRoute.routeCode(UPDATED_ROUTE_CODE).isDeleted(UPDATED_IS_DELETED).deletedBy(UPDATED_DELETED_BY);
 
         restRouteMockMvc
             .perform(
@@ -864,6 +965,7 @@ class RouteResourceIT {
         partialUpdatedRoute
             .routeCode(UPDATED_ROUTE_CODE)
             .distanceKm(UPDATED_DISTANCE_KM)
+            .baseFare(UPDATED_BASE_FARE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -996,6 +1098,7 @@ class RouteResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(route.getId().intValue())))
             .andExpect(jsonPath("$.[*].routeCode").value(hasItem(DEFAULT_ROUTE_CODE)))
             .andExpect(jsonPath("$.[*].distanceKm").value(hasItem(sameNumber(DEFAULT_DISTANCE_KM))))
+            .andExpect(jsonPath("$.[*].baseFare").value(hasItem(sameNumber(DEFAULT_BASE_FARE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))

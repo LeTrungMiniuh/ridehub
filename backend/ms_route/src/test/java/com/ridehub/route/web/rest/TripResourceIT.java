@@ -2,7 +2,6 @@ package com.ridehub.route.web.rest;
 
 import static com.ridehub.route.domain.TripAsserts.*;
 import static com.ridehub.route.web.rest.TestUtil.createUpdateProxyForBean;
-import static com.ridehub.route.web.rest.TestUtil.sameNumber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -14,13 +13,13 @@ import com.ridehub.route.IntegrationTest;
 import com.ridehub.route.domain.Attendant;
 import com.ridehub.route.domain.Driver;
 import com.ridehub.route.domain.Route;
+import com.ridehub.route.domain.ScheduleTimeSlot;
 import com.ridehub.route.domain.Trip;
 import com.ridehub.route.domain.Vehicle;
 import com.ridehub.route.repository.TripRepository;
 import com.ridehub.route.service.dto.TripDTO;
 import com.ridehub.route.service.mapper.TripMapper;
 import jakarta.persistence.EntityManager;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
@@ -52,10 +51,6 @@ class TripResourceIT {
 
     private static final Instant DEFAULT_ARRIVAL_TIME = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_ARRIVAL_TIME = Instant.now().truncatedTo(ChronoUnit.MILLIS);
-
-    private static final BigDecimal DEFAULT_BASE_FARE = new BigDecimal(1);
-    private static final BigDecimal UPDATED_BASE_FARE = new BigDecimal(2);
-    private static final BigDecimal SMALLER_BASE_FARE = new BigDecimal(1 - 1);
 
     private static final Instant DEFAULT_CREATED_AT = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_CREATED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -108,7 +103,6 @@ class TripResourceIT {
             .tripCode(DEFAULT_TRIP_CODE)
             .departureTime(DEFAULT_DEPARTURE_TIME)
             .arrivalTime(DEFAULT_ARRIVAL_TIME)
-            .baseFare(DEFAULT_BASE_FARE)
             .createdAt(DEFAULT_CREATED_AT)
             .updatedAt(DEFAULT_UPDATED_AT)
             .isDeleted(DEFAULT_IS_DELETED)
@@ -135,6 +129,16 @@ class TripResourceIT {
         }
         trip.setVehicle(vehicle);
         // Add required entity
+        ScheduleTimeSlot scheduleTimeSlot;
+        if (TestUtil.findAll(em, ScheduleTimeSlot.class).isEmpty()) {
+            scheduleTimeSlot = ScheduleTimeSlotResourceIT.createEntity(em);
+            em.persist(scheduleTimeSlot);
+            em.flush();
+        } else {
+            scheduleTimeSlot = TestUtil.findAll(em, ScheduleTimeSlot.class).get(0);
+        }
+        trip.setSlot(scheduleTimeSlot);
+        // Add required entity
         Driver driver;
         if (TestUtil.findAll(em, Driver.class).isEmpty()) {
             driver = DriverResourceIT.createEntity(em);
@@ -158,7 +162,6 @@ class TripResourceIT {
             .tripCode(UPDATED_TRIP_CODE)
             .departureTime(UPDATED_DEPARTURE_TIME)
             .arrivalTime(UPDATED_ARRIVAL_TIME)
-            .baseFare(UPDATED_BASE_FARE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -184,6 +187,16 @@ class TripResourceIT {
             vehicle = TestUtil.findAll(em, Vehicle.class).get(0);
         }
         updatedTrip.setVehicle(vehicle);
+        // Add required entity
+        ScheduleTimeSlot scheduleTimeSlot;
+        if (TestUtil.findAll(em, ScheduleTimeSlot.class).isEmpty()) {
+            scheduleTimeSlot = ScheduleTimeSlotResourceIT.createUpdatedEntity(em);
+            em.persist(scheduleTimeSlot);
+            em.flush();
+        } else {
+            scheduleTimeSlot = TestUtil.findAll(em, ScheduleTimeSlot.class).get(0);
+        }
+        updatedTrip.setSlot(scheduleTimeSlot);
         // Add required entity
         Driver driver;
         if (TestUtil.findAll(em, Driver.class).isEmpty()) {
@@ -305,23 +318,6 @@ class TripResourceIT {
 
     @Test
     @Transactional
-    void checkBaseFareIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        trip.setBaseFare(null);
-
-        // Create the Trip, which fails.
-        TripDTO tripDTO = tripMapper.toDto(trip);
-
-        restTripMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(tripDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void checkCreatedAtIsRequired() throws Exception {
         long databaseSizeBeforeTest = getRepositoryCount();
         // set the field null
@@ -352,7 +348,6 @@ class TripResourceIT {
             .andExpect(jsonPath("$.[*].tripCode").value(hasItem(DEFAULT_TRIP_CODE)))
             .andExpect(jsonPath("$.[*].departureTime").value(hasItem(DEFAULT_DEPARTURE_TIME.toString())))
             .andExpect(jsonPath("$.[*].arrivalTime").value(hasItem(DEFAULT_ARRIVAL_TIME.toString())))
-            .andExpect(jsonPath("$.[*].baseFare").value(hasItem(sameNumber(DEFAULT_BASE_FARE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))
@@ -375,7 +370,6 @@ class TripResourceIT {
             .andExpect(jsonPath("$.tripCode").value(DEFAULT_TRIP_CODE))
             .andExpect(jsonPath("$.departureTime").value(DEFAULT_DEPARTURE_TIME.toString()))
             .andExpect(jsonPath("$.arrivalTime").value(DEFAULT_ARRIVAL_TIME.toString()))
-            .andExpect(jsonPath("$.baseFare").value(sameNumber(DEFAULT_BASE_FARE)))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
             .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
             .andExpect(jsonPath("$.isDeleted").value(DEFAULT_IS_DELETED))
@@ -512,76 +506,6 @@ class TripResourceIT {
 
         // Get all the tripList where arrivalTime is not null
         defaultTripFiltering("arrivalTime.specified=true", "arrivalTime.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare equals to
-        defaultTripFiltering("baseFare.equals=" + DEFAULT_BASE_FARE, "baseFare.equals=" + UPDATED_BASE_FARE);
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsInShouldWork() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare in
-        defaultTripFiltering("baseFare.in=" + DEFAULT_BASE_FARE + "," + UPDATED_BASE_FARE, "baseFare.in=" + UPDATED_BASE_FARE);
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare is not null
-        defaultTripFiltering("baseFare.specified=true", "baseFare.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsGreaterThanOrEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare is greater than or equal to
-        defaultTripFiltering("baseFare.greaterThanOrEqual=" + DEFAULT_BASE_FARE, "baseFare.greaterThanOrEqual=" + UPDATED_BASE_FARE);
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsLessThanOrEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare is less than or equal to
-        defaultTripFiltering("baseFare.lessThanOrEqual=" + DEFAULT_BASE_FARE, "baseFare.lessThanOrEqual=" + SMALLER_BASE_FARE);
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsLessThanSomething() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare is less than
-        defaultTripFiltering("baseFare.lessThan=" + UPDATED_BASE_FARE, "baseFare.lessThan=" + DEFAULT_BASE_FARE);
-    }
-
-    @Test
-    @Transactional
-    void getAllTripsByBaseFareIsGreaterThanSomething() throws Exception {
-        // Initialize the database
-        insertedTrip = tripRepository.saveAndFlush(trip);
-
-        // Get all the tripList where baseFare is greater than
-        defaultTripFiltering("baseFare.greaterThan=" + SMALLER_BASE_FARE, "baseFare.greaterThan=" + DEFAULT_BASE_FARE);
     }
 
     @Test
@@ -780,6 +704,28 @@ class TripResourceIT {
 
     @Test
     @Transactional
+    void getAllTripsBySlotIsEqualToSomething() throws Exception {
+        ScheduleTimeSlot slot;
+        if (TestUtil.findAll(em, ScheduleTimeSlot.class).isEmpty()) {
+            tripRepository.saveAndFlush(trip);
+            slot = ScheduleTimeSlotResourceIT.createEntity(em);
+        } else {
+            slot = TestUtil.findAll(em, ScheduleTimeSlot.class).get(0);
+        }
+        em.persist(slot);
+        em.flush();
+        trip.setSlot(slot);
+        tripRepository.saveAndFlush(trip);
+        Long slotId = slot.getId();
+        // Get all the tripList where slot equals to slotId
+        defaultTripShouldBeFound("slotId.equals=" + slotId);
+
+        // Get all the tripList where slot equals to (slotId + 1)
+        defaultTripShouldNotBeFound("slotId.equals=" + (slotId + 1));
+    }
+
+    @Test
+    @Transactional
     void getAllTripsByDriverIsEqualToSomething() throws Exception {
         Driver driver;
         if (TestUtil.findAll(em, Driver.class).isEmpty()) {
@@ -839,7 +785,6 @@ class TripResourceIT {
             .andExpect(jsonPath("$.[*].tripCode").value(hasItem(DEFAULT_TRIP_CODE)))
             .andExpect(jsonPath("$.[*].departureTime").value(hasItem(DEFAULT_DEPARTURE_TIME.toString())))
             .andExpect(jsonPath("$.[*].arrivalTime").value(hasItem(DEFAULT_ARRIVAL_TIME.toString())))
-            .andExpect(jsonPath("$.[*].baseFare").value(hasItem(sameNumber(DEFAULT_BASE_FARE))))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
             .andExpect(jsonPath("$.[*].isDeleted").value(hasItem(DEFAULT_IS_DELETED)))
@@ -896,7 +841,6 @@ class TripResourceIT {
             .tripCode(UPDATED_TRIP_CODE)
             .departureTime(UPDATED_DEPARTURE_TIME)
             .arrivalTime(UPDATED_ARRIVAL_TIME)
-            .baseFare(UPDATED_BASE_FARE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)
@@ -994,7 +938,7 @@ class TripResourceIT {
         Trip partialUpdatedTrip = new Trip();
         partialUpdatedTrip.setId(trip.getId());
 
-        partialUpdatedTrip.isDeleted(UPDATED_IS_DELETED).deletedBy(UPDATED_DELETED_BY);
+        partialUpdatedTrip.deletedAt(UPDATED_DELETED_AT);
 
         restTripMockMvc
             .perform(
@@ -1027,7 +971,6 @@ class TripResourceIT {
             .tripCode(UPDATED_TRIP_CODE)
             .departureTime(UPDATED_DEPARTURE_TIME)
             .arrivalTime(UPDATED_ARRIVAL_TIME)
-            .baseFare(UPDATED_BASE_FARE)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT)
             .isDeleted(UPDATED_IS_DELETED)

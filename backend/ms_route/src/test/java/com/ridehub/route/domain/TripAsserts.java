@@ -1,6 +1,5 @@
 package com.ridehub.route.domain;
 
-import static com.ridehub.route.domain.AssertUtils.bigDecimalCompareTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TripAsserts {
@@ -51,9 +50,6 @@ public class TripAsserts {
             .satisfies(a -> assertThat(a.getTripCode()).as("check tripCode").isEqualTo(expected.getTripCode()))
             .satisfies(a -> assertThat(a.getDepartureTime()).as("check departureTime").isEqualTo(expected.getDepartureTime()))
             .satisfies(a -> assertThat(a.getArrivalTime()).as("check arrivalTime").isEqualTo(expected.getArrivalTime()))
-            .satisfies(a ->
-                assertThat(a.getBaseFare()).as("check baseFare").usingComparator(bigDecimalCompareTo).isEqualTo(expected.getBaseFare())
-            )
             .satisfies(a -> assertThat(a.getCreatedAt()).as("check createdAt").isEqualTo(expected.getCreatedAt()))
             .satisfies(a -> assertThat(a.getUpdatedAt()).as("check updatedAt").isEqualTo(expected.getUpdatedAt()))
             .satisfies(a -> assertThat(a.getIsDeleted()).as("check isDeleted").isEqualTo(expected.getIsDeleted()))
@@ -72,6 +68,7 @@ public class TripAsserts {
             .as("Verify Trip relationships")
             .satisfies(a -> assertThat(a.getRoute()).as("check route").isEqualTo(expected.getRoute()))
             .satisfies(a -> assertThat(a.getVehicle()).as("check vehicle").isEqualTo(expected.getVehicle()))
+            .satisfies(a -> assertThat(a.getSlot()).as("check slot").isEqualTo(expected.getSlot()))
             .satisfies(a -> assertThat(a.getDriver()).as("check driver").isEqualTo(expected.getDriver()))
             .satisfies(a -> assertThat(a.getAttendant()).as("check attendant").isEqualTo(expected.getAttendant()));
     }

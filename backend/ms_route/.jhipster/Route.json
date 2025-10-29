@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20251007111248"
+    "changelogDate": "20251028235122"
   },
   "applications": ["ms_route"],
   "clientRootFolder": "ms_route",
@@ -16,6 +16,11 @@
     {
       "fieldName": "distanceKm",
       "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "baseFare",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "createdAt",
@@ -44,6 +49,13 @@
   "name": "Route",
   "pagination": "infinite-scroll",
   "relationships": [
+    {
+      "otherEntityName": "schedule",
+      "otherEntityRelationshipName": "route",
+      "relationshipName": "schedules",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    },
     {
       "otherEntityName": "station",
       "relationshipName": "origin",

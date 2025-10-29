@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.Cache;
@@ -41,10 +40,6 @@ public class Trip implements Serializable {
     private Instant arrivalTime;
 
     @NotNull
-    @Column(name = "base_fare", precision = 21, scale = 2, nullable = false)
-    private BigDecimal baseFare;
-
-    @NotNull
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -63,13 +58,18 @@ public class Trip implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-    @JsonIgnoreProperties(value = { "origin", "destination" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "schedules", "origin", "destination" }, allowSetters = true)
     private Route route;
 
     @ManyToOne(optional = false)
     @NotNull
     @JsonIgnoreProperties(value = { "seatMap", "vehicleImg" }, allowSetters = true)
     private Vehicle vehicle;
+
+    @ManyToOne(optional = false)
+    @NotNull
+    @JsonIgnoreProperties(value = { "schedule" }, allowSetters = true)
+    private ScheduleTimeSlot slot;
 
     @ManyToOne(optional = false)
     @NotNull
@@ -132,19 +132,6 @@ public class Trip implements Serializable {
 
     public void setArrivalTime(Instant arrivalTime) {
         this.arrivalTime = arrivalTime;
-    }
-
-    public BigDecimal getBaseFare() {
-        return this.baseFare;
-    }
-
-    public Trip baseFare(BigDecimal baseFare) {
-        this.setBaseFare(baseFare);
-        return this;
-    }
-
-    public void setBaseFare(BigDecimal baseFare) {
-        this.baseFare = baseFare;
     }
 
     public Instant getCreatedAt() {
@@ -238,6 +225,19 @@ public class Trip implements Serializable {
         return this;
     }
 
+    public ScheduleTimeSlot getSlot() {
+        return this.slot;
+    }
+
+    public void setSlot(ScheduleTimeSlot scheduleTimeSlot) {
+        this.slot = scheduleTimeSlot;
+    }
+
+    public Trip slot(ScheduleTimeSlot scheduleTimeSlot) {
+        this.setSlot(scheduleTimeSlot);
+        return this;
+    }
+
     public Driver getDriver() {
         return this.driver;
     }
@@ -291,7 +291,6 @@ public class Trip implements Serializable {
             ", tripCode='" + getTripCode() + "'" +
             ", departureTime='" + getDepartureTime() + "'" +
             ", arrivalTime='" + getArrivalTime() + "'" +
-            ", baseFare=" + getBaseFare() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +

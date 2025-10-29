@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20251007111748"
+    "changelogDate": "20251028235822"
   },
   "applications": ["ms_route"],
   "clientRootFolder": "ms_route",
@@ -20,11 +20,6 @@
     {
       "fieldName": "arrivalTime",
       "fieldType": "Instant",
-      "fieldValidateRules": ["required"]
-    },
-    {
-      "fieldName": "baseFare",
-      "fieldType": "BigDecimal",
       "fieldValidateRules": ["required"]
     },
     {
@@ -64,6 +59,13 @@
     {
       "otherEntityName": "vehicle",
       "relationshipName": "vehicle",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityName": "scheduleTimeSlot",
+      "relationshipName": "slot",
       "relationshipSide": "left",
       "relationshipType": "many-to-one",
       "relationshipValidateRules": "required"

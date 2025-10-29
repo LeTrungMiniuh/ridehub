@@ -6,6 +6,8 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -39,6 +41,10 @@ public class Route implements Serializable {
     private BigDecimal distanceKm;
 
     @NotNull
+    @Column(name = "base_fare", precision = 21, scale = 2, nullable = false)
+    private BigDecimal baseFare;
+
+    @NotNull
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -55,6 +61,12 @@ public class Route implements Serializable {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "deleted_by", length = 36)
     private UUID deletedBy;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "route")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @org.springframework.data.annotation.Transient
+    @JsonIgnoreProperties(value = { "timeSlots", "route" }, allowSetters = true)
+    private Set<Schedule> schedules = new HashSet<>();
 
     @ManyToOne(optional = false)
     @NotNull
@@ -105,6 +117,19 @@ public class Route implements Serializable {
 
     public void setDistanceKm(BigDecimal distanceKm) {
         this.distanceKm = distanceKm;
+    }
+
+    public BigDecimal getBaseFare() {
+        return this.baseFare;
+    }
+
+    public Route baseFare(BigDecimal baseFare) {
+        this.setBaseFare(baseFare);
+        return this;
+    }
+
+    public void setBaseFare(BigDecimal baseFare) {
+        this.baseFare = baseFare;
     }
 
     public Instant getCreatedAt() {
@@ -172,6 +197,37 @@ public class Route implements Serializable {
         this.deletedBy = deletedBy;
     }
 
+    public Set<Schedule> getSchedules() {
+        return this.schedules;
+    }
+
+    public void setSchedules(Set<Schedule> schedules) {
+        if (this.schedules != null) {
+            this.schedules.forEach(i -> i.setRoute(null));
+        }
+        if (schedules != null) {
+            schedules.forEach(i -> i.setRoute(this));
+        }
+        this.schedules = schedules;
+    }
+
+    public Route schedules(Set<Schedule> schedules) {
+        this.setSchedules(schedules);
+        return this;
+    }
+
+    public Route addSchedules(Schedule schedule) {
+        this.schedules.add(schedule);
+        schedule.setRoute(this);
+        return this;
+    }
+
+    public Route removeSchedules(Schedule schedule) {
+        this.schedules.remove(schedule);
+        schedule.setRoute(null);
+        return this;
+    }
+
     public Station getOrigin() {
         return this.origin;
     }
@@ -224,6 +280,7 @@ public class Route implements Serializable {
             "id=" + getId() +
             ", routeCode='" + getRouteCode() + "'" +
             ", distanceKm=" + getDistanceKm() +
+            ", baseFare=" + getBaseFare() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +

@@ -22,6 +22,9 @@ public class RouteDTO implements Serializable {
     private BigDecimal distanceKm;
 
     @NotNull
+    private BigDecimal baseFare;
+
+    @NotNull
     private Instant createdAt;
 
     private Instant updatedAt;
@@ -60,6 +63,14 @@ public class RouteDTO implements Serializable {
 
     public void setDistanceKm(BigDecimal distanceKm) {
         this.distanceKm = distanceKm;
+    }
+
+    public BigDecimal getBaseFare() {
+        return baseFare;
+    }
+
+    public void setBaseFare(BigDecimal baseFare) {
+        this.baseFare = baseFare;
     }
 
     public Instant getCreatedAt() {
@@ -146,6 +157,7 @@ public class RouteDTO implements Serializable {
             "id=" + getId() +
             ", routeCode='" + getRouteCode() + "'" +
             ", distanceKm=" + getDistanceKm() +
+            ", baseFare=" + getBaseFare() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +

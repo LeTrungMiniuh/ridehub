@@ -1,7 +1,6 @@
 package com.ridehub.route.service;
 
 import com.ridehub.route.service.dto.SeatMapDTO;
-import java.util.List;
 import java.util.Optional;
 
 /**

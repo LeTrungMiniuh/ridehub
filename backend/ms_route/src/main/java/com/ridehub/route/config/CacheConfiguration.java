@@ -87,10 +87,14 @@ public class CacheConfiguration {
             createCache(cm, com.ridehub.route.domain.Address.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Station.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Route.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.route.domain.Route.class.getName() + ".schedules", jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Vehicle.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.SeatMap.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Floor.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Seat.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.route.domain.Schedule.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.route.domain.Schedule.class.getName() + ".timeSlots", jcacheConfiguration);
+            createCache(cm, com.ridehub.route.domain.ScheduleTimeSlot.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Trip.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Staff.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.route.domain.Driver.class.getName(), jcacheConfiguration);

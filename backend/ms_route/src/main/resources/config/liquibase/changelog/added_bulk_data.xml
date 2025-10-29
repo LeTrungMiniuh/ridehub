@@ -434,6 +434,7 @@
         @id,
         route_code,
         @distance_km,
+        @base_fare,
         @created_at,
         @updated_at,
         @is_deleted,
@@ -445,6 +446,7 @@
       SET
         id = @id,
         distance_km = IF(@distance_km = '' OR @distance_km = 'NULL', NULL, @distance_km),
+        base_fare = IF(@base_fare = '' OR @base_fare = 'NULL', NULL, @base_fare),
         created_at = IF(@created_at = '' OR @created_at = 'NULL', NOW(6), STR_TO_DATE(@created_at, '%Y-%m-%d %H:%i:%s')),
         updated_at = IF(@updated_at = '' OR @updated_at = 'NULL', NULL, STR_TO_DATE(@updated_at, '%Y-%m-%d %H:%i:%s')),
         is_deleted = IF(@is_deleted = '' OR @is_deleted = 'NULL', 0, @is_deleted),
@@ -472,15 +474,13 @@
       trip_code,
       departure_time,
       arrival_time,
-      @base_fare,
       created_at,
       @updated_at,
       @is_deleted,
       @deleted_at,
       @deleted_by
     )
-    SET base_fare   = NULLIF(@base_fare,''),
-        updated_at  = NULLIF(@updated_at,''),
+    SET updated_at  = NULLIF(@updated_at,''),
         is_deleted  = CASE WHEN LOWER(@is_deleted) IN ('1','true','t','yes','y') THEN 1
                            WHEN LOWER(@is_deleted) IN ('0','false','f','no','n','') THEN 0
                            ELSE NULL END,

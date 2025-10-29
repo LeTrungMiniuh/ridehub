@@ -5,11 +5,7 @@ import com.ridehub.route.repository.FileRouteRepository;
 import com.ridehub.route.service.FileRouteService;
 import com.ridehub.route.service.dto.FileRouteDTO;
 import com.ridehub.route.service.mapper.FileRouteMapper;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -63,7 +59,6 @@ public class FileRouteServiceImpl implements FileRouteService {
             .map(fileRouteRepository::save)
             .map(fileRouteMapper::toDto);
     }
-
 
     @Override
     @Transactional(readOnly = true)

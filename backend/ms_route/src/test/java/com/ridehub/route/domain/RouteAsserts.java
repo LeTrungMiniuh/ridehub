@@ -55,6 +55,9 @@ public class RouteAsserts {
                     .usingComparator(bigDecimalCompareTo)
                     .isEqualTo(expected.getDistanceKm())
             )
+            .satisfies(a ->
+                assertThat(a.getBaseFare()).as("check baseFare").usingComparator(bigDecimalCompareTo).isEqualTo(expected.getBaseFare())
+            )
             .satisfies(a -> assertThat(a.getCreatedAt()).as("check createdAt").isEqualTo(expected.getCreatedAt()))
             .satisfies(a -> assertThat(a.getUpdatedAt()).as("check updatedAt").isEqualTo(expected.getUpdatedAt()))
             .satisfies(a -> assertThat(a.getIsDeleted()).as("check isDeleted").isEqualTo(expected.getIsDeleted()))

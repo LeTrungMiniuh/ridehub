@@ -78,11 +78,13 @@ class RouteCriteriaTest {
         routeCriteria.id();
         routeCriteria.routeCode();
         routeCriteria.distanceKm();
+        routeCriteria.baseFare();
         routeCriteria.createdAt();
         routeCriteria.updatedAt();
         routeCriteria.isDeleted();
         routeCriteria.deletedAt();
         routeCriteria.deletedBy();
+        routeCriteria.schedulesId();
         routeCriteria.originId();
         routeCriteria.destinationId();
         routeCriteria.distinct();
@@ -94,11 +96,13 @@ class RouteCriteriaTest {
                 condition.apply(criteria.getId()) &&
                 condition.apply(criteria.getRouteCode()) &&
                 condition.apply(criteria.getDistanceKm()) &&
+                condition.apply(criteria.getBaseFare()) &&
                 condition.apply(criteria.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt()) &&
                 condition.apply(criteria.getIsDeleted()) &&
                 condition.apply(criteria.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy()) &&
+                condition.apply(criteria.getSchedulesId()) &&
                 condition.apply(criteria.getOriginId()) &&
                 condition.apply(criteria.getDestinationId()) &&
                 condition.apply(criteria.getDistinct()),
@@ -112,11 +116,13 @@ class RouteCriteriaTest {
                 condition.apply(criteria.getId(), copy.getId()) &&
                 condition.apply(criteria.getRouteCode(), copy.getRouteCode()) &&
                 condition.apply(criteria.getDistanceKm(), copy.getDistanceKm()) &&
+                condition.apply(criteria.getBaseFare(), copy.getBaseFare()) &&
                 condition.apply(criteria.getCreatedAt(), copy.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt(), copy.getUpdatedAt()) &&
                 condition.apply(criteria.getIsDeleted(), copy.getIsDeleted()) &&
                 condition.apply(criteria.getDeletedAt(), copy.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy(), copy.getDeletedBy()) &&
+                condition.apply(criteria.getSchedulesId(), copy.getSchedulesId()) &&
                 condition.apply(criteria.getOriginId(), copy.getOriginId()) &&
                 condition.apply(criteria.getDestinationId(), copy.getDestinationId()) &&
                 condition.apply(criteria.getDistinct(), copy.getDistinct()),

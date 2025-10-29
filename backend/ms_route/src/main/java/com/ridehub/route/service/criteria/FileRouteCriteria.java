@@ -42,12 +42,6 @@ public class FileRouteCriteria implements Serializable, Criteria {
 
     private UUIDFilter deletedBy;
 
-    private LongFilter stationId;
-
-    private LongFilter vehicleId;
-
-    private LongFilter seatMapId;
-
     private Boolean distinct;
 
     public FileRouteCriteria() {}
@@ -63,9 +57,6 @@ public class FileRouteCriteria implements Serializable, Criteria {
         this.isDeleted = other.optionalIsDeleted().map(BooleanFilter::copy).orElse(null);
         this.deletedAt = other.optionalDeletedAt().map(InstantFilter::copy).orElse(null);
         this.deletedBy = other.optionalDeletedBy().map(UUIDFilter::copy).orElse(null);
-        this.stationId = other.optionalStationId().map(LongFilter::copy).orElse(null);
-        this.vehicleId = other.optionalVehicleId().map(LongFilter::copy).orElse(null);
-        this.seatMapId = other.optionalSeatMapId().map(LongFilter::copy).orElse(null);
         this.distinct = other.distinct;
     }
 
@@ -264,63 +255,6 @@ public class FileRouteCriteria implements Serializable, Criteria {
         this.deletedBy = deletedBy;
     }
 
-    public LongFilter getStationId() {
-        return stationId;
-    }
-
-    public Optional<LongFilter> optionalStationId() {
-        return Optional.ofNullable(stationId);
-    }
-
-    public LongFilter stationId() {
-        if (stationId == null) {
-            setStationId(new LongFilter());
-        }
-        return stationId;
-    }
-
-    public void setStationId(LongFilter stationId) {
-        this.stationId = stationId;
-    }
-
-    public LongFilter getVehicleId() {
-        return vehicleId;
-    }
-
-    public Optional<LongFilter> optionalVehicleId() {
-        return Optional.ofNullable(vehicleId);
-    }
-
-    public LongFilter vehicleId() {
-        if (vehicleId == null) {
-            setVehicleId(new LongFilter());
-        }
-        return vehicleId;
-    }
-
-    public void setVehicleId(LongFilter vehicleId) {
-        this.vehicleId = vehicleId;
-    }
-
-    public LongFilter getSeatMapId() {
-        return seatMapId;
-    }
-
-    public Optional<LongFilter> optionalSeatMapId() {
-        return Optional.ofNullable(seatMapId);
-    }
-
-    public LongFilter seatMapId() {
-        if (seatMapId == null) {
-            setSeatMapId(new LongFilter());
-        }
-        return seatMapId;
-    }
-
-    public void setSeatMapId(LongFilter seatMapId) {
-        this.seatMapId = seatMapId;
-    }
-
     public Boolean getDistinct() {
         return distinct;
     }
@@ -360,31 +294,13 @@ public class FileRouteCriteria implements Serializable, Criteria {
             Objects.equals(isDeleted, that.isDeleted) &&
             Objects.equals(deletedAt, that.deletedAt) &&
             Objects.equals(deletedBy, that.deletedBy) &&
-            Objects.equals(stationId, that.stationId) &&
-            Objects.equals(vehicleId, that.vehicleId) &&
-            Objects.equals(seatMapId, that.seatMapId) &&
             Objects.equals(distinct, that.distinct)
         );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-            id,
-            bucket,
-            objectKey,
-            contentType,
-            size,
-            createdAt,
-            updatedAt,
-            isDeleted,
-            deletedAt,
-            deletedBy,
-            stationId,
-            vehicleId,
-            seatMapId,
-            distinct
-        );
+        return Objects.hash(id, bucket, objectKey, contentType, size, createdAt, updatedAt, isDeleted, deletedAt, deletedBy, distinct);
     }
 
     // prettier-ignore
@@ -401,9 +317,6 @@ public class FileRouteCriteria implements Serializable, Criteria {
             optionalIsDeleted().map(f -> "isDeleted=" + f + ", ").orElse("") +
             optionalDeletedAt().map(f -> "deletedAt=" + f + ", ").orElse("") +
             optionalDeletedBy().map(f -> "deletedBy=" + f + ", ").orElse("") +
-            optionalStationId().map(f -> "stationId=" + f + ", ").orElse("") +
-            optionalVehicleId().map(f -> "vehicleId=" + f + ", ").orElse("") +
-            optionalSeatMapId().map(f -> "seatMapId=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";
     }

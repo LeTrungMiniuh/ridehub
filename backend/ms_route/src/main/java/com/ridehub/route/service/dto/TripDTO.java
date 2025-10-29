@@ -2,7 +2,6 @@ package com.ridehub.route.service.dto;
 
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -25,9 +24,6 @@ public class TripDTO implements Serializable {
     private Instant arrivalTime;
 
     @NotNull
-    private BigDecimal baseFare;
-
-    @NotNull
     private Instant createdAt;
 
     private Instant updatedAt;
@@ -43,6 +39,9 @@ public class TripDTO implements Serializable {
 
     @NotNull
     private VehicleDTO vehicle;
+
+    @NotNull
+    private ScheduleTimeSlotDTO slot;
 
     @NotNull
     private DriverDTO driver;
@@ -79,14 +78,6 @@ public class TripDTO implements Serializable {
 
     public void setArrivalTime(Instant arrivalTime) {
         this.arrivalTime = arrivalTime;
-    }
-
-    public BigDecimal getBaseFare() {
-        return baseFare;
-    }
-
-    public void setBaseFare(BigDecimal baseFare) {
-        this.baseFare = baseFare;
     }
 
     public Instant getCreatedAt() {
@@ -145,6 +136,14 @@ public class TripDTO implements Serializable {
         this.vehicle = vehicle;
     }
 
+    public ScheduleTimeSlotDTO getSlot() {
+        return slot;
+    }
+
+    public void setSlot(ScheduleTimeSlotDTO slot) {
+        this.slot = slot;
+    }
+
     public DriverDTO getDriver() {
         return driver;
     }
@@ -190,7 +189,6 @@ public class TripDTO implements Serializable {
             ", tripCode='" + getTripCode() + "'" +
             ", departureTime='" + getDepartureTime() + "'" +
             ", arrivalTime='" + getArrivalTime() + "'" +
-            ", baseFare=" + getBaseFare() +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
             ", isDeleted='" + getIsDeleted() + "'" +
@@ -198,6 +196,7 @@ public class TripDTO implements Serializable {
             ", deletedBy='" + getDeletedBy() + "'" +
             ", route=" + getRoute() +
             ", vehicle=" + getVehicle() +
+            ", slot=" + getSlot() +
             ", driver=" + getDriver() +
             ", attendant=" + getAttendant() +
             "}";

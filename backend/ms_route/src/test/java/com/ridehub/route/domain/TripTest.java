@@ -3,6 +3,7 @@ package com.ridehub.route.domain;
 import static com.ridehub.route.domain.AttendantTestSamples.*;
 import static com.ridehub.route.domain.DriverTestSamples.*;
 import static com.ridehub.route.domain.RouteTestSamples.*;
+import static com.ridehub.route.domain.ScheduleTimeSlotTestSamples.*;
 import static com.ridehub.route.domain.TripTestSamples.*;
 import static com.ridehub.route.domain.VehicleTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +49,18 @@ class TripTest {
 
         trip.vehicle(null);
         assertThat(trip.getVehicle()).isNull();
+    }
+
+    @Test
+    void slotTest() {
+        Trip trip = getTripRandomSampleGenerator();
+        ScheduleTimeSlot scheduleTimeSlotBack = getScheduleTimeSlotRandomSampleGenerator();
+
+        trip.setSlot(scheduleTimeSlotBack);
+        assertThat(trip.getSlot()).isEqualTo(scheduleTimeSlotBack);
+
+        trip.slot(null);
+        assertThat(trip.getSlot()).isNull();
     }
 
     @Test
