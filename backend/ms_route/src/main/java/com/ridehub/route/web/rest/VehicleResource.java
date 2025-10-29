@@ -5,6 +5,7 @@ import com.ridehub.route.service.VehicleQueryService;
 import com.ridehub.route.service.VehicleService;
 import com.ridehub.route.service.criteria.VehicleCriteria;
 import com.ridehub.route.service.dto.VehicleDTO;
+import com.ridehub.route.service.dto.VehicleTypeFactorUpdateDTO;
 import com.ridehub.route.service.vm.VehicleDetailVM;
 import com.ridehub.route.service.vm.VehicleWithSeatCountVM;
 import com.ridehub.route.web.rest.errors.BadRequestAlertException;
@@ -241,5 +242,21 @@ public class VehicleResource {
         LOG.debug("REST request to get Vehicle Detail : {}", id);
         Optional<VehicleDetailVM> vm = vehicleQueryService.findDetail(id);
         return ResponseUtil.wrapOrNotFound(vm);
+    }
+
+    /**
+     * {@code PUT  /vehicles/type-factor} : Update typeFactor for all vehicles of a specific type.
+     *
+     * @param updateDTO DTO containing vehicle type and new typeFactor.
+     * @return {@link ResponseEntity} with status {@code 200 (OK)} and the number of vehicles updated.
+     */
+    @PutMapping("/type-factor")
+    public ResponseEntity<Integer> updateTypeFactorByType(@Valid @RequestBody VehicleTypeFactorUpdateDTO updateDTO) {
+        LOG.debug("REST request to update typeFactor for vehicles of type : {}", updateDTO.getType());
+        int updatedCount = vehicleService.updateTypeFactorByType(updateDTO);
+        return ResponseEntity.ok()
+                .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, 
+                        "Updated " + updatedCount + " vehicles of type " + updateDTO.getType()))
+                .body(updatedCount);
     }
 }

@@ -1,6 +1,7 @@
 package com.ridehub.route.service;
 
 import com.ridehub.route.service.dto.VehicleDTO;
+import com.ridehub.route.service.dto.VehicleTypeFactorUpdateDTO;
 import java.util.Optional;
 
 /**
@@ -45,4 +46,12 @@ public interface VehicleService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    /**
+     * Update typeFactor for all vehicles of a specific type.
+     *
+     * @param updateDTO the DTO containing vehicle type and new typeFactor.
+     * @return the number of vehicles updated.
+     */
+    int updateTypeFactorByType(VehicleTypeFactorUpdateDTO updateDTO);
 }

@@ -1,10 +1,13 @@
 package com.ridehub.route.service.impl;
 
 import com.ridehub.route.domain.Vehicle;
+import com.ridehub.route.domain.enumeration.VehicleType;
 import com.ridehub.route.repository.VehicleRepository;
 import com.ridehub.route.service.VehicleService;
 import com.ridehub.route.service.dto.VehicleDTO;
+import com.ridehub.route.service.dto.VehicleTypeFactorUpdateDTO;
 import com.ridehub.route.service.mapper.VehicleMapper;
+import java.math.BigDecimal;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,5 +74,11 @@ public class VehicleServiceImpl implements VehicleService {
     public void delete(Long id) {
         LOG.debug("Request to delete Vehicle : {}", id);
         vehicleRepository.deleteById(id);
+    }
+
+    @Override
+    public int updateTypeFactorByType(VehicleTypeFactorUpdateDTO updateDTO) {
+        LOG.debug("Request to update typeFactor for all vehicles of type : {}", updateDTO.getType());
+        return vehicleRepository.updateTypeFactorByType(updateDTO.getType(), updateDTO.getTypeFactor());
     }
 }

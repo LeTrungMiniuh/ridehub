@@ -14,7 +14,7 @@ enum VehicleStatus { ACTIVE, MAINTENANCE, RETIRED }
 enum VehicleType { STANDARD_BUS_VIP, STANDARD_BUS_NORMAL, LIMOUSINE }
 enum LockStatus { HELD, EXPIRED, COMMITTED }
 enum SeatType { SLEEPER, NORMAL }
-enum TripStatus { SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED, DELAYED }
+
 
 // Schedule-driven pricing occasion
 enum OccasionType { NORMAL, WEEKEND, HOLIDAY, PEAK, OFF_PEAK, TET }
@@ -366,7 +366,6 @@ entity Trip {
   tripCode String required unique
   departureTime Instant required
   arrivalTime Instant required
-  status TripStatus required
   occasionFactor BigDecimal required // resolved from schedule/occasion at generation time
   // baseFare removed; now on Route
   createdAt Instant required

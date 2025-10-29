@@ -72,13 +72,7 @@ enum SeatType {
   NORMAL
 }
 
-enum TripStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  DELAYED
-}
+
 
 ' New: Occasion type for schedule-driven pricing
 enum OccasionType {
@@ -295,7 +289,6 @@ package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock, Schedul
     +tripCode: String {unique}
     +departureTime: Instant
     +arrivalTime: Instant
-    +status: TripStatus
     +occasionFactor: BigDecimal ' resolved from schedule/occasion at generation time
     ' baseFare removed; now on Route
   }
