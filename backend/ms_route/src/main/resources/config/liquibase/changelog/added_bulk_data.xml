@@ -493,6 +493,138 @@
         attendant_id = NULLIF(@attendant_id,'');
   </sql>
   </changeSet>
+  <!-- 14) schedule -->
+  <changeSet id="msroute-00014-schedule" author="jhipster">
+    <comment>Load schedule</comment>
+    <sql>
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/schedule.csv'
+      INTO TABLE schedule
+      FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
+      LINES TERMINATED BY '\n'
+      IGNORE 1 LINES
+      (
+        @id,
+        schedule_code,
+        @start_date,
+        @end_date,
+        days_of_week,
+        @active,
+        created_at,
+        @updated_at,
+        @is_deleted,
+        @deleted_at,
+        @deleted_by,
+        @occasion_rule_id,
+        @route_id
+      )
+      SET
+        id              = NULLIF(@id,''),
+        -- dates in CSV expected as yyyy-MM-dd; adjust if your file has time
+        start_date      = NULLIF(@start_date,''),
+        end_date        = NULLIF(@end_date,''),
+        active          = CASE
+                            WHEN LOWER(@active) IN ('1','true','t','yes','y') THEN 1
+                            WHEN LOWER(@active) IN ('0','false','f','no','n','') THEN 0
+                            ELSE 0
+                          END,
+        updated_at      = NULLIF(@updated_at,''),
+        is_deleted      = CASE
+                            WHEN LOWER(@is_deleted) IN ('1','true','t','yes','y') THEN 1
+                            WHEN LOWER(@is_deleted) IN ('0','false','f','no','n','') THEN 0
+                            ELSE NULL
+                          END,
+        deleted_at      = NULLIF(@deleted_at,''),
+        deleted_by      = CASE WHEN @deleted_by IN ('','\\N') THEN NULL ELSE @deleted_by END,
+        occasion_rule_id = NULLIF(@occasion_rule_id,''),
+        route_id        = NULLIF(@route_id,'');
+    </sql>
+  </changeSet>
+  <!-- 15) schedule_time_slot -->
+  <changeSet id="msroute-00015-schedule-time-slot" author="jhipster">
+    <comment>Load schedule_time_slot</comment>
+    <sql>
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/schedule_time_slot.csv'
+      INTO TABLE schedule_time_slot
+      FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
+      LINES TERMINATED BY '\n'
+      IGNORE 1 LINES
+      (
+        @id,
+        slot_code,
+        @departure_time,
+        @arrival_time,
+        @buffer_minutes,
+        @sequence,
+        @active,
+        created_at,
+        @updated_at,
+        @is_deleted,
+        @deleted_at,
+        @deleted_by,
+        @schedule_id
+      )
+      SET
+        id             = NULLIF(@id,''),
+        -- expect HH:mm:ss; if your CSV has '2025-10-30 08:00:00', change the STR_TO_DATE format
+        departure_time = NULLIF(@departure_time,''),
+        arrival_time   = NULLIF(@arrival_time,''),
+        buffer_minutes = NULLIF(@buffer_minutes,''),
+        sequence       = NULLIF(@sequence,''),
+        active         = CASE
+                           WHEN LOWER(@active) IN ('1','true','t','yes','y') THEN 1
+                           WHEN LOWER(@active) IN ('0','false','f','no','n','') THEN 0
+                           ELSE 0
+                         END,
+        updated_at     = NULLIF(@updated_at,''),
+        is_deleted     = CASE
+                           WHEN LOWER(@is_deleted) IN ('1','true','t','yes','y') THEN 1
+                           WHEN LOWER(@is_deleted) IN ('0','false','f','no','n','') THEN 0
+                           ELSE NULL
+                         END,
+        deleted_at     = NULLIF(@deleted_at,''),
+        deleted_by     = CASE WHEN @deleted_by IN ('','\\N') THEN NULL ELSE @deleted_by END,
+        schedule_id    = NULLIF(@schedule_id,'');
+    </sql>
+  </changeSet>
+  <!-- 16) trip (moved from 14) -->
+  <changeSet id="msroute-00016-trip" author="jhipster">
+    <comment>Load trip</comment>
+    <sql>
+      LOAD DATA LOCAL INFILE '${csv_path}/msroute/trip.csv'
+      INTO TABLE trip
+      FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\'
+      LINES TERMINATED BY '\n'
+      IGNORE 1 LINES
+      (
+        @id,
+        route_id,
+        vehicle_id,
+        driver_id,
+        @attendant_id,
+        trip_code,
+        departure_time,
+        arrival_time,
+        created_at,
+        @updated_at,
+        @is_deleted,
+        @deleted_at,
+        @deleted_by,
+        occasion_factor,
+        slot_id
+      )
+      SET
+        id          = NULLIF(@id,''),
+        updated_at  = NULLIF(@updated_at,''),
+        is_deleted  = CASE
+                        WHEN LOWER(@is_deleted) IN ('1','true','t','yes','y') THEN 1
+                        WHEN LOWER(@is_deleted) IN ('0','false','f','no','n','') THEN 0
+                        ELSE NULL
+                      END,
+        deleted_at  = NULLIF(@deleted_at,''),
+        deleted_by  = CASE WHEN @deleted_by IN ('','\\N') THEN NULL ELSE @deleted_by END,
+        attendant_id = NULLIF(@attendant_id,'');
+    </sql>
+  </changeSet>
   <!-- 99) Re-enable FK checks -->
   <changeSet id="msroute-99999-enable-fk" author="jhipster">
     <comment>Re-enable foreign key checks after bulk CSV import</comment>
