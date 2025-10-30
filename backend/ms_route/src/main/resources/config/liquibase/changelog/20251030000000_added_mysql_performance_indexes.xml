@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <!--
+        Added MySQL performance indexes for high-traffic operations.
+        Optimizes seat availability checks, route searches, trip scheduling, and booking workflows.
+    -->
+    
+    <!-- Route table indexes for route search optimization -->
+    <changeSet id="20251030000000-1" author="performance-optimization">
+        <createIndex tableName="route" indexName="idx_route__origin_destination">
+            <column name="origin_id"/>
+            <column name="destination_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-2" author="performance-optimization">
+        <createIndex tableName="route" indexName="idx_route__route_code">
+            <column name="route_code"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Trip table indexes for scheduling and search optimization -->
+    <changeSet id="20251030000000-3" author="performance-optimization">
+        <createIndex tableName="trip" indexName="idx_trip__route_departure">
+            <column name="route_id"/>
+            <column name="departure_time"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-4" author="performance-optimization">
+        <createIndex tableName="trip" indexName="idx_trip__departure_arrival">
+            <column name="departure_time"/>
+            <column name="arrival_time"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-5" author="performance-optimization">
+        <createIndex tableName="trip" indexName="idx_trip__vehicle_slot">
+            <column name="vehicle_id"/>
+            <column name="slot_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Seat table indexes for seat availability optimization -->
+    <changeSet id="20251030000000-6" author="performance-optimization">
+        <createIndex tableName="seat" indexName="idx_seat__floor_seat">
+            <column name="floor_id"/>
+            <column name="seat_no"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-7" author="performance-optimization">
+        <createIndex tableName="seat" indexName="idx_seat__type">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- SeatLock table indexes for booking operations optimization -->
+    <changeSet id="20251030000000-8" author="performance-optimization">
+        <createIndex tableName="seat_lock" indexName="idx_seat_lock__trip_seat_status">
+            <column name="trip_id"/>
+            <column name="seat_no"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-9" author="performance-optimization">
+        <createIndex tableName="seat_lock" indexName="idx_seat_lock__expires_status">
+            <column name="expires_at"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-10" author="performance-optimization">
+        <createIndex tableName="seat_lock" indexName="idx_seat_lock__user_booking">
+            <column name="user_id"/>
+            <column name="booking_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Schedule table indexes for scheduling optimization -->
+    <changeSet id="20251030000000-11" author="performance-optimization">
+        <createIndex tableName="schedule" indexName="idx_schedule__route_active">
+            <column name="route_id"/>
+            <column name="active"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-12" author="performance-optimization">
+        <createIndex tableName="schedule" indexName="idx_schedule__date_range">
+            <column name="start_date"/>
+            <column name="end_date"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Vehicle table indexes for vehicle management optimization -->
+    <changeSet id="20251030000000-13" author="performance-optimization">
+        <createIndex tableName="vehicle" indexName="idx_vehicle__type_status">
+            <column name="type"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Station table indexes for station search optimization -->
+    <changeSet id="20251030000000-14" author="performance-optimization">
+        <createIndex tableName="station" indexName="idx_station__address_active">
+            <column name="address_id"/>
+            <column name="active"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ScheduleTimeSlot table indexes for time slot optimization -->
+    <changeSet id="20251030000000-15" author="performance-optimization">
+        <createIndex tableName="schedule_time_slot" indexName="idx_schedule_time_slot__departure_arrival">
+            <column name="departure_time"/>
+            <column name="arrival_time"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Driver table indexes for driver assignment optimization -->
+    <changeSet id="20251030000000-16" author="performance-optimization">
+        <createIndex tableName="driver" indexName="idx_driver__staff_id">
+            <column name="staff_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Attendant table indexes for attendant assignment optimization -->
+    <changeSet id="20251030000000-17" author="performance-optimization">
+        <createIndex tableName="attendant" indexName="idx_attendant__staff_id">
+            <column name="staff_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <!-- Staff table indexes for staff assignment optimization (referenced by Driver/Attendant) -->
+    <changeSet id="20251030000000-25" author="performance-optimization">
+        <createIndex tableName="staff" indexName="idx_staff__status_gender">
+            <column name="status"/>
+            <column name="gender"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Generic indexes for soft delete optimization across all tables -->
+    <changeSet id="20251030000000-18" author="performance-optimization">
+        <createIndex tableName="route" indexName="idx_route__deleted">
+            <column name="is_deleted"/>
+            <column name="deleted_at"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-19" author="performance-optimization">
+        <createIndex tableName="trip" indexName="idx_trip__deleted">
+            <column name="is_deleted"/>
+            <column name="deleted_at"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-20" author="performance-optimization">
+        <createIndex tableName="seat" indexName="idx_seat__deleted">
+            <column name="is_deleted"/>
+            <column name="deleted_at"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-21" author="performance-optimization">
+        <createIndex tableName="seat_lock" indexName="idx_seat_lock__deleted">
+            <column name="is_deleted"/>
+            <column name="deleted_at"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-22" author="performance-optimization">
+        <createIndex tableName="schedule" indexName="idx_schedule__deleted">
+            <column name="is_deleted"/>
+            <column name="deleted_at"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20251030000000-24" author="performance-optimization">
+        <createIndex tableName="station" indexName="idx_station__deleted">
+            <column name="is_deleted"/>
+            <column name="deleted_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Created/Updated timestamps for audit and cleanup operations -->
+    <changeSet id="20251030000000-23" author="performance-optimization">
+        <createIndex tableName="seat_lock" indexName="idx_seat_lock__created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
+
+</databaseChangeLog>

@@ -13,3 +13,17 @@ gh api user/repository_invitations --jq '.[] | select(.inviter.login=="maian3333
 git submodule update --init --recursive
 
 git submodule foreach 'git checkout main && git pull origin main'
+
+
+
+
+./mvnw liquibase:update \
+  -Durl="jdbc:mysql://sql.microservices.appf4s.io.vn:3307/ms_route?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&allowLoadLocalInfile=true&createDatabaseIfNotExist=true" \
+  -Dliquibase.url="jdbc:mysql://sql.microservices.appf4s.io.vn:3307/route?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&allowLoadLocalInfile=true&createDatabaseIfNotExist=true" \
+  -Dliquibase.username=root \
+  -Dliquibase.password= \
+  -Dliquibase.changeLogFile=src/main/resources/config/liquibase/master.xml \
+  -Dliquibase.contexts=dev,faker \
+  -Dcsv_path=/home/phungvip/Desktop/work-space/ridehub/backend/ms_route/src/main/resources/config/liquibase \
+  -Dliquibase.parameters.csv_path=/home/phungvip/Desktop/work-space/ridehub/backend/ms_route/src/main/resources/config/liquibase \
+  -Dliquibase.property.csv_path=/home/phungvip/Desktop/work-space/ridehub/backend/ms_route/src/main/resources/config/liquibase
