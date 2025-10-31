@@ -97,7 +97,7 @@ public class AutoScheduleService {
         LOG.info("Starting auto-schedule process for trips");
 
         LocalDate today = LocalDate.now();
-        LocalDate scheduleEndDate = today.plusDays(30); // Create trips for next 30 days
+        LocalDate scheduleEndDate = today.plusDays(7); // Create trips for next 7 days (rolling window)
 
         // Get all active schedules
         ScheduleCriteria scheduleCriteria = new ScheduleCriteria();
@@ -198,20 +198,15 @@ public class AutoScheduleService {
             }
         }
 
-        // Bulk check which trips already exist
-        Set<TripIdentifier> existingTrips = bulkCheckTripExistence(potentialTrips);
+        // Use individual existence checks instead of bulk checking for better performance
+        // with smaller date ranges
 
         int tripsCreated = 0;
 
-        // Create only non-existing trips
+        // Create trips with individual existence checks (faster for small datasets)
         for (LocalDate tripDate : tripDates) {
             for (ScheduleTimeSlot timeSlot : schedule.getTimeSlots()) {
-                TripIdentifier tripId = new TripIdentifier(
-                        schedule.getRoute() != null ? schedule.getRoute().getId() : null,
-                        timeSlot.getId(),
-                        tripDate);
-
-                if (!existingTrips.contains(tripId)) {
+                if (schedule.getRoute() != null) {
                     if (createTripForScheduleSlot(schedule, timeSlot, tripDate)) {
                         tripsCreated++;
                     }
@@ -287,6 +282,31 @@ public class AutoScheduleService {
      * Check if a trip already exists for given schedule, time slot, and date.
      */
     private boolean tripExists(Schedule schedule, ScheduleTimeSlot timeSlot, LocalDate date) {
+        try {
+            // Use optimized repository method for better performance
+            Instant dayStart = date.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+            Instant dayEnd = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant();
+            
+            long count = tripRepository.countByRouteIdAndSlotIdAndDepartureTimeBetweenAndIsDeletedFalse(
+                    schedule.getRoute().getId(),
+                    timeSlot.getId(),
+                    dayStart,
+                    dayEnd
+            );
+            
+            return count > 0;
+        } catch (Exception e) {
+            LOG.warn("Error checking trip existence for schedule {} on {}: {}",
+                    schedule.getScheduleCode(), date, e.getMessage());
+            // Fall back to original method if optimized query fails
+            return tripExistsOriginal(schedule, timeSlot, date);
+        }
+    }
+
+    /**
+     * Original trip existence method as fallback.
+     */
+    private boolean tripExistsOriginal(Schedule schedule, ScheduleTimeSlot timeSlot, LocalDate date) {
         TripCriteria criteria = new TripCriteria();
 
         // Filter by route

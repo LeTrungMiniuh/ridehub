@@ -77,7 +77,19 @@ public class TripQueryService extends QueryService<Trip> {
         public Page<TripDTO> findByCriteria(TripCriteria criteria, Pageable page) {
                 LOG.debug("find by criteria : {}, page: {}", criteria, page);
                 final Specification<Trip> specification = createSpecification(criteria);
-                return tripRepository.findAll(specification, page).map(tripMapper::toDto);
+                return tripRepository.findAll(specification, page).map(trip -> {
+                        TripDTO tripDTO = tripMapper.toDto(trip);
+                        
+                        // Set full route DTO with origin and destination data
+                        if (trip.getRoute() != null && trip.getRoute().getId() != null) {
+                                RouteDTO routeDTO = routeRepository.findById(trip.getRoute().getId())
+                                        .map(routeMapper::toDto)
+                                        .orElse(null);
+                                tripDTO.setRoute(routeDTO);
+                        }
+                        
+                        return tripDTO;
+                });
         }
 
         /**
