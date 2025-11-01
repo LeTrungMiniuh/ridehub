@@ -1,6 +1,7 @@
 package com.ridehub.route.service;
 
 import com.ridehub.route.domain.*; // for static metamodels
+import com.ridehub.route.domain.enumeration.VehicleType;
 import com.ridehub.route.repository.RouteRepository;
 import com.ridehub.route.repository.TripRepository;
 import com.ridehub.route.service.criteria.SeatLockCriteria;
@@ -173,9 +174,11 @@ public class TripQueryService extends QueryService<Trip> {
                                         buildSpecification(criteria.getVehicleId(),
                                                         root -> root.join(Trip_.vehicle, JoinType.LEFT)
                                                                         .get(Vehicle_.id)),
-                                        buildSpecification(criteria.getVehicleType(),
+                                        buildSpecification(
+                                                        criteria.getVehicleType(),
                                                         root -> root.join(Trip_.vehicle, JoinType.LEFT)
-                                                                        .get(Vehicle_.type).as(String.class)),
+                                                                        .get(Vehicle_.type)),
+
                                         buildSpecification(criteria.getDriverId(),
                                                         root -> root.join(Trip_.driver, JoinType.LEFT).get(Driver_.id)),
                                         buildSpecification(criteria.getAttendantId(),
