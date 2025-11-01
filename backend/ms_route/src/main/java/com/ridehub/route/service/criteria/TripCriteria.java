@@ -52,6 +52,8 @@ public class TripCriteria implements Serializable, Criteria {
 
     private LongFilter attendantId;
 
+    private StringFilter vehicleType;
+
     private StringFilter routeCode;
 
     private StringFilter originDistrictCode;
@@ -82,6 +84,7 @@ public class TripCriteria implements Serializable, Criteria {
         this.slotId = other.optionalSlotId().map(LongFilter::copy).orElse(null);
         this.driverId = other.optionalDriverId().map(LongFilter::copy).orElse(null);
         this.attendantId = other.optionalAttendantId().map(LongFilter::copy).orElse(null);
+        this.vehicleType = other.optionalVehicleType().map(StringFilter::copy).orElse(null);
 
         this.routeCode = other.optionalRouteCode().map(StringFilter::copy).orElse(null);
         this.originDistrictCode = other.optionalOriginDistrictCode().map(StringFilter::copy).orElse(null);
@@ -452,6 +455,25 @@ public class TripCriteria implements Serializable, Criteria {
         this.attendantId = attendantId;
     }
 
+    public StringFilter getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(StringFilter vehicleType) {
+        this.vehicleType = vehicleType;
+    }
+
+    public Optional<StringFilter> optionalVehicleType() {
+        return Optional.ofNullable(vehicleType);
+    }
+
+    public StringFilter vehicleType() {
+        if (vehicleType == null) {
+            setVehicleType(new StringFilter());
+        }
+        return vehicleType;
+    }
+
     public Boolean getDistinct() {
         return distinct;
     }
@@ -496,6 +518,7 @@ public class TripCriteria implements Serializable, Criteria {
             Objects.equals(slotId, that.slotId) &&
             Objects.equals(driverId, that.driverId) &&
             Objects.equals(attendantId, that.attendantId) &&
+            Objects.equals(vehicleType, that.vehicleType) &&
             Objects.equals(distinct, that.distinct)
         );
     }
@@ -518,6 +541,7 @@ public class TripCriteria implements Serializable, Criteria {
             slotId,
             driverId,
             attendantId,
+            vehicleType,
             distinct
         );
     }
@@ -541,6 +565,7 @@ public class TripCriteria implements Serializable, Criteria {
             optionalSlotId().map(f -> "slotId=" + f + ", ").orElse("") +
             optionalDriverId().map(f -> "driverId=" + f + ", ").orElse("") +
             optionalAttendantId().map(f -> "attendantId=" + f + ", ").orElse("") +
+            optionalVehicleType().map(f -> "vehicleType=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";
     }

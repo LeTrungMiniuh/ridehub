@@ -79,15 +79,15 @@ public class TripQueryService extends QueryService<Trip> {
                 final Specification<Trip> specification = createSpecification(criteria);
                 return tripRepository.findAll(specification, page).map(trip -> {
                         TripDTO tripDTO = tripMapper.toDto(trip);
-                        
+
                         // Set full route DTO with origin and destination data
                         if (trip.getRoute() != null && trip.getRoute().getId() != null) {
                                 RouteDTO routeDTO = routeRepository.findById(trip.getRoute().getId())
-                                        .map(routeMapper::toDto)
-                                        .orElse(null);
+                                                .map(routeMapper::toDto)
+                                                .orElse(null);
                                 tripDTO.setRoute(routeDTO);
                         }
-                        
+
                         return tripDTO;
                 });
         }
@@ -115,15 +115,15 @@ public class TripQueryService extends QueryService<Trip> {
 
                 // 2️⃣ Convert entity -> DTO
                 TripDTO tripDTO = tripMapper.toDto(trip);
-                
+
                 // 2) Set full route DTO (null-safe)
                 if (trip.getRoute() != null && trip.getRoute().getId() != null) {
                         RouteDTO routeDTO = routeRepository.findById(trip.getRoute().getId())
-                                .map(routeMapper::toDto)
-                                .orElse(null);
+                                        .map(routeMapper::toDto)
+                                        .orElse(null);
                         tripDTO.setRoute(routeDTO);
                 }
-                
+
                 // 3) Vehicle detail (null-safe)
                 VehicleDetailVM vehicleDetail = new VehicleDetailVM(null, List.of(), Map.of());
                 if (trip.getVehicle() != null && trip.getVehicle().getId() != null) {
@@ -173,6 +173,9 @@ public class TripQueryService extends QueryService<Trip> {
                                         buildSpecification(criteria.getVehicleId(),
                                                         root -> root.join(Trip_.vehicle, JoinType.LEFT)
                                                                         .get(Vehicle_.id)),
+                                        buildSpecification(criteria.getVehicleType(),
+                                                        root -> root.join(Trip_.vehicle, JoinType.LEFT)
+                                                                        .get(Vehicle_.type).as(String.class)),
                                         buildSpecification(criteria.getDriverId(),
                                                         root -> root.join(Trip_.driver, JoinType.LEFT).get(Driver_.id)),
                                         buildSpecification(criteria.getAttendantId(),
