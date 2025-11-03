@@ -1,7 +1,7 @@
 id;bucket;object_key;content_type;size;is_banner;created_at;updated_at;is_deleted;deleted_at;deleted_by;promotion_id
-1;promotions;summer2025_banner.jpg;image/jpeg;2303013;true;2025-11-03T22:29:19.522128877;;false;;;1500
-2;marketing;winter25_logo.png;image/png;3114873;false;2025-11-03T22:29:19.543805693;;false;;;1501
-3;banners;earlybird_flyer.pdf;application/pdf;491558;false;2025-11-03T22:29:19.543933871;;false;;;1502
-4;images;flashsale_banner.gif;image/gif;3262727;true;2025-11-03T22:29:19.543994178;;false;;;1503
-5;documents;loyalty10_card.jpg;image/jpeg;1135118;false;2025-11-03T22:29:19.544144699;;false;;;1504
-6;assets;newuser20_welcome.png;image/png;677556;false;2025-11-03T22:29:19.544203242;;false;;;1505
+1;promotions;summer2025_banner.jpg;image/jpeg;2071598;true;2025-11-03T22:58:33.142155667;;false;;00000000-0000-0000-0000-000000000000;1500
+2;marketing;winter25_logo.png;image/png;2163332;false;2025-11-03T22:58:33.147055286;;false;;00000000-0000-0000-0000-000000000000;1501
+3;banners;earlybird_flyer.pdf;application/pdf;3358039;false;2025-11-03T22:58:33.147140849;;false;;00000000-0000-0000-0000-000000000000;1502
+4;images;flashsale_banner.gif;image/gif;4507167;true;2025-11-03T22:58:33.147265787;;false;;00000000-0000-0000-0000-000000000000;1503
+5;documents;loyalty10_card.jpg;image/jpeg;377660;false;2025-11-03T22:58:33.147331632;;false;;00000000-0000-0000-0000-000000000000;1504
+6;assets;newuser20_welcome.png;image/png;1895348;false;2025-11-03T22:58:33.147382188;;false;;00000000-0000-0000-0000-000000000000;1505
