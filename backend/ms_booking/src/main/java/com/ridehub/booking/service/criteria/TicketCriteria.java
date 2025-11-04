@@ -1,5 +1,8 @@
 package com.ridehub.booking.service.criteria;
 
+import com.ridehub.booking.domain.enumeration.AvroTicketStatus;
+import com.ridehub.booking.domain.enumeration.ExchangeStatus;
+import com.ridehub.booking.domain.enumeration.RefundStatus;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,6 +23,57 @@ import tech.jhipster.service.filter.*;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class TicketCriteria implements Serializable, Criteria {
 
+    /**
+     * Class for filtering AvroTicketStatus
+     */
+    public static class AvroTicketStatusFilter extends Filter<AvroTicketStatus> {
+
+        public AvroTicketStatusFilter() {}
+
+        public AvroTicketStatusFilter(AvroTicketStatusFilter filter) {
+            super(filter);
+        }
+
+        @Override
+        public AvroTicketStatusFilter copy() {
+            return new AvroTicketStatusFilter(this);
+        }
+    }
+
+    /**
+     * Class for filtering ExchangeStatus
+     */
+    public static class ExchangeStatusFilter extends Filter<ExchangeStatus> {
+
+        public ExchangeStatusFilter() {}
+
+        public ExchangeStatusFilter(ExchangeStatusFilter filter) {
+            super(filter);
+        }
+
+        @Override
+        public ExchangeStatusFilter copy() {
+            return new ExchangeStatusFilter(this);
+        }
+    }
+
+    /**
+     * Class for filtering RefundStatus
+     */
+    public static class RefundStatusFilter extends Filter<RefundStatus> {
+
+        public RefundStatusFilter() {}
+
+        public RefundStatusFilter(RefundStatusFilter filter) {
+            super(filter);
+        }
+
+        @Override
+        public RefundStatusFilter copy() {
+            return new RefundStatusFilter(this);
+        }
+    }
+
     private static final long serialVersionUID = 1L;
 
     private LongFilter id;
@@ -35,6 +89,28 @@ public class TicketCriteria implements Serializable, Criteria {
     private InstantFilter timeTo;
 
     private BooleanFilter checkedIn;
+
+    private AvroTicketStatusFilter status;
+
+    private ExchangeStatusFilter exchangeStatus;
+
+    private RefundStatusFilter refundStatus;
+
+    private StringFilter exchangeReason;
+
+    private StringFilter refundReason;
+
+    private InstantFilter exchangeRequestedAt;
+
+    private InstantFilter exchangeCompletedAt;
+
+    private InstantFilter refundRequestedAt;
+
+    private InstantFilter refundCompletedAt;
+
+    private BigDecimalFilter refundAmount;
+
+    private StringFilter refundTransactionId;
 
     private LongFilter tripId;
 
@@ -54,7 +130,15 @@ public class TicketCriteria implements Serializable, Criteria {
 
     private LongFilter qrCodeImgId;
 
+    private LongFilter originalTicketId;
+
+    private LongFilter exchangedTicketId;
+
     private LongFilter bookingId;
+
+    private LongFilter exchangedFromId;
+
+    private LongFilter exchangedToId;
 
     private Boolean distinct;
 
@@ -68,6 +152,17 @@ public class TicketCriteria implements Serializable, Criteria {
         this.timeFrom = other.optionalTimeFrom().map(InstantFilter::copy).orElse(null);
         this.timeTo = other.optionalTimeTo().map(InstantFilter::copy).orElse(null);
         this.checkedIn = other.optionalCheckedIn().map(BooleanFilter::copy).orElse(null);
+        this.status = other.optionalStatus().map(AvroTicketStatusFilter::copy).orElse(null);
+        this.exchangeStatus = other.optionalExchangeStatus().map(ExchangeStatusFilter::copy).orElse(null);
+        this.refundStatus = other.optionalRefundStatus().map(RefundStatusFilter::copy).orElse(null);
+        this.exchangeReason = other.optionalExchangeReason().map(StringFilter::copy).orElse(null);
+        this.refundReason = other.optionalRefundReason().map(StringFilter::copy).orElse(null);
+        this.exchangeRequestedAt = other.optionalExchangeRequestedAt().map(InstantFilter::copy).orElse(null);
+        this.exchangeCompletedAt = other.optionalExchangeCompletedAt().map(InstantFilter::copy).orElse(null);
+        this.refundRequestedAt = other.optionalRefundRequestedAt().map(InstantFilter::copy).orElse(null);
+        this.refundCompletedAt = other.optionalRefundCompletedAt().map(InstantFilter::copy).orElse(null);
+        this.refundAmount = other.optionalRefundAmount().map(BigDecimalFilter::copy).orElse(null);
+        this.refundTransactionId = other.optionalRefundTransactionId().map(StringFilter::copy).orElse(null);
         this.tripId = other.optionalTripId().map(LongFilter::copy).orElse(null);
         this.routeId = other.optionalRouteId().map(LongFilter::copy).orElse(null);
         this.seatId = other.optionalSeatId().map(LongFilter::copy).orElse(null);
@@ -77,7 +172,11 @@ public class TicketCriteria implements Serializable, Criteria {
         this.deletedAt = other.optionalDeletedAt().map(InstantFilter::copy).orElse(null);
         this.deletedBy = other.optionalDeletedBy().map(UUIDFilter::copy).orElse(null);
         this.qrCodeImgId = other.optionalQrCodeImgId().map(LongFilter::copy).orElse(null);
+        this.originalTicketId = other.optionalOriginalTicketId().map(LongFilter::copy).orElse(null);
+        this.exchangedTicketId = other.optionalExchangedTicketId().map(LongFilter::copy).orElse(null);
         this.bookingId = other.optionalBookingId().map(LongFilter::copy).orElse(null);
+        this.exchangedFromId = other.optionalExchangedFromId().map(LongFilter::copy).orElse(null);
+        this.exchangedToId = other.optionalExchangedToId().map(LongFilter::copy).orElse(null);
         this.distinct = other.distinct;
     }
 
@@ -217,6 +316,215 @@ public class TicketCriteria implements Serializable, Criteria {
 
     public void setCheckedIn(BooleanFilter checkedIn) {
         this.checkedIn = checkedIn;
+    }
+
+    public AvroTicketStatusFilter getStatus() {
+        return status;
+    }
+
+    public Optional<AvroTicketStatusFilter> optionalStatus() {
+        return Optional.ofNullable(status);
+    }
+
+    public AvroTicketStatusFilter status() {
+        if (status == null) {
+            setStatus(new AvroTicketStatusFilter());
+        }
+        return status;
+    }
+
+    public void setStatus(AvroTicketStatusFilter status) {
+        this.status = status;
+    }
+
+    public ExchangeStatusFilter getExchangeStatus() {
+        return exchangeStatus;
+    }
+
+    public Optional<ExchangeStatusFilter> optionalExchangeStatus() {
+        return Optional.ofNullable(exchangeStatus);
+    }
+
+    public ExchangeStatusFilter exchangeStatus() {
+        if (exchangeStatus == null) {
+            setExchangeStatus(new ExchangeStatusFilter());
+        }
+        return exchangeStatus;
+    }
+
+    public void setExchangeStatus(ExchangeStatusFilter exchangeStatus) {
+        this.exchangeStatus = exchangeStatus;
+    }
+
+    public RefundStatusFilter getRefundStatus() {
+        return refundStatus;
+    }
+
+    public Optional<RefundStatusFilter> optionalRefundStatus() {
+        return Optional.ofNullable(refundStatus);
+    }
+
+    public RefundStatusFilter refundStatus() {
+        if (refundStatus == null) {
+            setRefundStatus(new RefundStatusFilter());
+        }
+        return refundStatus;
+    }
+
+    public void setRefundStatus(RefundStatusFilter refundStatus) {
+        this.refundStatus = refundStatus;
+    }
+
+    public StringFilter getExchangeReason() {
+        return exchangeReason;
+    }
+
+    public Optional<StringFilter> optionalExchangeReason() {
+        return Optional.ofNullable(exchangeReason);
+    }
+
+    public StringFilter exchangeReason() {
+        if (exchangeReason == null) {
+            setExchangeReason(new StringFilter());
+        }
+        return exchangeReason;
+    }
+
+    public void setExchangeReason(StringFilter exchangeReason) {
+        this.exchangeReason = exchangeReason;
+    }
+
+    public StringFilter getRefundReason() {
+        return refundReason;
+    }
+
+    public Optional<StringFilter> optionalRefundReason() {
+        return Optional.ofNullable(refundReason);
+    }
+
+    public StringFilter refundReason() {
+        if (refundReason == null) {
+            setRefundReason(new StringFilter());
+        }
+        return refundReason;
+    }
+
+    public void setRefundReason(StringFilter refundReason) {
+        this.refundReason = refundReason;
+    }
+
+    public InstantFilter getExchangeRequestedAt() {
+        return exchangeRequestedAt;
+    }
+
+    public Optional<InstantFilter> optionalExchangeRequestedAt() {
+        return Optional.ofNullable(exchangeRequestedAt);
+    }
+
+    public InstantFilter exchangeRequestedAt() {
+        if (exchangeRequestedAt == null) {
+            setExchangeRequestedAt(new InstantFilter());
+        }
+        return exchangeRequestedAt;
+    }
+
+    public void setExchangeRequestedAt(InstantFilter exchangeRequestedAt) {
+        this.exchangeRequestedAt = exchangeRequestedAt;
+    }
+
+    public InstantFilter getExchangeCompletedAt() {
+        return exchangeCompletedAt;
+    }
+
+    public Optional<InstantFilter> optionalExchangeCompletedAt() {
+        return Optional.ofNullable(exchangeCompletedAt);
+    }
+
+    public InstantFilter exchangeCompletedAt() {
+        if (exchangeCompletedAt == null) {
+            setExchangeCompletedAt(new InstantFilter());
+        }
+        return exchangeCompletedAt;
+    }
+
+    public void setExchangeCompletedAt(InstantFilter exchangeCompletedAt) {
+        this.exchangeCompletedAt = exchangeCompletedAt;
+    }
+
+    public InstantFilter getRefundRequestedAt() {
+        return refundRequestedAt;
+    }
+
+    public Optional<InstantFilter> optionalRefundRequestedAt() {
+        return Optional.ofNullable(refundRequestedAt);
+    }
+
+    public InstantFilter refundRequestedAt() {
+        if (refundRequestedAt == null) {
+            setRefundRequestedAt(new InstantFilter());
+        }
+        return refundRequestedAt;
+    }
+
+    public void setRefundRequestedAt(InstantFilter refundRequestedAt) {
+        this.refundRequestedAt = refundRequestedAt;
+    }
+
+    public InstantFilter getRefundCompletedAt() {
+        return refundCompletedAt;
+    }
+
+    public Optional<InstantFilter> optionalRefundCompletedAt() {
+        return Optional.ofNullable(refundCompletedAt);
+    }
+
+    public InstantFilter refundCompletedAt() {
+        if (refundCompletedAt == null) {
+            setRefundCompletedAt(new InstantFilter());
+        }
+        return refundCompletedAt;
+    }
+
+    public void setRefundCompletedAt(InstantFilter refundCompletedAt) {
+        this.refundCompletedAt = refundCompletedAt;
+    }
+
+    public BigDecimalFilter getRefundAmount() {
+        return refundAmount;
+    }
+
+    public Optional<BigDecimalFilter> optionalRefundAmount() {
+        return Optional.ofNullable(refundAmount);
+    }
+
+    public BigDecimalFilter refundAmount() {
+        if (refundAmount == null) {
+            setRefundAmount(new BigDecimalFilter());
+        }
+        return refundAmount;
+    }
+
+    public void setRefundAmount(BigDecimalFilter refundAmount) {
+        this.refundAmount = refundAmount;
+    }
+
+    public StringFilter getRefundTransactionId() {
+        return refundTransactionId;
+    }
+
+    public Optional<StringFilter> optionalRefundTransactionId() {
+        return Optional.ofNullable(refundTransactionId);
+    }
+
+    public StringFilter refundTransactionId() {
+        if (refundTransactionId == null) {
+            setRefundTransactionId(new StringFilter());
+        }
+        return refundTransactionId;
+    }
+
+    public void setRefundTransactionId(StringFilter refundTransactionId) {
+        this.refundTransactionId = refundTransactionId;
     }
 
     public LongFilter getTripId() {
@@ -390,6 +698,44 @@ public class TicketCriteria implements Serializable, Criteria {
         this.qrCodeImgId = qrCodeImgId;
     }
 
+    public LongFilter getOriginalTicketId() {
+        return originalTicketId;
+    }
+
+    public Optional<LongFilter> optionalOriginalTicketId() {
+        return Optional.ofNullable(originalTicketId);
+    }
+
+    public LongFilter originalTicketId() {
+        if (originalTicketId == null) {
+            setOriginalTicketId(new LongFilter());
+        }
+        return originalTicketId;
+    }
+
+    public void setOriginalTicketId(LongFilter originalTicketId) {
+        this.originalTicketId = originalTicketId;
+    }
+
+    public LongFilter getExchangedTicketId() {
+        return exchangedTicketId;
+    }
+
+    public Optional<LongFilter> optionalExchangedTicketId() {
+        return Optional.ofNullable(exchangedTicketId);
+    }
+
+    public LongFilter exchangedTicketId() {
+        if (exchangedTicketId == null) {
+            setExchangedTicketId(new LongFilter());
+        }
+        return exchangedTicketId;
+    }
+
+    public void setExchangedTicketId(LongFilter exchangedTicketId) {
+        this.exchangedTicketId = exchangedTicketId;
+    }
+
     public LongFilter getBookingId() {
         return bookingId;
     }
@@ -407,6 +753,44 @@ public class TicketCriteria implements Serializable, Criteria {
 
     public void setBookingId(LongFilter bookingId) {
         this.bookingId = bookingId;
+    }
+
+    public LongFilter getExchangedFromId() {
+        return exchangedFromId;
+    }
+
+    public Optional<LongFilter> optionalExchangedFromId() {
+        return Optional.ofNullable(exchangedFromId);
+    }
+
+    public LongFilter exchangedFromId() {
+        if (exchangedFromId == null) {
+            setExchangedFromId(new LongFilter());
+        }
+        return exchangedFromId;
+    }
+
+    public void setExchangedFromId(LongFilter exchangedFromId) {
+        this.exchangedFromId = exchangedFromId;
+    }
+
+    public LongFilter getExchangedToId() {
+        return exchangedToId;
+    }
+
+    public Optional<LongFilter> optionalExchangedToId() {
+        return Optional.ofNullable(exchangedToId);
+    }
+
+    public LongFilter exchangedToId() {
+        if (exchangedToId == null) {
+            setExchangedToId(new LongFilter());
+        }
+        return exchangedToId;
+    }
+
+    public void setExchangedToId(LongFilter exchangedToId) {
+        this.exchangedToId = exchangedToId;
     }
 
     public Boolean getDistinct() {
@@ -445,6 +829,17 @@ public class TicketCriteria implements Serializable, Criteria {
             Objects.equals(timeFrom, that.timeFrom) &&
             Objects.equals(timeTo, that.timeTo) &&
             Objects.equals(checkedIn, that.checkedIn) &&
+            Objects.equals(status, that.status) &&
+            Objects.equals(exchangeStatus, that.exchangeStatus) &&
+            Objects.equals(refundStatus, that.refundStatus) &&
+            Objects.equals(exchangeReason, that.exchangeReason) &&
+            Objects.equals(refundReason, that.refundReason) &&
+            Objects.equals(exchangeRequestedAt, that.exchangeRequestedAt) &&
+            Objects.equals(exchangeCompletedAt, that.exchangeCompletedAt) &&
+            Objects.equals(refundRequestedAt, that.refundRequestedAt) &&
+            Objects.equals(refundCompletedAt, that.refundCompletedAt) &&
+            Objects.equals(refundAmount, that.refundAmount) &&
+            Objects.equals(refundTransactionId, that.refundTransactionId) &&
             Objects.equals(tripId, that.tripId) &&
             Objects.equals(routeId, that.routeId) &&
             Objects.equals(seatId, that.seatId) &&
@@ -454,7 +849,11 @@ public class TicketCriteria implements Serializable, Criteria {
             Objects.equals(deletedAt, that.deletedAt) &&
             Objects.equals(deletedBy, that.deletedBy) &&
             Objects.equals(qrCodeImgId, that.qrCodeImgId) &&
+            Objects.equals(originalTicketId, that.originalTicketId) &&
+            Objects.equals(exchangedTicketId, that.exchangedTicketId) &&
             Objects.equals(bookingId, that.bookingId) &&
+            Objects.equals(exchangedFromId, that.exchangedFromId) &&
+            Objects.equals(exchangedToId, that.exchangedToId) &&
             Objects.equals(distinct, that.distinct)
         );
     }
@@ -469,6 +868,17 @@ public class TicketCriteria implements Serializable, Criteria {
             timeFrom,
             timeTo,
             checkedIn,
+            status,
+            exchangeStatus,
+            refundStatus,
+            exchangeReason,
+            refundReason,
+            exchangeRequestedAt,
+            exchangeCompletedAt,
+            refundRequestedAt,
+            refundCompletedAt,
+            refundAmount,
+            refundTransactionId,
             tripId,
             routeId,
             seatId,
@@ -478,7 +888,11 @@ public class TicketCriteria implements Serializable, Criteria {
             deletedAt,
             deletedBy,
             qrCodeImgId,
+            originalTicketId,
+            exchangedTicketId,
             bookingId,
+            exchangedFromId,
+            exchangedToId,
             distinct
         );
     }
@@ -494,6 +908,17 @@ public class TicketCriteria implements Serializable, Criteria {
             optionalTimeFrom().map(f -> "timeFrom=" + f + ", ").orElse("") +
             optionalTimeTo().map(f -> "timeTo=" + f + ", ").orElse("") +
             optionalCheckedIn().map(f -> "checkedIn=" + f + ", ").orElse("") +
+            optionalStatus().map(f -> "status=" + f + ", ").orElse("") +
+            optionalExchangeStatus().map(f -> "exchangeStatus=" + f + ", ").orElse("") +
+            optionalRefundStatus().map(f -> "refundStatus=" + f + ", ").orElse("") +
+            optionalExchangeReason().map(f -> "exchangeReason=" + f + ", ").orElse("") +
+            optionalRefundReason().map(f -> "refundReason=" + f + ", ").orElse("") +
+            optionalExchangeRequestedAt().map(f -> "exchangeRequestedAt=" + f + ", ").orElse("") +
+            optionalExchangeCompletedAt().map(f -> "exchangeCompletedAt=" + f + ", ").orElse("") +
+            optionalRefundRequestedAt().map(f -> "refundRequestedAt=" + f + ", ").orElse("") +
+            optionalRefundCompletedAt().map(f -> "refundCompletedAt=" + f + ", ").orElse("") +
+            optionalRefundAmount().map(f -> "refundAmount=" + f + ", ").orElse("") +
+            optionalRefundTransactionId().map(f -> "refundTransactionId=" + f + ", ").orElse("") +
             optionalTripId().map(f -> "tripId=" + f + ", ").orElse("") +
             optionalRouteId().map(f -> "routeId=" + f + ", ").orElse("") +
             optionalSeatId().map(f -> "seatId=" + f + ", ").orElse("") +
@@ -503,7 +928,11 @@ public class TicketCriteria implements Serializable, Criteria {
             optionalDeletedAt().map(f -> "deletedAt=" + f + ", ").orElse("") +
             optionalDeletedBy().map(f -> "deletedBy=" + f + ", ").orElse("") +
             optionalQrCodeImgId().map(f -> "qrCodeImgId=" + f + ", ").orElse("") +
+            optionalOriginalTicketId().map(f -> "originalTicketId=" + f + ", ").orElse("") +
+            optionalExchangedTicketId().map(f -> "exchangedTicketId=" + f + ", ").orElse("") +
             optionalBookingId().map(f -> "bookingId=" + f + ", ").orElse("") +
+            optionalExchangedFromId().map(f -> "exchangedFromId=" + f + ", ").orElse("") +
+            optionalExchangedToId().map(f -> "exchangedToId=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";
     }

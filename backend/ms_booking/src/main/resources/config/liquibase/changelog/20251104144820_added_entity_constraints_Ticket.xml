@@ -8,13 +8,27 @@
     <!--
         Added the constraints for entity Ticket.
     -->
-    <changeSet id="20251029032524-2" author="jhipster">
+    <changeSet id="20251104144820-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="qr_code_img_id"
                                  baseTableName="ticket"
                                  constraintName="fk_ticket__qr_code_img_id"
                                  referencedColumnNames="id"
                                  referencedTableName="file_booking"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="original_ticket_id"
+                                 baseTableName="ticket"
+                                 constraintName="fk_ticket__original_ticket_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="ticket"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="exchanged_ticket_id"
+                                 baseTableName="ticket"
+                                 constraintName="fk_ticket__exchanged_ticket_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="ticket"
                                  />
 
         <addForeignKeyConstraint baseColumnNames="booking_id"

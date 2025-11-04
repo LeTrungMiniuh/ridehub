@@ -78,6 +78,17 @@ public class TicketQueryService extends QueryService<Ticket> {
                 buildRangeSpecification(criteria.getTimeFrom(), Ticket_.timeFrom),
                 buildRangeSpecification(criteria.getTimeTo(), Ticket_.timeTo),
                 buildSpecification(criteria.getCheckedIn(), Ticket_.checkedIn),
+                buildSpecification(criteria.getStatus(), Ticket_.status),
+                buildSpecification(criteria.getExchangeStatus(), Ticket_.exchangeStatus),
+                buildSpecification(criteria.getRefundStatus(), Ticket_.refundStatus),
+                buildStringSpecification(criteria.getExchangeReason(), Ticket_.exchangeReason),
+                buildStringSpecification(criteria.getRefundReason(), Ticket_.refundReason),
+                buildRangeSpecification(criteria.getExchangeRequestedAt(), Ticket_.exchangeRequestedAt),
+                buildRangeSpecification(criteria.getExchangeCompletedAt(), Ticket_.exchangeCompletedAt),
+                buildRangeSpecification(criteria.getRefundRequestedAt(), Ticket_.refundRequestedAt),
+                buildRangeSpecification(criteria.getRefundCompletedAt(), Ticket_.refundCompletedAt),
+                buildRangeSpecification(criteria.getRefundAmount(), Ticket_.refundAmount),
+                buildStringSpecification(criteria.getRefundTransactionId(), Ticket_.refundTransactionId),
                 buildRangeSpecification(criteria.getTripId(), Ticket_.tripId),
                 buildRangeSpecification(criteria.getRouteId(), Ticket_.routeId),
                 buildRangeSpecification(criteria.getSeatId(), Ticket_.seatId),
@@ -87,7 +98,14 @@ public class TicketQueryService extends QueryService<Ticket> {
                 buildRangeSpecification(criteria.getDeletedAt(), Ticket_.deletedAt),
                 buildSpecification(criteria.getDeletedBy(), Ticket_.deletedBy),
                 buildSpecification(criteria.getQrCodeImgId(), root -> root.join(Ticket_.qrCodeImg, JoinType.LEFT).get(FileBooking_.id)),
-                buildSpecification(criteria.getBookingId(), root -> root.join(Ticket_.booking, JoinType.LEFT).get(Booking_.id))
+                buildSpecification(criteria.getOriginalTicketId(), root -> root.join(Ticket_.originalTicket, JoinType.LEFT).get(Ticket_.id)
+                ),
+                buildSpecification(criteria.getExchangedTicketId(), root ->
+                    root.join(Ticket_.exchangedTicket, JoinType.LEFT).get(Ticket_.id)
+                ),
+                buildSpecification(criteria.getBookingId(), root -> root.join(Ticket_.booking, JoinType.LEFT).get(Booking_.id)),
+                buildSpecification(criteria.getExchangedFromId(), root -> root.join(Ticket_.exchangedFroms, JoinType.LEFT).get(Ticket_.id)),
+                buildSpecification(criteria.getExchangedToId(), root -> root.join(Ticket_.exchangedTos, JoinType.LEFT).get(Ticket_.id))
             );
         }
         return specification;

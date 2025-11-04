@@ -82,6 +82,17 @@ class TicketCriteriaTest {
         ticketCriteria.timeFrom();
         ticketCriteria.timeTo();
         ticketCriteria.checkedIn();
+        ticketCriteria.status();
+        ticketCriteria.exchangeStatus();
+        ticketCriteria.refundStatus();
+        ticketCriteria.exchangeReason();
+        ticketCriteria.refundReason();
+        ticketCriteria.exchangeRequestedAt();
+        ticketCriteria.exchangeCompletedAt();
+        ticketCriteria.refundRequestedAt();
+        ticketCriteria.refundCompletedAt();
+        ticketCriteria.refundAmount();
+        ticketCriteria.refundTransactionId();
         ticketCriteria.tripId();
         ticketCriteria.routeId();
         ticketCriteria.seatId();
@@ -91,7 +102,11 @@ class TicketCriteriaTest {
         ticketCriteria.deletedAt();
         ticketCriteria.deletedBy();
         ticketCriteria.qrCodeImgId();
+        ticketCriteria.originalTicketId();
+        ticketCriteria.exchangedTicketId();
         ticketCriteria.bookingId();
+        ticketCriteria.exchangedFromId();
+        ticketCriteria.exchangedToId();
         ticketCriteria.distinct();
     }
 
@@ -105,6 +120,17 @@ class TicketCriteriaTest {
                 condition.apply(criteria.getTimeFrom()) &&
                 condition.apply(criteria.getTimeTo()) &&
                 condition.apply(criteria.getCheckedIn()) &&
+                condition.apply(criteria.getStatus()) &&
+                condition.apply(criteria.getExchangeStatus()) &&
+                condition.apply(criteria.getRefundStatus()) &&
+                condition.apply(criteria.getExchangeReason()) &&
+                condition.apply(criteria.getRefundReason()) &&
+                condition.apply(criteria.getExchangeRequestedAt()) &&
+                condition.apply(criteria.getExchangeCompletedAt()) &&
+                condition.apply(criteria.getRefundRequestedAt()) &&
+                condition.apply(criteria.getRefundCompletedAt()) &&
+                condition.apply(criteria.getRefundAmount()) &&
+                condition.apply(criteria.getRefundTransactionId()) &&
                 condition.apply(criteria.getTripId()) &&
                 condition.apply(criteria.getRouteId()) &&
                 condition.apply(criteria.getSeatId()) &&
@@ -114,7 +140,11 @@ class TicketCriteriaTest {
                 condition.apply(criteria.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy()) &&
                 condition.apply(criteria.getQrCodeImgId()) &&
+                condition.apply(criteria.getOriginalTicketId()) &&
+                condition.apply(criteria.getExchangedTicketId()) &&
                 condition.apply(criteria.getBookingId()) &&
+                condition.apply(criteria.getExchangedFromId()) &&
+                condition.apply(criteria.getExchangedToId()) &&
                 condition.apply(criteria.getDistinct()),
             "every filter matches"
         );
@@ -130,6 +160,17 @@ class TicketCriteriaTest {
                 condition.apply(criteria.getTimeFrom(), copy.getTimeFrom()) &&
                 condition.apply(criteria.getTimeTo(), copy.getTimeTo()) &&
                 condition.apply(criteria.getCheckedIn(), copy.getCheckedIn()) &&
+                condition.apply(criteria.getStatus(), copy.getStatus()) &&
+                condition.apply(criteria.getExchangeStatus(), copy.getExchangeStatus()) &&
+                condition.apply(criteria.getRefundStatus(), copy.getRefundStatus()) &&
+                condition.apply(criteria.getExchangeReason(), copy.getExchangeReason()) &&
+                condition.apply(criteria.getRefundReason(), copy.getRefundReason()) &&
+                condition.apply(criteria.getExchangeRequestedAt(), copy.getExchangeRequestedAt()) &&
+                condition.apply(criteria.getExchangeCompletedAt(), copy.getExchangeCompletedAt()) &&
+                condition.apply(criteria.getRefundRequestedAt(), copy.getRefundRequestedAt()) &&
+                condition.apply(criteria.getRefundCompletedAt(), copy.getRefundCompletedAt()) &&
+                condition.apply(criteria.getRefundAmount(), copy.getRefundAmount()) &&
+                condition.apply(criteria.getRefundTransactionId(), copy.getRefundTransactionId()) &&
                 condition.apply(criteria.getTripId(), copy.getTripId()) &&
                 condition.apply(criteria.getRouteId(), copy.getRouteId()) &&
                 condition.apply(criteria.getSeatId(), copy.getSeatId()) &&
@@ -139,7 +180,11 @@ class TicketCriteriaTest {
                 condition.apply(criteria.getDeletedAt(), copy.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy(), copy.getDeletedBy()) &&
                 condition.apply(criteria.getQrCodeImgId(), copy.getQrCodeImgId()) &&
+                condition.apply(criteria.getOriginalTicketId(), copy.getOriginalTicketId()) &&
+                condition.apply(criteria.getExchangedTicketId(), copy.getExchangedTicketId()) &&
                 condition.apply(criteria.getBookingId(), copy.getBookingId()) &&
+                condition.apply(criteria.getExchangedFromId(), copy.getExchangedFromId()) &&
+                condition.apply(criteria.getExchangedToId(), copy.getExchangedToId()) &&
                 condition.apply(criteria.getDistinct(), copy.getDistinct()),
             "every filter matches"
         );

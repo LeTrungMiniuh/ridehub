@@ -22,9 +22,13 @@ enum OccasionType { NORMAL, WEEKEND, HOLIDAY, PEAK, OFF_PEAK, TET }
 // From Avro enums (for cross-service communication)
 enum AvroBookingStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }
 enum AvroSeatType { ECONOMY, BUSINESS, FIRST_CLASS, VIP }
-enum AvroTicketStatus { AVAILABLE, BOOKED, CANCELLED, EXPIRED }
+enum AvroTicketStatus { AVAILABLE, BOOKED, CANCELLED, EXPIRED, EXCHANGE_REQUESTED, EXCHANGE_APPROVED, EXCHANGE_REJECTED, EXCHANGE_COMPLETED, REFUND_REQUESTED, REFUND_APPROVED, REFUND_REJECTED, REFUND_COMPLETED, REFUND_FAILED }
 enum AvroPaymentStatus { PENDING, COMPLETED, FAILED, REFUNDED }
 enum TransportType { TRAIN, BUS }
+
+// Ticket management enums
+enum ExchangeStatus { EXCHANGE_REQUESTED, EXCHANGE_APPROVED, EXCHANGE_REJECTED, EXCHANGE_COMPLETED }
+enum RefundStatus { REFUND_REQUESTED, REFUND_APPROVED, REFUND_REJECTED, REFUND_COMPLETED, REFUND_FAILED }
 
 // ======================================================
 /* Applications */
@@ -478,6 +482,17 @@ entity Ticket {
   timeFrom Instant
   timeTo Instant
   checkedIn Boolean
+  status AvroTicketStatus required
+  exchangeStatus ExchangeStatus
+  refundStatus RefundStatus
+  exchangeReason String
+  refundReason String
+  exchangeRequestedAt Instant
+  exchangeCompletedAt Instant
+  refundRequestedAt Instant
+  refundCompletedAt Instant
+  refundAmount BigDecimal
+  refundTransactionId String maxlength(80)
   tripId Long required
   routeId Long required
   seatId Long required
@@ -591,6 +606,11 @@ entity FileBooking {
 
 relationship OneToOne {
   Ticket{qrCodeImg} to FileBooking{ticket}
+}
+
+relationship ManyToOne {
+  Ticket{originalTicket} to Ticket{exchangedFrom},
+  Ticket{exchangedTicket} to Ticket{exchangedTo}
 }
 
 relationship OneToMany {
@@ -769,3 +789,8 @@ deployment {
 // - Pricing formula at booking time:
 //   final = Route.baseFare * Vehicle.typeFactor * Floor.priceFactorFloor * Seat.priceFactor * Trip.occasionFactor - promos
 // - When generating Trip from Schedule(+TimeSlot), resolve applicable ScheduleOccasion rule and copy its occasionFactor to Trip.
+// - Ticket management:
+//   * Exchange: originalTicket -> newTicket (status flow: BOOKED -> EXCHANGE_REQUESTED -> EXCHANGE_APPROVED -> EXCHANGE_COMPLETED)
+//   * Refund: status flow: BOOKED -> REFUND_REQUESTED -> REFUND_APPROVED -> REFUND_COMPLETED
+//   * Cancellation: status flow: BOOKED -> CANCELLED
+//   * Add indexes: Ticket(status, exchangeStatus, refundStatus), Ticket(original_ticket_id), Ticket(exchanged_ticket_id)

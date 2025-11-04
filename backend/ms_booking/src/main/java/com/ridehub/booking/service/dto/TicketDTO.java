@@ -1,5 +1,8 @@
 package com.ridehub.booking.service.dto;
 
+import com.ridehub.booking.domain.enumeration.AvroTicketStatus;
+import com.ridehub.booking.domain.enumeration.ExchangeStatus;
+import com.ridehub.booking.domain.enumeration.RefundStatus;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -32,6 +35,30 @@ public class TicketDTO implements Serializable {
     private Boolean checkedIn;
 
     @NotNull
+    private AvroTicketStatus status;
+
+    private ExchangeStatus exchangeStatus;
+
+    private RefundStatus refundStatus;
+
+    private String exchangeReason;
+
+    private String refundReason;
+
+    private Instant exchangeRequestedAt;
+
+    private Instant exchangeCompletedAt;
+
+    private Instant refundRequestedAt;
+
+    private Instant refundCompletedAt;
+
+    private BigDecimal refundAmount;
+
+    @Size(max = 80)
+    private String refundTransactionId;
+
+    @NotNull
     private Long tripId;
 
     @NotNull
@@ -52,6 +79,10 @@ public class TicketDTO implements Serializable {
     private UUID deletedBy;
 
     private FileBookingDTO qrCodeImg;
+
+    private TicketDTO originalTicket;
+
+    private TicketDTO exchangedTicket;
 
     @NotNull
     private BookingDTO booking;
@@ -110,6 +141,94 @@ public class TicketDTO implements Serializable {
 
     public void setCheckedIn(Boolean checkedIn) {
         this.checkedIn = checkedIn;
+    }
+
+    public AvroTicketStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AvroTicketStatus status) {
+        this.status = status;
+    }
+
+    public ExchangeStatus getExchangeStatus() {
+        return exchangeStatus;
+    }
+
+    public void setExchangeStatus(ExchangeStatus exchangeStatus) {
+        this.exchangeStatus = exchangeStatus;
+    }
+
+    public RefundStatus getRefundStatus() {
+        return refundStatus;
+    }
+
+    public void setRefundStatus(RefundStatus refundStatus) {
+        this.refundStatus = refundStatus;
+    }
+
+    public String getExchangeReason() {
+        return exchangeReason;
+    }
+
+    public void setExchangeReason(String exchangeReason) {
+        this.exchangeReason = exchangeReason;
+    }
+
+    public String getRefundReason() {
+        return refundReason;
+    }
+
+    public void setRefundReason(String refundReason) {
+        this.refundReason = refundReason;
+    }
+
+    public Instant getExchangeRequestedAt() {
+        return exchangeRequestedAt;
+    }
+
+    public void setExchangeRequestedAt(Instant exchangeRequestedAt) {
+        this.exchangeRequestedAt = exchangeRequestedAt;
+    }
+
+    public Instant getExchangeCompletedAt() {
+        return exchangeCompletedAt;
+    }
+
+    public void setExchangeCompletedAt(Instant exchangeCompletedAt) {
+        this.exchangeCompletedAt = exchangeCompletedAt;
+    }
+
+    public Instant getRefundRequestedAt() {
+        return refundRequestedAt;
+    }
+
+    public void setRefundRequestedAt(Instant refundRequestedAt) {
+        this.refundRequestedAt = refundRequestedAt;
+    }
+
+    public Instant getRefundCompletedAt() {
+        return refundCompletedAt;
+    }
+
+    public void setRefundCompletedAt(Instant refundCompletedAt) {
+        this.refundCompletedAt = refundCompletedAt;
+    }
+
+    public BigDecimal getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(BigDecimal refundAmount) {
+        this.refundAmount = refundAmount;
+    }
+
+    public String getRefundTransactionId() {
+        return refundTransactionId;
+    }
+
+    public void setRefundTransactionId(String refundTransactionId) {
+        this.refundTransactionId = refundTransactionId;
     }
 
     public Long getTripId() {
@@ -184,6 +303,22 @@ public class TicketDTO implements Serializable {
         this.qrCodeImg = qrCodeImg;
     }
 
+    public TicketDTO getOriginalTicket() {
+        return originalTicket;
+    }
+
+    public void setOriginalTicket(TicketDTO originalTicket) {
+        this.originalTicket = originalTicket;
+    }
+
+    public TicketDTO getExchangedTicket() {
+        return exchangedTicket;
+    }
+
+    public void setExchangedTicket(TicketDTO exchangedTicket) {
+        this.exchangedTicket = exchangedTicket;
+    }
+
     public BookingDTO getBooking() {
         return booking;
     }
@@ -224,6 +359,17 @@ public class TicketDTO implements Serializable {
             ", timeFrom='" + getTimeFrom() + "'" +
             ", timeTo='" + getTimeTo() + "'" +
             ", checkedIn='" + getCheckedIn() + "'" +
+            ", status='" + getStatus() + "'" +
+            ", exchangeStatus='" + getExchangeStatus() + "'" +
+            ", refundStatus='" + getRefundStatus() + "'" +
+            ", exchangeReason='" + getExchangeReason() + "'" +
+            ", refundReason='" + getRefundReason() + "'" +
+            ", exchangeRequestedAt='" + getExchangeRequestedAt() + "'" +
+            ", exchangeCompletedAt='" + getExchangeCompletedAt() + "'" +
+            ", refundRequestedAt='" + getRefundRequestedAt() + "'" +
+            ", refundCompletedAt='" + getRefundCompletedAt() + "'" +
+            ", refundAmount=" + getRefundAmount() +
+            ", refundTransactionId='" + getRefundTransactionId() + "'" +
             ", tripId=" + getTripId() +
             ", routeId=" + getRouteId() +
             ", seatId=" + getSeatId() +
@@ -233,6 +379,8 @@ public class TicketDTO implements Serializable {
             ", deletedAt='" + getDeletedAt() + "'" +
             ", deletedBy='" + getDeletedBy() + "'" +
             ", qrCodeImg=" + getQrCodeImg() +
+            ", originalTicket=" + getOriginalTicket() +
+            ", exchangedTicket=" + getExchangedTicket() +
             ", booking=" + getBooking() +
             "}";
     }

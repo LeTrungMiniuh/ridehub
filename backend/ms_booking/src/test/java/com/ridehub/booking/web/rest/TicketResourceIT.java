@@ -14,6 +14,10 @@ import com.ridehub.booking.IntegrationTest;
 import com.ridehub.booking.domain.Booking;
 import com.ridehub.booking.domain.FileBooking;
 import com.ridehub.booking.domain.Ticket;
+import com.ridehub.booking.domain.Ticket;
+import com.ridehub.booking.domain.enumeration.AvroTicketStatus;
+import com.ridehub.booking.domain.enumeration.ExchangeStatus;
+import com.ridehub.booking.domain.enumeration.RefundStatus;
 import com.ridehub.booking.repository.TicketRepository;
 import com.ridehub.booking.service.dto.TicketDTO;
 import com.ridehub.booking.service.mapper.TicketMapper;
@@ -60,6 +64,40 @@ class TicketResourceIT {
 
     private static final Boolean DEFAULT_CHECKED_IN = false;
     private static final Boolean UPDATED_CHECKED_IN = true;
+
+    private static final AvroTicketStatus DEFAULT_STATUS = AvroTicketStatus.AVAILABLE;
+    private static final AvroTicketStatus UPDATED_STATUS = AvroTicketStatus.BOOKED;
+
+    private static final ExchangeStatus DEFAULT_EXCHANGE_STATUS = ExchangeStatus.EXCHANGE_REQUESTED;
+    private static final ExchangeStatus UPDATED_EXCHANGE_STATUS = ExchangeStatus.EXCHANGE_APPROVED;
+
+    private static final RefundStatus DEFAULT_REFUND_STATUS = RefundStatus.REFUND_REQUESTED;
+    private static final RefundStatus UPDATED_REFUND_STATUS = RefundStatus.REFUND_APPROVED;
+
+    private static final String DEFAULT_EXCHANGE_REASON = "AAAAAAAAAA";
+    private static final String UPDATED_EXCHANGE_REASON = "BBBBBBBBBB";
+
+    private static final String DEFAULT_REFUND_REASON = "AAAAAAAAAA";
+    private static final String UPDATED_REFUND_REASON = "BBBBBBBBBB";
+
+    private static final Instant DEFAULT_EXCHANGE_REQUESTED_AT = Instant.ofEpochMilli(0L);
+    private static final Instant UPDATED_EXCHANGE_REQUESTED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    private static final Instant DEFAULT_EXCHANGE_COMPLETED_AT = Instant.ofEpochMilli(0L);
+    private static final Instant UPDATED_EXCHANGE_COMPLETED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    private static final Instant DEFAULT_REFUND_REQUESTED_AT = Instant.ofEpochMilli(0L);
+    private static final Instant UPDATED_REFUND_REQUESTED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    private static final Instant DEFAULT_REFUND_COMPLETED_AT = Instant.ofEpochMilli(0L);
+    private static final Instant UPDATED_REFUND_COMPLETED_AT = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    private static final BigDecimal DEFAULT_REFUND_AMOUNT = new BigDecimal(1);
+    private static final BigDecimal UPDATED_REFUND_AMOUNT = new BigDecimal(2);
+    private static final BigDecimal SMALLER_REFUND_AMOUNT = new BigDecimal(1 - 1);
+
+    private static final String DEFAULT_REFUND_TRANSACTION_ID = "AAAAAAAAAA";
+    private static final String UPDATED_REFUND_TRANSACTION_ID = "BBBBBBBBBB";
 
     private static final Long DEFAULT_TRIP_ID = 1L;
     private static final Long UPDATED_TRIP_ID = 2L;
@@ -127,6 +165,17 @@ class TicketResourceIT {
             .timeFrom(DEFAULT_TIME_FROM)
             .timeTo(DEFAULT_TIME_TO)
             .checkedIn(DEFAULT_CHECKED_IN)
+            .status(DEFAULT_STATUS)
+            .exchangeStatus(DEFAULT_EXCHANGE_STATUS)
+            .refundStatus(DEFAULT_REFUND_STATUS)
+            .exchangeReason(DEFAULT_EXCHANGE_REASON)
+            .refundReason(DEFAULT_REFUND_REASON)
+            .exchangeRequestedAt(DEFAULT_EXCHANGE_REQUESTED_AT)
+            .exchangeCompletedAt(DEFAULT_EXCHANGE_COMPLETED_AT)
+            .refundRequestedAt(DEFAULT_REFUND_REQUESTED_AT)
+            .refundCompletedAt(DEFAULT_REFUND_COMPLETED_AT)
+            .refundAmount(DEFAULT_REFUND_AMOUNT)
+            .refundTransactionId(DEFAULT_REFUND_TRANSACTION_ID)
             .tripId(DEFAULT_TRIP_ID)
             .routeId(DEFAULT_ROUTE_ID)
             .seatId(DEFAULT_SEAT_ID)
@@ -162,6 +211,17 @@ class TicketResourceIT {
             .timeFrom(UPDATED_TIME_FROM)
             .timeTo(UPDATED_TIME_TO)
             .checkedIn(UPDATED_CHECKED_IN)
+            .status(UPDATED_STATUS)
+            .exchangeStatus(UPDATED_EXCHANGE_STATUS)
+            .refundStatus(UPDATED_REFUND_STATUS)
+            .exchangeReason(UPDATED_EXCHANGE_REASON)
+            .refundReason(UPDATED_REFUND_REASON)
+            .exchangeRequestedAt(UPDATED_EXCHANGE_REQUESTED_AT)
+            .exchangeCompletedAt(UPDATED_EXCHANGE_COMPLETED_AT)
+            .refundRequestedAt(UPDATED_REFUND_REQUESTED_AT)
+            .refundCompletedAt(UPDATED_REFUND_COMPLETED_AT)
+            .refundAmount(UPDATED_REFUND_AMOUNT)
+            .refundTransactionId(UPDATED_REFUND_TRANSACTION_ID)
             .tripId(UPDATED_TRIP_ID)
             .routeId(UPDATED_ROUTE_ID)
             .seatId(UPDATED_SEAT_ID)
@@ -274,6 +334,23 @@ class TicketResourceIT {
 
     @Test
     @Transactional
+    void checkStatusIsRequired() throws Exception {
+        long databaseSizeBeforeTest = getRepositoryCount();
+        // set the field null
+        ticket.setStatus(null);
+
+        // Create the Ticket, which fails.
+        TicketDTO ticketDTO = ticketMapper.toDto(ticket);
+
+        restTicketMockMvc
+            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(ticketDTO)))
+            .andExpect(status().isBadRequest());
+
+        assertSameRepositoryCount(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
     void checkTripIdIsRequired() throws Exception {
         long databaseSizeBeforeTest = getRepositoryCount();
         // set the field null
@@ -358,6 +435,17 @@ class TicketResourceIT {
             .andExpect(jsonPath("$.[*].timeFrom").value(hasItem(DEFAULT_TIME_FROM.toString())))
             .andExpect(jsonPath("$.[*].timeTo").value(hasItem(DEFAULT_TIME_TO.toString())))
             .andExpect(jsonPath("$.[*].checkedIn").value(hasItem(DEFAULT_CHECKED_IN)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].exchangeStatus").value(hasItem(DEFAULT_EXCHANGE_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].refundStatus").value(hasItem(DEFAULT_REFUND_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].exchangeReason").value(hasItem(DEFAULT_EXCHANGE_REASON)))
+            .andExpect(jsonPath("$.[*].refundReason").value(hasItem(DEFAULT_REFUND_REASON)))
+            .andExpect(jsonPath("$.[*].exchangeRequestedAt").value(hasItem(DEFAULT_EXCHANGE_REQUESTED_AT.toString())))
+            .andExpect(jsonPath("$.[*].exchangeCompletedAt").value(hasItem(DEFAULT_EXCHANGE_COMPLETED_AT.toString())))
+            .andExpect(jsonPath("$.[*].refundRequestedAt").value(hasItem(DEFAULT_REFUND_REQUESTED_AT.toString())))
+            .andExpect(jsonPath("$.[*].refundCompletedAt").value(hasItem(DEFAULT_REFUND_COMPLETED_AT.toString())))
+            .andExpect(jsonPath("$.[*].refundAmount").value(hasItem(sameNumber(DEFAULT_REFUND_AMOUNT))))
+            .andExpect(jsonPath("$.[*].refundTransactionId").value(hasItem(DEFAULT_REFUND_TRANSACTION_ID)))
             .andExpect(jsonPath("$.[*].tripId").value(hasItem(DEFAULT_TRIP_ID.intValue())))
             .andExpect(jsonPath("$.[*].routeId").value(hasItem(DEFAULT_ROUTE_ID.intValue())))
             .andExpect(jsonPath("$.[*].seatId").value(hasItem(DEFAULT_SEAT_ID.intValue())))
@@ -386,6 +474,17 @@ class TicketResourceIT {
             .andExpect(jsonPath("$.timeFrom").value(DEFAULT_TIME_FROM.toString()))
             .andExpect(jsonPath("$.timeTo").value(DEFAULT_TIME_TO.toString()))
             .andExpect(jsonPath("$.checkedIn").value(DEFAULT_CHECKED_IN))
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
+            .andExpect(jsonPath("$.exchangeStatus").value(DEFAULT_EXCHANGE_STATUS.toString()))
+            .andExpect(jsonPath("$.refundStatus").value(DEFAULT_REFUND_STATUS.toString()))
+            .andExpect(jsonPath("$.exchangeReason").value(DEFAULT_EXCHANGE_REASON))
+            .andExpect(jsonPath("$.refundReason").value(DEFAULT_REFUND_REASON))
+            .andExpect(jsonPath("$.exchangeRequestedAt").value(DEFAULT_EXCHANGE_REQUESTED_AT.toString()))
+            .andExpect(jsonPath("$.exchangeCompletedAt").value(DEFAULT_EXCHANGE_COMPLETED_AT.toString()))
+            .andExpect(jsonPath("$.refundRequestedAt").value(DEFAULT_REFUND_REQUESTED_AT.toString()))
+            .andExpect(jsonPath("$.refundCompletedAt").value(DEFAULT_REFUND_COMPLETED_AT.toString()))
+            .andExpect(jsonPath("$.refundAmount").value(sameNumber(DEFAULT_REFUND_AMOUNT)))
+            .andExpect(jsonPath("$.refundTransactionId").value(DEFAULT_REFUND_TRANSACTION_ID))
             .andExpect(jsonPath("$.tripId").value(DEFAULT_TRIP_ID.intValue()))
             .andExpect(jsonPath("$.routeId").value(DEFAULT_ROUTE_ID.intValue()))
             .andExpect(jsonPath("$.seatId").value(DEFAULT_SEAT_ID.intValue()))
@@ -669,6 +768,499 @@ class TicketResourceIT {
 
         // Get all the ticketList where checkedIn is not null
         defaultTicketFiltering("checkedIn.specified=true", "checkedIn.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByStatusIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where status equals to
+        defaultTicketFiltering("status.equals=" + DEFAULT_STATUS, "status.equals=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByStatusIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where status in
+        defaultTicketFiltering("status.in=" + DEFAULT_STATUS + "," + UPDATED_STATUS, "status.in=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByStatusIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where status is not null
+        defaultTicketFiltering("status.specified=true", "status.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeStatusIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeStatus equals to
+        defaultTicketFiltering("exchangeStatus.equals=" + DEFAULT_EXCHANGE_STATUS, "exchangeStatus.equals=" + UPDATED_EXCHANGE_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeStatusIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeStatus in
+        defaultTicketFiltering(
+            "exchangeStatus.in=" + DEFAULT_EXCHANGE_STATUS + "," + UPDATED_EXCHANGE_STATUS,
+            "exchangeStatus.in=" + UPDATED_EXCHANGE_STATUS
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeStatusIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeStatus is not null
+        defaultTicketFiltering("exchangeStatus.specified=true", "exchangeStatus.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundStatusIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundStatus equals to
+        defaultTicketFiltering("refundStatus.equals=" + DEFAULT_REFUND_STATUS, "refundStatus.equals=" + UPDATED_REFUND_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundStatusIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundStatus in
+        defaultTicketFiltering(
+            "refundStatus.in=" + DEFAULT_REFUND_STATUS + "," + UPDATED_REFUND_STATUS,
+            "refundStatus.in=" + UPDATED_REFUND_STATUS
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundStatusIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundStatus is not null
+        defaultTicketFiltering("refundStatus.specified=true", "refundStatus.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeReasonIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeReason equals to
+        defaultTicketFiltering("exchangeReason.equals=" + DEFAULT_EXCHANGE_REASON, "exchangeReason.equals=" + UPDATED_EXCHANGE_REASON);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeReasonIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeReason in
+        defaultTicketFiltering(
+            "exchangeReason.in=" + DEFAULT_EXCHANGE_REASON + "," + UPDATED_EXCHANGE_REASON,
+            "exchangeReason.in=" + UPDATED_EXCHANGE_REASON
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeReasonIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeReason is not null
+        defaultTicketFiltering("exchangeReason.specified=true", "exchangeReason.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeReasonContainsSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeReason contains
+        defaultTicketFiltering("exchangeReason.contains=" + DEFAULT_EXCHANGE_REASON, "exchangeReason.contains=" + UPDATED_EXCHANGE_REASON);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeReasonNotContainsSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeReason does not contain
+        defaultTicketFiltering(
+            "exchangeReason.doesNotContain=" + UPDATED_EXCHANGE_REASON,
+            "exchangeReason.doesNotContain=" + DEFAULT_EXCHANGE_REASON
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundReasonIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundReason equals to
+        defaultTicketFiltering("refundReason.equals=" + DEFAULT_REFUND_REASON, "refundReason.equals=" + UPDATED_REFUND_REASON);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundReasonIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundReason in
+        defaultTicketFiltering(
+            "refundReason.in=" + DEFAULT_REFUND_REASON + "," + UPDATED_REFUND_REASON,
+            "refundReason.in=" + UPDATED_REFUND_REASON
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundReasonIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundReason is not null
+        defaultTicketFiltering("refundReason.specified=true", "refundReason.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundReasonContainsSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundReason contains
+        defaultTicketFiltering("refundReason.contains=" + DEFAULT_REFUND_REASON, "refundReason.contains=" + UPDATED_REFUND_REASON);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundReasonNotContainsSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundReason does not contain
+        defaultTicketFiltering(
+            "refundReason.doesNotContain=" + UPDATED_REFUND_REASON,
+            "refundReason.doesNotContain=" + DEFAULT_REFUND_REASON
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeRequestedAtIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeRequestedAt equals to
+        defaultTicketFiltering(
+            "exchangeRequestedAt.equals=" + DEFAULT_EXCHANGE_REQUESTED_AT,
+            "exchangeRequestedAt.equals=" + UPDATED_EXCHANGE_REQUESTED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeRequestedAtIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeRequestedAt in
+        defaultTicketFiltering(
+            "exchangeRequestedAt.in=" + DEFAULT_EXCHANGE_REQUESTED_AT + "," + UPDATED_EXCHANGE_REQUESTED_AT,
+            "exchangeRequestedAt.in=" + UPDATED_EXCHANGE_REQUESTED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeRequestedAtIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeRequestedAt is not null
+        defaultTicketFiltering("exchangeRequestedAt.specified=true", "exchangeRequestedAt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeCompletedAtIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeCompletedAt equals to
+        defaultTicketFiltering(
+            "exchangeCompletedAt.equals=" + DEFAULT_EXCHANGE_COMPLETED_AT,
+            "exchangeCompletedAt.equals=" + UPDATED_EXCHANGE_COMPLETED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeCompletedAtIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeCompletedAt in
+        defaultTicketFiltering(
+            "exchangeCompletedAt.in=" + DEFAULT_EXCHANGE_COMPLETED_AT + "," + UPDATED_EXCHANGE_COMPLETED_AT,
+            "exchangeCompletedAt.in=" + UPDATED_EXCHANGE_COMPLETED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangeCompletedAtIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where exchangeCompletedAt is not null
+        defaultTicketFiltering("exchangeCompletedAt.specified=true", "exchangeCompletedAt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundRequestedAtIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundRequestedAt equals to
+        defaultTicketFiltering(
+            "refundRequestedAt.equals=" + DEFAULT_REFUND_REQUESTED_AT,
+            "refundRequestedAt.equals=" + UPDATED_REFUND_REQUESTED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundRequestedAtIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundRequestedAt in
+        defaultTicketFiltering(
+            "refundRequestedAt.in=" + DEFAULT_REFUND_REQUESTED_AT + "," + UPDATED_REFUND_REQUESTED_AT,
+            "refundRequestedAt.in=" + UPDATED_REFUND_REQUESTED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundRequestedAtIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundRequestedAt is not null
+        defaultTicketFiltering("refundRequestedAt.specified=true", "refundRequestedAt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundCompletedAtIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundCompletedAt equals to
+        defaultTicketFiltering(
+            "refundCompletedAt.equals=" + DEFAULT_REFUND_COMPLETED_AT,
+            "refundCompletedAt.equals=" + UPDATED_REFUND_COMPLETED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundCompletedAtIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundCompletedAt in
+        defaultTicketFiltering(
+            "refundCompletedAt.in=" + DEFAULT_REFUND_COMPLETED_AT + "," + UPDATED_REFUND_COMPLETED_AT,
+            "refundCompletedAt.in=" + UPDATED_REFUND_COMPLETED_AT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundCompletedAtIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundCompletedAt is not null
+        defaultTicketFiltering("refundCompletedAt.specified=true", "refundCompletedAt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount equals to
+        defaultTicketFiltering("refundAmount.equals=" + DEFAULT_REFUND_AMOUNT, "refundAmount.equals=" + UPDATED_REFUND_AMOUNT);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount in
+        defaultTicketFiltering(
+            "refundAmount.in=" + DEFAULT_REFUND_AMOUNT + "," + UPDATED_REFUND_AMOUNT,
+            "refundAmount.in=" + UPDATED_REFUND_AMOUNT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount is not null
+        defaultTicketFiltering("refundAmount.specified=true", "refundAmount.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount is greater than or equal to
+        defaultTicketFiltering(
+            "refundAmount.greaterThanOrEqual=" + DEFAULT_REFUND_AMOUNT,
+            "refundAmount.greaterThanOrEqual=" + UPDATED_REFUND_AMOUNT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount is less than or equal to
+        defaultTicketFiltering(
+            "refundAmount.lessThanOrEqual=" + DEFAULT_REFUND_AMOUNT,
+            "refundAmount.lessThanOrEqual=" + SMALLER_REFUND_AMOUNT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsLessThanSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount is less than
+        defaultTicketFiltering("refundAmount.lessThan=" + UPDATED_REFUND_AMOUNT, "refundAmount.lessThan=" + DEFAULT_REFUND_AMOUNT);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundAmountIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundAmount is greater than
+        defaultTicketFiltering("refundAmount.greaterThan=" + SMALLER_REFUND_AMOUNT, "refundAmount.greaterThan=" + DEFAULT_REFUND_AMOUNT);
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundTransactionIdIsEqualToSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundTransactionId equals to
+        defaultTicketFiltering(
+            "refundTransactionId.equals=" + DEFAULT_REFUND_TRANSACTION_ID,
+            "refundTransactionId.equals=" + UPDATED_REFUND_TRANSACTION_ID
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundTransactionIdIsInShouldWork() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundTransactionId in
+        defaultTicketFiltering(
+            "refundTransactionId.in=" + DEFAULT_REFUND_TRANSACTION_ID + "," + UPDATED_REFUND_TRANSACTION_ID,
+            "refundTransactionId.in=" + UPDATED_REFUND_TRANSACTION_ID
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundTransactionIdIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundTransactionId is not null
+        defaultTicketFiltering("refundTransactionId.specified=true", "refundTransactionId.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundTransactionIdContainsSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundTransactionId contains
+        defaultTicketFiltering(
+            "refundTransactionId.contains=" + DEFAULT_REFUND_TRANSACTION_ID,
+            "refundTransactionId.contains=" + UPDATED_REFUND_TRANSACTION_ID
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByRefundTransactionIdNotContainsSomething() throws Exception {
+        // Initialize the database
+        insertedTicket = ticketRepository.saveAndFlush(ticket);
+
+        // Get all the ticketList where refundTransactionId does not contain
+        defaultTicketFiltering(
+            "refundTransactionId.doesNotContain=" + UPDATED_REFUND_TRANSACTION_ID,
+            "refundTransactionId.doesNotContain=" + DEFAULT_REFUND_TRANSACTION_ID
+        );
     }
 
     @Test
@@ -1055,6 +1647,50 @@ class TicketResourceIT {
 
     @Test
     @Transactional
+    void getAllTicketsByOriginalTicketIsEqualToSomething() throws Exception {
+        Ticket originalTicket;
+        if (TestUtil.findAll(em, Ticket.class).isEmpty()) {
+            ticketRepository.saveAndFlush(ticket);
+            originalTicket = TicketResourceIT.createEntity(em);
+        } else {
+            originalTicket = TestUtil.findAll(em, Ticket.class).get(0);
+        }
+        em.persist(originalTicket);
+        em.flush();
+        ticket.setOriginalTicket(originalTicket);
+        ticketRepository.saveAndFlush(ticket);
+        Long originalTicketId = originalTicket.getId();
+        // Get all the ticketList where originalTicket equals to originalTicketId
+        defaultTicketShouldBeFound("originalTicketId.equals=" + originalTicketId);
+
+        // Get all the ticketList where originalTicket equals to (originalTicketId + 1)
+        defaultTicketShouldNotBeFound("originalTicketId.equals=" + (originalTicketId + 1));
+    }
+
+    @Test
+    @Transactional
+    void getAllTicketsByExchangedTicketIsEqualToSomething() throws Exception {
+        Ticket exchangedTicket;
+        if (TestUtil.findAll(em, Ticket.class).isEmpty()) {
+            ticketRepository.saveAndFlush(ticket);
+            exchangedTicket = TicketResourceIT.createEntity(em);
+        } else {
+            exchangedTicket = TestUtil.findAll(em, Ticket.class).get(0);
+        }
+        em.persist(exchangedTicket);
+        em.flush();
+        ticket.setExchangedTicket(exchangedTicket);
+        ticketRepository.saveAndFlush(ticket);
+        Long exchangedTicketId = exchangedTicket.getId();
+        // Get all the ticketList where exchangedTicket equals to exchangedTicketId
+        defaultTicketShouldBeFound("exchangedTicketId.equals=" + exchangedTicketId);
+
+        // Get all the ticketList where exchangedTicket equals to (exchangedTicketId + 1)
+        defaultTicketShouldNotBeFound("exchangedTicketId.equals=" + (exchangedTicketId + 1));
+    }
+
+    @Test
+    @Transactional
     void getAllTicketsByBookingIsEqualToSomething() throws Exception {
         Booking booking;
         if (TestUtil.findAll(em, Booking.class).isEmpty()) {
@@ -1095,6 +1731,17 @@ class TicketResourceIT {
             .andExpect(jsonPath("$.[*].timeFrom").value(hasItem(DEFAULT_TIME_FROM.toString())))
             .andExpect(jsonPath("$.[*].timeTo").value(hasItem(DEFAULT_TIME_TO.toString())))
             .andExpect(jsonPath("$.[*].checkedIn").value(hasItem(DEFAULT_CHECKED_IN)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].exchangeStatus").value(hasItem(DEFAULT_EXCHANGE_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].refundStatus").value(hasItem(DEFAULT_REFUND_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].exchangeReason").value(hasItem(DEFAULT_EXCHANGE_REASON)))
+            .andExpect(jsonPath("$.[*].refundReason").value(hasItem(DEFAULT_REFUND_REASON)))
+            .andExpect(jsonPath("$.[*].exchangeRequestedAt").value(hasItem(DEFAULT_EXCHANGE_REQUESTED_AT.toString())))
+            .andExpect(jsonPath("$.[*].exchangeCompletedAt").value(hasItem(DEFAULT_EXCHANGE_COMPLETED_AT.toString())))
+            .andExpect(jsonPath("$.[*].refundRequestedAt").value(hasItem(DEFAULT_REFUND_REQUESTED_AT.toString())))
+            .andExpect(jsonPath("$.[*].refundCompletedAt").value(hasItem(DEFAULT_REFUND_COMPLETED_AT.toString())))
+            .andExpect(jsonPath("$.[*].refundAmount").value(hasItem(sameNumber(DEFAULT_REFUND_AMOUNT))))
+            .andExpect(jsonPath("$.[*].refundTransactionId").value(hasItem(DEFAULT_REFUND_TRANSACTION_ID)))
             .andExpect(jsonPath("$.[*].tripId").value(hasItem(DEFAULT_TRIP_ID.intValue())))
             .andExpect(jsonPath("$.[*].routeId").value(hasItem(DEFAULT_ROUTE_ID.intValue())))
             .andExpect(jsonPath("$.[*].seatId").value(hasItem(DEFAULT_SEAT_ID.intValue())))
@@ -1157,6 +1804,17 @@ class TicketResourceIT {
             .timeFrom(UPDATED_TIME_FROM)
             .timeTo(UPDATED_TIME_TO)
             .checkedIn(UPDATED_CHECKED_IN)
+            .status(UPDATED_STATUS)
+            .exchangeStatus(UPDATED_EXCHANGE_STATUS)
+            .refundStatus(UPDATED_REFUND_STATUS)
+            .exchangeReason(UPDATED_EXCHANGE_REASON)
+            .refundReason(UPDATED_REFUND_REASON)
+            .exchangeRequestedAt(UPDATED_EXCHANGE_REQUESTED_AT)
+            .exchangeCompletedAt(UPDATED_EXCHANGE_COMPLETED_AT)
+            .refundRequestedAt(UPDATED_REFUND_REQUESTED_AT)
+            .refundCompletedAt(UPDATED_REFUND_COMPLETED_AT)
+            .refundAmount(UPDATED_REFUND_AMOUNT)
+            .refundTransactionId(UPDATED_REFUND_TRANSACTION_ID)
             .tripId(UPDATED_TRIP_ID)
             .routeId(UPDATED_ROUTE_ID)
             .seatId(UPDATED_SEAT_ID)
@@ -1260,9 +1918,14 @@ class TicketResourceIT {
         partialUpdatedTicket
             .ticketCode(UPDATED_TICKET_CODE)
             .qrCode(UPDATED_QR_CODE)
+            .exchangeStatus(UPDATED_EXCHANGE_STATUS)
+            .refundStatus(UPDATED_REFUND_STATUS)
+            .exchangeCompletedAt(UPDATED_EXCHANGE_COMPLETED_AT)
+            .refundCompletedAt(UPDATED_REFUND_COMPLETED_AT)
+            .refundTransactionId(UPDATED_REFUND_TRANSACTION_ID)
             .routeId(UPDATED_ROUTE_ID)
             .seatId(UPDATED_SEAT_ID)
-            .deletedAt(UPDATED_DELETED_AT);
+            .createdAt(UPDATED_CREATED_AT);
 
         restTicketMockMvc
             .perform(
@@ -1298,6 +1961,17 @@ class TicketResourceIT {
             .timeFrom(UPDATED_TIME_FROM)
             .timeTo(UPDATED_TIME_TO)
             .checkedIn(UPDATED_CHECKED_IN)
+            .status(UPDATED_STATUS)
+            .exchangeStatus(UPDATED_EXCHANGE_STATUS)
+            .refundStatus(UPDATED_REFUND_STATUS)
+            .exchangeReason(UPDATED_EXCHANGE_REASON)
+            .refundReason(UPDATED_REFUND_REASON)
+            .exchangeRequestedAt(UPDATED_EXCHANGE_REQUESTED_AT)
+            .exchangeCompletedAt(UPDATED_EXCHANGE_COMPLETED_AT)
+            .refundRequestedAt(UPDATED_REFUND_REQUESTED_AT)
+            .refundCompletedAt(UPDATED_REFUND_COMPLETED_AT)
+            .refundAmount(UPDATED_REFUND_AMOUNT)
+            .refundTransactionId(UPDATED_REFUND_TRANSACTION_ID)
             .tripId(UPDATED_TRIP_ID)
             .routeId(UPDATED_ROUTE_ID)
             .seatId(UPDATED_SEAT_ID)

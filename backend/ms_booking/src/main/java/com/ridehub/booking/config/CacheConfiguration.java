@@ -83,6 +83,8 @@ public class CacheConfiguration {
             createCache(cm, com.ridehub.booking.domain.Booking.class.getName() + ".appliedPromos", jcacheConfiguration);
             createCache(cm, com.ridehub.booking.domain.Booking.class.getName() + ".pricingSnapshots", jcacheConfiguration);
             createCache(cm, com.ridehub.booking.domain.Ticket.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.booking.domain.Ticket.class.getName() + ".exchangedFroms", jcacheConfiguration);
+            createCache(cm, com.ridehub.booking.domain.Ticket.class.getName() + ".exchangedTos", jcacheConfiguration);
             createCache(cm, com.ridehub.booking.domain.Invoice.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.booking.domain.PaymentTransaction.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.booking.domain.PaymentTransaction.class.getName() + ".webhooks", jcacheConfiguration);

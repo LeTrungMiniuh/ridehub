@@ -7,24 +7,33 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity PaymentWebhookLog.
+        Added the entity AppliedPromotion.
     -->
-    <changeSet id="20251029033024-1" author="jhipster">
-        <createTable tableName="payment_webhook_log">
+    <changeSet id="20251104145120-1" author="jhipster">
+        <createTable tableName="applied_promotion">
             <column name="id" type="bigint" autoIncrement="true" startWith="1500">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="provider" type="varchar(255)">
-                <constraints nullable="true" />
-            </column>
-            <column name="payload_hash" type="varchar(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="ux_payment_webhook_log__payload_hash" />
-            </column>
-            <column name="received_at" type="${datetimeType}">
+            <column name="promotion_id" type="bigint">
                 <constraints nullable="false" />
             </column>
-            <column name="processing_status" type="varchar(64)">
+            <column name="promotion_code" type="varchar(255)">
                 <constraints nullable="true" />
+            </column>
+            <column name="policy_type" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="percent" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="max_off" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="discount_amount" type="decimal(21,2)">
+                <constraints nullable="false" />
+            </column>
+            <column name="applied_at" type="${datetimeType}">
+                <constraints nullable="false" />
             </column>
             <column name="created_at" type="${datetimeType}">
                 <constraints nullable="false" />
@@ -41,15 +50,15 @@
             <column name="deleted_by" type="${uuidType}">
                 <constraints nullable="true" />
             </column>
-            <column name="payment_transaction_id" type="bigint">
+            <column name="booking_id" type="bigint">
                 <constraints nullable="false" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
-        <dropDefaultValue tableName="payment_webhook_log" columnName="received_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="payment_webhook_log" columnName="created_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="payment_webhook_log" columnName="updated_at" columnDataType="${datetimeType}"/>
-        <dropDefaultValue tableName="payment_webhook_log" columnName="deleted_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="applied_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="applied_promotion" columnName="deleted_at" columnDataType="${datetimeType}"/>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
@@ -62,23 +71,26 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20251029033024-1-data" author="jhipster" context="faker">
+    <changeSet id="20251104145120-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/payment_webhook_log.csv"
+                  file="config/liquibase/fake-data/applied_promotion.csv"
                   separator=";"
-                  tableName="payment_webhook_log"
+                  tableName="applied_promotion"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="provider" type="string"/>
-            <column name="payload_hash" type="string"/>
-            <column name="received_at" type="date"/>
-            <column name="processing_status" type="string"/>
+            <column name="promotion_id" type="numeric"/>
+            <column name="promotion_code" type="string"/>
+            <column name="policy_type" type="string"/>
+            <column name="percent" type="numeric"/>
+            <column name="max_off" type="numeric"/>
+            <column name="discount_amount" type="numeric"/>
+            <column name="applied_at" type="date"/>
             <column name="created_at" type="date"/>
             <column name="updated_at" type="date"/>
             <column name="is_deleted" type="boolean"/>
             <column name="deleted_at" type="date"/>
             <column name="deleted_by" type="string"/>
-            <column name="payment_transaction_id" type="numeric"/>
+            <column name="booking_id" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

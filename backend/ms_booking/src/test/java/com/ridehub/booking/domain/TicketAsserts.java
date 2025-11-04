@@ -54,6 +54,28 @@ public class TicketAsserts {
             .satisfies(a -> assertThat(a.getTimeFrom()).as("check timeFrom").isEqualTo(expected.getTimeFrom()))
             .satisfies(a -> assertThat(a.getTimeTo()).as("check timeTo").isEqualTo(expected.getTimeTo()))
             .satisfies(a -> assertThat(a.getCheckedIn()).as("check checkedIn").isEqualTo(expected.getCheckedIn()))
+            .satisfies(a -> assertThat(a.getStatus()).as("check status").isEqualTo(expected.getStatus()))
+            .satisfies(a -> assertThat(a.getExchangeStatus()).as("check exchangeStatus").isEqualTo(expected.getExchangeStatus()))
+            .satisfies(a -> assertThat(a.getRefundStatus()).as("check refundStatus").isEqualTo(expected.getRefundStatus()))
+            .satisfies(a -> assertThat(a.getExchangeReason()).as("check exchangeReason").isEqualTo(expected.getExchangeReason()))
+            .satisfies(a -> assertThat(a.getRefundReason()).as("check refundReason").isEqualTo(expected.getRefundReason()))
+            .satisfies(a ->
+                assertThat(a.getExchangeRequestedAt()).as("check exchangeRequestedAt").isEqualTo(expected.getExchangeRequestedAt())
+            )
+            .satisfies(a ->
+                assertThat(a.getExchangeCompletedAt()).as("check exchangeCompletedAt").isEqualTo(expected.getExchangeCompletedAt())
+            )
+            .satisfies(a -> assertThat(a.getRefundRequestedAt()).as("check refundRequestedAt").isEqualTo(expected.getRefundRequestedAt()))
+            .satisfies(a -> assertThat(a.getRefundCompletedAt()).as("check refundCompletedAt").isEqualTo(expected.getRefundCompletedAt()))
+            .satisfies(a ->
+                assertThat(a.getRefundAmount())
+                    .as("check refundAmount")
+                    .usingComparator(bigDecimalCompareTo)
+                    .isEqualTo(expected.getRefundAmount())
+            )
+            .satisfies(a ->
+                assertThat(a.getRefundTransactionId()).as("check refundTransactionId").isEqualTo(expected.getRefundTransactionId())
+            )
             .satisfies(a -> assertThat(a.getTripId()).as("check tripId").isEqualTo(expected.getTripId()))
             .satisfies(a -> assertThat(a.getRouteId()).as("check routeId").isEqualTo(expected.getRouteId()))
             .satisfies(a -> assertThat(a.getSeatId()).as("check seatId").isEqualTo(expected.getSeatId()))
@@ -74,6 +96,8 @@ public class TicketAsserts {
         assertThat(actual)
             .as("Verify Ticket relationships")
             .satisfies(a -> assertThat(a.getQrCodeImg()).as("check qrCodeImg").isEqualTo(expected.getQrCodeImg()))
+            .satisfies(a -> assertThat(a.getOriginalTicket()).as("check originalTicket").isEqualTo(expected.getOriginalTicket()))
+            .satisfies(a -> assertThat(a.getExchangedTicket()).as("check exchangedTicket").isEqualTo(expected.getExchangedTicket()))
             .satisfies(a -> assertThat(a.getBooking()).as("check booking").isEqualTo(expected.getBooking()));
     }
 }

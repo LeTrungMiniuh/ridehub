@@ -58,7 +58,10 @@ public class FileBooking implements Serializable {
     @Column(name = "deleted_by", length = 36)
     private UUID deletedBy;
 
-    @JsonIgnoreProperties(value = { "qrCodeImg", "booking" }, allowSetters = true)
+    @JsonIgnoreProperties(
+        value = { "qrCodeImg", "originalTicket", "exchangedTicket", "booking", "exchangedFroms", "exchangedTos" },
+        allowSetters = true
+    )
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "qrCodeImg")
     private Ticket ticket;
 
