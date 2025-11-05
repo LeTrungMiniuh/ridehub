@@ -1,6 +1,10 @@
 package com.ridehub.booking.service;
 
 import com.ridehub.booking.service.dto.TicketDTO;
+import com.ridehub.booking.service.dto.request.TicketCancelRequestDTO;
+import com.ridehub.booking.service.dto.request.TicketExchangeRequestDTO;
+import com.ridehub.booking.service.dto.request.TicketRefundRequestDTO;
+import com.ridehub.booking.service.dto.response.TicketOperationResponseDTO;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,8 +70,35 @@ public interface TicketService {
     /**
      * Check in a ticket.
      *
-     * @param ticketCode the ticket code to check in.
+     * @param ticketCode ticket code to check in.
      * @return the updated entity.
      */
     Optional<TicketDTO> checkinTicket(String ticketCode);
+
+    /**
+     * Cancel a ticket.
+     *
+     * @param ticketCode the ticket code to cancel.
+     * @param cancelRequest the cancel request details.
+     * @return the operation response.
+     */
+    TicketOperationResponseDTO cancelTicket(String ticketCode, TicketCancelRequestDTO cancelRequest);
+
+    /**
+     * Request a refund for a ticket.
+     *
+     * @param ticketCode the ticket code to refund.
+     * @param refundRequest the refund request details.
+     * @return the operation response.
+     */
+    TicketOperationResponseDTO refundTicket(String ticketCode, TicketRefundRequestDTO refundRequest);
+
+    /**
+     * Request an exchange for a ticket.
+     *
+     * @param ticketCode the ticket code to exchange.
+     * @param exchangeRequest the exchange request details.
+     * @return the operation response.
+     */
+    TicketOperationResponseDTO exchangeTicket(String ticketCode, TicketExchangeRequestDTO exchangeRequest);
 }

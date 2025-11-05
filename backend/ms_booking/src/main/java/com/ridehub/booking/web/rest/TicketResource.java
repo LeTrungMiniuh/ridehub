@@ -5,7 +5,11 @@ import com.ridehub.booking.service.TicketQueryService;
 import com.ridehub.booking.service.TicketService;
 import com.ridehub.booking.service.criteria.TicketCriteria;
 import com.ridehub.booking.service.dto.TicketDTO;
+import com.ridehub.booking.service.dto.request.TicketCancelRequestDTO;
+import com.ridehub.booking.service.dto.request.TicketExchangeRequestDTO;
+import com.ridehub.booking.service.dto.request.TicketRefundRequestDTO;
 import com.ridehub.booking.service.dto.response.CheckinResponse;
+import com.ridehub.booking.service.dto.response.TicketOperationResponseDTO;
 import com.ridehub.booking.service.dto.response.TicketResponse;
 import com.ridehub.booking.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -175,6 +179,61 @@ public class TicketResource {
 
         ticketService.checkinTicket(code);
         return ResponseEntity.ok(new CheckinResponse(true));
+    }
+
+    // -------------------------------------------------------
+    // Ticket Management Endpoints
+    // -------------------------------------------------------
+
+    /**
+     * POST /api/tickets/{code}/cancel : cancel a ticket.
+     */
+    @PostMapping("/{code}/cancel")
+    public ResponseEntity<TicketOperationResponseDTO> cancelTicket(
+            @PathVariable String code,
+            @Valid @RequestBody TicketCancelRequestDTO cancelRequest) {
+        LOG.debug("REST request to cancel Ticket with code: {}", code);
+
+        TicketOperationResponseDTO response = ticketService.cancelTicket(code, cancelRequest);
+        if (Boolean.TRUE.equals(response.getSuccess())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * POST /api/tickets/{code}/refund : request a refund for a ticket.
+     */
+    @PostMapping("/{code}/refund")
+    public ResponseEntity<TicketOperationResponseDTO> refundTicket(
+            @PathVariable String code,
+            @Valid @RequestBody TicketRefundRequestDTO refundRequest) {
+        LOG.debug("REST request to refund Ticket with code: {}", code);
+
+        TicketOperationResponseDTO response = ticketService.refundTicket(code, refundRequest);
+        if (Boolean.TRUE.equals(response.getSuccess())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * POST /api/tickets/{code}/exchange : request an exchange for a ticket.
+     */
+    @PostMapping("/{code}/exchange")
+    public ResponseEntity<TicketOperationResponseDTO> exchangeTicket(
+            @PathVariable String code,
+            @Valid @RequestBody TicketExchangeRequestDTO exchangeRequest) {
+        LOG.debug("REST request to exchange Ticket with code: {}", code);
+
+        TicketOperationResponseDTO response = ticketService.exchangeTicket(code, exchangeRequest);
+        if (Boolean.TRUE.equals(response.getSuccess())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
 }
