@@ -70,6 +70,8 @@ public class TripCriteria implements Serializable, Criteria {
 
     private StringFilter destinationProvinceCode;
 
+    private StringFilter vehiclePlateNumber;
+
     private Boolean distinct;
 
     public TripCriteria() {
@@ -98,6 +100,7 @@ public class TripCriteria implements Serializable, Criteria {
         this.originProvinceCode = other.optionalOriginProvinceCode().map(StringFilter::copy).orElse(null);
         this.destinationDistrictCode = other.optionalDestinationDistrictCode().map(StringFilter::copy).orElse(null);
         this.destinationProvinceCode = other.optionalDestinationProvinceCode().map(StringFilter::copy).orElse(null);
+        this.vehiclePlateNumber = other.optionalVehiclePlateNumber().map(StringFilter::copy).orElse(null);
 
         this.distinct = other.distinct;
     }
@@ -175,6 +178,20 @@ public class TripCriteria implements Serializable, Criteria {
 
     public Optional<StringFilter> optionalDestinationProvinceCode() {
         return Optional.ofNullable(destinationProvinceCode);
+    }
+
+    public StringFilter getVehiclePlateNumber() {
+        if (vehiclePlateNumber == null)
+            vehiclePlateNumber = new StringFilter();
+        return vehiclePlateNumber;
+    }
+
+    public void setVehiclePlateNumber(StringFilter vehiclePlateNumber) {
+        this.vehiclePlateNumber = vehiclePlateNumber;
+    }
+
+    public Optional<StringFilter> optionalVehiclePlateNumber() {
+        return Optional.ofNullable(vehiclePlateNumber);
     }
 
     public LongFilter getId() {
@@ -526,6 +543,9 @@ public class TripCriteria implements Serializable, Criteria {
                 Objects.equals(driverId, that.driverId) &&
                 Objects.equals(attendantId, that.attendantId) &&
                 Objects.equals(vehicleType, that.vehicleType) &&
+                Objects.equals(destinationDistrictCode, that.destinationDistrictCode) &&
+                Objects.equals(destinationProvinceCode, that.destinationProvinceCode) &&
+                Objects.equals(vehiclePlateNumber, that.vehiclePlateNumber) &&
                 Objects.equals(distinct, that.distinct));
     }
 
@@ -548,6 +568,9 @@ public class TripCriteria implements Serializable, Criteria {
                 driverId,
                 attendantId,
                 vehicleType,
+                destinationDistrictCode,
+                destinationProvinceCode,
+                vehiclePlateNumber,
                 distinct);
     }
 
@@ -571,6 +594,9 @@ public class TripCriteria implements Serializable, Criteria {
                 optionalDriverId().map(f -> "driverId=" + f + ", ").orElse("") +
                 optionalAttendantId().map(f -> "attendantId=" + f + ", ").orElse("") +
                 optionalVehicleType().map(f -> "vehicleType=" + f + ", ").orElse("") +
+                optionalDestinationDistrictCode().map(f -> "destinationDistrictCode=" + f + ", ").orElse("") +
+                optionalDestinationProvinceCode().map(f -> "destinationProvinceCode=" + f + ", ").orElse("") +
+                optionalVehiclePlateNumber().map(f -> "vehiclePlateNumber=" + f + ", ").orElse("") +
                 optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
                 "}";
     }

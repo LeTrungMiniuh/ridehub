@@ -181,9 +181,12 @@ public class TripQueryService extends QueryService<Trip> {
 
                                         buildSpecification(criteria.getDriverId(),
                                                         root -> root.join(Trip_.driver, JoinType.LEFT).get(Driver_.id)),
-                                        buildSpecification(criteria.getAttendantId(),
-                                                        root -> root.join(Trip_.attendant, JoinType.LEFT)
-                                                                        .get(Attendant_.id)));
+                                         buildSpecification(criteria.getAttendantId(),
+                                                         root -> root.join(Trip_.attendant, JoinType.LEFT)
+                                                                         .get(Attendant_.id)),
+                                         buildSpecification(criteria.getVehiclePlateNumber(),
+                                                         root -> root.join(Trip_.vehicle, JoinType.LEFT)
+                                                                         .get(Vehicle_.plateNumber)));
 
                         if (criteria.getOriginDistrictCode() != null) {
                                 specification = specification.and(
