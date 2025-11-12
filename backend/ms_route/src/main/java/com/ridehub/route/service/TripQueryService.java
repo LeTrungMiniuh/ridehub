@@ -78,19 +78,7 @@ public class TripQueryService extends QueryService<Trip> {
         public Page<TripDTO> findByCriteria(TripCriteria criteria, Pageable page) {
                 LOG.debug("find by criteria : {}, page: {}", criteria, page);
                 final Specification<Trip> specification = createSpecification(criteria);
-                return tripRepository.findAll(specification, page).map(trip -> {
-                        TripDTO tripDTO = tripMapper.toDto(trip);
-
-                        // Set full route DTO with origin and destination data
-                        if (trip.getRoute() != null && trip.getRoute().getId() != null) {
-                                RouteDTO routeDTO = routeRepository.findById(trip.getRoute().getId())
-                                                .map(routeMapper::toDto)
-                                                .orElse(null);
-                                tripDTO.setRoute(routeDTO);
-                        }
-
-                        return tripDTO;
-                });
+                return tripRepository.findAll(specification, page).map(tripMapper::toDto);
         }
 
         /**
@@ -181,12 +169,12 @@ public class TripQueryService extends QueryService<Trip> {
 
                                         buildSpecification(criteria.getDriverId(),
                                                         root -> root.join(Trip_.driver, JoinType.LEFT).get(Driver_.id)),
-                                         buildSpecification(criteria.getAttendantId(),
-                                                         root -> root.join(Trip_.attendant, JoinType.LEFT)
-                                                                         .get(Attendant_.id)),
-                                         buildSpecification(criteria.getVehiclePlateNumber(),
-                                                         root -> root.join(Trip_.vehicle, JoinType.LEFT)
-                                                                         .get(Vehicle_.plateNumber)));
+                                        buildSpecification(criteria.getAttendantId(),
+                                                        root -> root.join(Trip_.attendant, JoinType.LEFT)
+                                                                        .get(Attendant_.id)),
+                                        buildSpecification(criteria.getVehiclePlateNumber(),
+                                                        root -> root.join(Trip_.vehicle, JoinType.LEFT)
+                                                                        .get(Vehicle_.plateNumber)));
 
                         if (criteria.getOriginDistrictCode() != null) {
                                 specification = specification.and(
