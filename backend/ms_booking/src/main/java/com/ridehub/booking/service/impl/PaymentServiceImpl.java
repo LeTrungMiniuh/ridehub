@@ -11,6 +11,7 @@ import com.ridehub.booking.repository.PaymentTransactionRepository;
 import com.ridehub.booking.repository.PaymentWebhookLogRepository;
 import com.ridehub.booking.repository.TicketRepository;
 import com.ridehub.booking.service.PaymentService;
+import com.ridehub.booking.service.payment.sepay.SePayService;
 import com.ridehub.booking.service.payment.vnpay.VNPayService;
 import com.ridehub.booking.service.payment.vnpay.VNPayUtils;
 import com.ridehub.booking.service.vm.InitiatePaymentRequestVM;
@@ -56,6 +57,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final TripResourceMsrouteApi tripResourceMsrouteApi;
     private final SeatLockResourceMsrouteApi seatLockResourceMsrouteApi;
     private final VNPayService vnPayService;
+    private final SePayService sePayService;
 
     public PaymentServiceImpl(
             BookingRepository bookingRepository,
@@ -65,7 +67,8 @@ public class PaymentServiceImpl implements PaymentService {
             StringRedisTemplate redis,
             TripResourceMsrouteApi tripResourceMsrouteApi,
             SeatLockResourceMsrouteApi seatLockResourceMsrouteApi,
-            VNPayService vnPayService) {
+            VNPayService vnPayService,
+            SePayService sePayService) {
 
         this.bookingRepository = bookingRepository;
         this.paymentTransactionRepository = paymentTransactionRepository;
@@ -75,6 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.tripResourceMsrouteApi = tripResourceMsrouteApi;
         this.seatLockResourceMsrouteApi = seatLockResourceMsrouteApi;
         this.vnPayService = vnPayService;
+        this.sePayService = sePayService;
     }
 
     @Override
@@ -494,6 +498,9 @@ public class PaymentServiceImpl implements PaymentService {
                 case "VNPAY":
                     return vnPayService.createPaymentUrl(request, transactionId, orderRef, amount, returnUrl,
                             ipAddress, bookingExpiresAt);
+                case "SEPAY":
+                    return sePayService.createPaymentUrl(request, transactionId, orderRef, amount, returnUrl,
+                            ipAddress, bookingExpiresAt);
             }
         }
 
@@ -507,6 +514,11 @@ public class PaymentServiceImpl implements PaymentService {
         if ("VNPAY".equalsIgnoreCase(provider)) {
             // For VNPay, we'll validate the signature in the parseWebhookPayload method
             // since VNPay uses query parameters instead of a separate signature
+            return true;
+        }
+        if ("SEPAY".equalsIgnoreCase(provider)) {
+            // For SePay, we'll validate the signature in the parseWebhookPayload method
+            // since SePay uses query parameters similar to VNPay
             return true;
         }
         // Default signature check for other providers
@@ -534,6 +546,10 @@ public class PaymentServiceImpl implements PaymentService {
         if ("VNPAY".equalsIgnoreCase(provider)) {
             VNPayService.VNPayWebhookData vnpayData = vnPayService.parseWebhookPayload(payload);
             return new WebhookData(vnpayData.getTransactionId(), vnpayData.getStatus(), vnpayData.getAmount());
+        }
+        if ("SEPAY".equalsIgnoreCase(provider)) {
+            SePayService.SePayWebhookData sepayData = sePayService.parseWebhookPayload(payload);
+            return new WebhookData(sepayData.getTransactionId(), sepayData.getStatus(), sepayData.getAmount());
         }
 
         // Default fallback for unknown providers

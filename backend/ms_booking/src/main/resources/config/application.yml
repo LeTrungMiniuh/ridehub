@@ -273,3 +273,17 @@ jhipster:
 # ===================================================================
 
 # application:
+
+# SePay Payment Gateway Configuration
+sepay:
+  merchant-id: ${SEPAY_MERCHANT_ID:SP-TEST-LDB8A7B6}
+  secret-key: ${SEPAY_SECRET_KEY:spsk_test_km3W2bC9f16KPypYZzmbYw2CMb8Sg2BA}
+  init-url: ${SEPAY_INIT_URL:https://pay-sandbox.sepay.vn/v1/checkout/init}
+  success-url: ${SEPAY_SUCCESS_URL:https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback}
+  error-url: ${SEPAY_ERROR_URL:https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback}
+  cancel-url: ${SEPAY_CANCEL_URL:https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback}
+  # Timeout configurations
+  connect-timeout-seconds: ${SEPAY_CONNECT_TIMEOUT:30}
+  request-timeout-seconds: ${SEPAY_REQUEST_TIMEOUT:45}
+  max-retries: ${SEPAY_MAX_RETRIES:3}
+  retry-delay-millis: ${SEPAY_RETRY_DELAY:2000}
