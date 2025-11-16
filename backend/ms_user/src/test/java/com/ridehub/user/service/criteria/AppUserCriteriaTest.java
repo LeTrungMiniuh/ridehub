@@ -91,6 +91,9 @@ class AppUserCriteriaTest {
         appUserCriteria.deletedAt();
         appUserCriteria.deletedBy();
         appUserCriteria.profileId();
+        appUserCriteria.statisticsId();
+        appUserCriteria.chatSessionsId();
+        appUserCriteria.recommendationsId();
         appUserCriteria.distinct();
     }
 
@@ -113,6 +116,9 @@ class AppUserCriteriaTest {
                 condition.apply(criteria.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy()) &&
                 condition.apply(criteria.getProfileId()) &&
+                condition.apply(criteria.getStatisticsId()) &&
+                condition.apply(criteria.getChatSessionsId()) &&
+                condition.apply(criteria.getRecommendationsId()) &&
                 condition.apply(criteria.getDistinct()),
             "every filter matches"
         );
@@ -137,6 +143,9 @@ class AppUserCriteriaTest {
                 condition.apply(criteria.getDeletedAt(), copy.getDeletedAt()) &&
                 condition.apply(criteria.getDeletedBy(), copy.getDeletedBy()) &&
                 condition.apply(criteria.getProfileId(), copy.getProfileId()) &&
+                condition.apply(criteria.getStatisticsId(), copy.getStatisticsId()) &&
+                condition.apply(criteria.getChatSessionsId(), copy.getChatSessionsId()) &&
+                condition.apply(criteria.getRecommendationsId(), copy.getRecommendationsId()) &&
                 condition.apply(criteria.getDistinct(), copy.getDistinct()),
             "every filter matches"
         );

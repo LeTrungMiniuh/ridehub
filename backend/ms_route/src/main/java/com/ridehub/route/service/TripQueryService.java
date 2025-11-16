@@ -1,7 +1,6 @@
 package com.ridehub.route.service;
 
 import com.ridehub.route.domain.*; // for static metamodels
-import com.ridehub.route.domain.enumeration.VehicleType;
 import com.ridehub.route.repository.RouteRepository;
 import com.ridehub.route.repository.TripRepository;
 import com.ridehub.route.service.criteria.SeatLockCriteria;
@@ -9,6 +8,7 @@ import com.ridehub.route.service.criteria.TripCriteria;
 import com.ridehub.route.service.dto.RouteDTO;
 import com.ridehub.route.service.dto.SeatLockDTO;
 import com.ridehub.route.service.dto.TripDTO;
+import com.ridehub.route.service.dto.TripWithPricingDTO;
 import com.ridehub.route.service.mapper.RouteMapper;
 import com.ridehub.route.service.mapper.TripMapper;
 import com.ridehub.route.service.vm.TripDetailVM;
@@ -17,6 +17,7 @@ import com.ridehub.route.service.vm.VehicleDetailVM;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.JoinType;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -53,16 +54,19 @@ public class TripQueryService extends QueryService<Trip> {
         private final SeatLockQueryService seatLockQueryService;
         private final RouteRepository routeRepository;
         private final RouteMapper routeMapper;
+        private final TripPricingService tripPricingService;
 
         public TripQueryService(TripRepository tripRepository, TripMapper tripMapper,
                         VehicleQueryService vehicleQueryService, SeatLockQueryService seatLockQueryService,
-                        RouteRepository routeRepository, RouteMapper routeMapper) {
+                        RouteRepository routeRepository, RouteMapper routeMapper,
+                        TripPricingService tripPricingService) {
                 this.tripRepository = tripRepository;
                 this.tripMapper = tripMapper;
                 this.vehicleQueryService = vehicleQueryService;
                 this.seatLockQueryService = seatLockQueryService;
                 this.routeRepository = routeRepository;
                 this.routeMapper = routeMapper;
+                this.tripPricingService = tripPricingService;
         }
 
         /**
@@ -266,6 +270,24 @@ public class TripQueryService extends QueryService<Trip> {
                 LOG.debug("find by criteria : {}", criteria);
                 final Specification<Trip> specification = createSpecification(criteria);
                 return tripRepository.findAll(specification);
+        }
+
+        /**
+         * Return a {@link Page} of {@link TripWithPricingDTO} which matches the criteria from the
+         * database with pricing templates included.
+         * 
+         * @param criteria The object which holds all the filters, which the entities
+         *                 should match.
+         * @param page     The page, which should be returned.
+         * @return the matching entities with pricing templates.
+         */
+        @Transactional(readOnly = true)
+        public Page<TripWithPricingDTO> findWithPricingByCriteria(TripCriteria criteria, Pageable page) {
+                LOG.debug("find with pricing by criteria : {}, page: {}", criteria, page);
+                final Specification<Trip> specification = createSpecification(criteria);
+                Page<TripDTO> tripPage = tripRepository.findAll(specification, page).map(tripMapper::toDto);
+                
+                return tripPage.map(tripPricingService::convertToTripWithPricingDTO);
         }
 
 }

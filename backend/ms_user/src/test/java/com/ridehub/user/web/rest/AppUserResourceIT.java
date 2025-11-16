@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ridehub.user.IntegrationTest;
 import com.ridehub.user.domain.AppUser;
 import com.ridehub.user.domain.Profile;
+import com.ridehub.user.domain.UserStatistics;
 import com.ridehub.user.repository.AppUserRepository;
 import com.ridehub.user.service.dto.AppUserDTO;
 import com.ridehub.user.service.mapper.AppUserMapper;
@@ -928,6 +929,28 @@ class AppUserResourceIT {
 
         // Get all the appUserList where profile equals to (profileId + 1)
         defaultAppUserShouldNotBeFound("profileId.equals=" + (profileId + 1));
+    }
+
+    @Test
+    @Transactional
+    void getAllAppUsersByStatisticsIsEqualToSomething() throws Exception {
+        UserStatistics statistics;
+        if (TestUtil.findAll(em, UserStatistics.class).isEmpty()) {
+            appUserRepository.saveAndFlush(appUser);
+            statistics = UserStatisticsResourceIT.createEntity(em);
+        } else {
+            statistics = TestUtil.findAll(em, UserStatistics.class).get(0);
+        }
+        em.persist(statistics);
+        em.flush();
+        appUser.setStatistics(statistics);
+        appUserRepository.saveAndFlush(appUser);
+        Long statisticsId = statistics.getId();
+        // Get all the appUserList where statistics equals to statisticsId
+        defaultAppUserShouldBeFound("statisticsId.equals=" + statisticsId);
+
+        // Get all the appUserList where statistics equals to (statisticsId + 1)
+        defaultAppUserShouldNotBeFound("statisticsId.equals=" + (statisticsId + 1));
     }
 
     private void defaultAppUserFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {

@@ -9,7 +9,7 @@ import com.ridehub.mspromotion.client.model.BuyNGetMFreeDTO;
 import com.ridehub.mspromotion.client.model.ConditionRouteItemDTO;
 import com.ridehub.mspromotion.client.model.PercentOffTotalDTO;
 import com.ridehub.mspromotion.client.model.PromotionDetailDTO;
-
+import com.ridehub.msroute.client.api.PricingTemplateResourceMsrouteApi;
 import com.ridehub.msroute.client.api.TripResourceMsrouteApi;
 import com.ridehub.msroute.client.model.SeatDTO;
 import com.ridehub.msroute.client.model.SeatLockDTO;
@@ -40,6 +40,7 @@ public class PricingService {
     private static final Logger LOG = LoggerFactory.getLogger(PricingService.class);
 
     private final PromotionResourceMspromotionApi promotionResourceMspromotionApi;
+    private final PricingTemplateResourceMsrouteApi pricingTemplateResourceMsrouteApi;
     private final TripResourceMsrouteApi tripResourceMsrouteApi;
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
@@ -47,8 +48,9 @@ public class PricingService {
     public PricingService(
             PromotionResourceMspromotionApi promotionResourceMspromotionApi,
             TripResourceMsrouteApi tripResourceMsrouteApi, StringRedisTemplate redis,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper, PricingTemplateResourceMsrouteApi pricingTemplateResourceMsrouteApi) {
         this.promotionResourceMspromotionApi = promotionResourceMspromotionApi;
+        this.pricingTemplateResourceMsrouteApi = pricingTemplateResourceMsrouteApi;
         this.tripResourceMsrouteApi = tripResourceMsrouteApi;
         this.redis = redis;
         this.objectMapper = objectMapper;
@@ -71,7 +73,7 @@ public class PricingService {
         LocalDate travelDate = toLocalDate(tripVM.getTripDTO().getDepartureTime());
 
         // === 3️⃣ Compute total base price ===
-        List<BigDecimal> perSeatPrices = computeSeatPrices(tripVM, seatNos, baseFare, vehicleFactor, occasionFactor);
+        List<BigDecimal> perSeatPrices = computeSeatPrices(tripVM, seatNos);
         BigDecimal total = perSeatPrices.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // === 4️⃣ Try promo cache (Redis) ===
@@ -231,11 +233,7 @@ public class PricingService {
     // =========================
     // ---- helper: compute per-seat prices ----
     private List<BigDecimal> computeSeatPrices(
-            TripDetailVM tripVM, List<String> seatNos, BigDecimal baseFare, BigDecimal vehicleFactor, BigDecimal occasionFactor) {
-
-        Map<Long, BigDecimal> floorFactorById = new HashMap<>();
-        tripVM.getDetailVM().getFloors()
-                .forEach(f -> floorFactorById.put(f.getId(), nn(f.getPriceFactorFloor(), BigDecimal.ONE)));
+            TripDetailVM tripVM, List<String> seatNos) {
 
         Map<String, SeatDTO> seatByNo = new HashMap<>();
         tripVM.getDetailVM().getSeatsByFloorId().forEach((floorIdStr, seats) -> {
@@ -247,10 +245,7 @@ public class PricingService {
             SeatDTO seat = seatByNo.get(seatNo);
             if (seat == null)
                 throw new IllegalArgumentException("Unknown seat number: " + seatNo);
-            Long floorId = seat.getFloor().getId();
-            BigDecimal floorFactor = floorFactorById.getOrDefault(floorId, BigDecimal.ONE);
-            BigDecimal seatFactor = nn(seat.getPriceFactor(), BigDecimal.ONE);
-            perSeat.add(baseFare.multiply(vehicleFactor).multiply(occasionFactor).multiply(floorFactor).multiply(seatFactor));
+            perSeat.add(pricingTemplateResourceMsrouteApi.getPricingTemplateByTripAndSeat(tripVM.getTripDTO().getId(),seat.getId()).getFinalPrice());
         }
         return perSeat;
     }

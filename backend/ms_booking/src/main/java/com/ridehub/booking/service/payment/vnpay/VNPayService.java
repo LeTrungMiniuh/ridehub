@@ -92,19 +92,60 @@ public class VNPayService {
 
     /**
      * Parse VNPay webhook payload
+     * Based on VNPay IPN URL documentation: https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html#code-ipn-url
      */
     public VNPayWebhookData parseWebhookPayload(String payload) {
         LOG.debug("Parsing VNPay webhook payload");
 
         Map<String, String> params = VNPayUtils.parseQuery(payload);
 
+        // Required parameters according to VNPay documentation
         String transactionId = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
+        String transactionStatus = params.get("vnp_TransactionStatus");
         String amountStr = params.get("vnp_Amount");
+        String tmnCode = params.get("vnp_TmnCode");
+        String bankCode = params.get("vnp_BankCode");
+        String bankTranNo = params.get("vnp_BankTranNo");
+        String cardType = params.get("vnp_CardType");
+        String orderInfo = params.get("vnp_OrderInfo");
+        String payDate = params.get("vnp_PayDate");
+        String transactionNo = params.get("vnp_TransactionNo");
+        String secureHash = params.get("vnp_SecureHash");
 
-        String status = "00".equals(responseCode) ? "SUCCESS" : "FAILED";
-        BigDecimal amount = amountStr != null ? new BigDecimal(amountStr).divide(new BigDecimal("100"))
-                : BigDecimal.ZERO;
+        // Validate required parameters
+        if (transactionId == null || responseCode == null || transactionStatus == null || amountStr == null) {
+            LOG.warn("Missing required VNPay IPN parameters");
+            throw new IllegalArgumentException("Missing required VNPay IPN parameters");
+        }
+
+        // Convert amount from VNPAY format (multiply by 100) to actual amount
+        BigDecimal amount;
+        try {
+            amount = new BigDecimal(amountStr).divide(new BigDecimal("100"));
+        } catch (NumberFormatException e) {
+            LOG.error("Invalid amount format: {}", amountStr);
+            throw new IllegalArgumentException("Invalid amount format: " + amountStr);
+        }
+
+        // Determine payment status based on both response code and transaction status
+        // According to VNPay documentation: 
+        // - vnp_ResponseCode: Response code from VNPAY (00 = success)
+        // - vnp_TransactionStatus: Transaction status at VNPAY (00 = success)
+        String status;
+        if ("00".equals(responseCode) && "00".equals(transactionStatus)) {
+            status = "SUCCESS";
+        } else if ("01".equals(transactionStatus)) {
+            status = "PROCESSING";
+        } else if ("02".equals(transactionStatus)) {
+            status = "FAILED";
+        } else {
+            status = "FAILED";
+        }
+
+        // Log important details for debugging
+        LOG.info("VNPay IPN parsed - TransactionId: {}, ResponseCode: {}, TransactionStatus: {}, Amount: {}, BankCode: {}",
+                transactionId, responseCode, transactionStatus, amount, bankCode);
 
         return new VNPayWebhookData(transactionId, status, amount, params);
     }

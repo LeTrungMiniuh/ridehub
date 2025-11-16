@@ -4,7 +4,7 @@
 
 // From ms_booking domain enums
 enum BookingStatus { DRAFT, AWAITING_PAYMENT, PAID, CONFIRMED, CANCELED, REFUNDED, RECOVERY_FAILED_SEAT_LOCKS }
-enum PaymentMethod { VNPAY, CREDIT_CARD, BANK_TRANSFER }
+enum PaymentMethod { VNPAY, CREDIT_CARD, BANK_TRANSFER, MOMO, ZALOPAY, SEPAY }
 enum PaymentStatus { INITIATED, PROCESSING, SUCCESS, FAILED, REFUNDED, PAYMENT_SUCCESS_BUT_BOOKING_EXPIRED, REQUIRES_MANUAL_REVIEW }
 
 // From ms_route domain enums
@@ -61,7 +61,7 @@ application {
     serverPort 8081
     enableSwaggerCodegen true
   }
-  entities AppUser, Profile, FileUser
+  entities AppUser, Profile, FileUser, UserStatistics, TripStatistics
 }
 
 application {
@@ -81,7 +81,7 @@ application {
     enableSwaggerCodegen true
   }
   // UPDATED: added ScheduleOccasion; Schedule no longer keeps occasion/occasionFactor
-  entities Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, ScheduleOccasion, Trip, Staff, Driver, Attendant, SeatLock, FileRoute
+  entities Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, ScheduleOccasion, Trip, Staff, Driver, Attendant, SeatLock, FileRoute, PricingTemplate
 }
 
 application {
@@ -173,6 +173,65 @@ entity FileUser {
 
 relationship OneToOne {
   Profile{avatar} to FileUser{profile}
+}
+
+
+
+relationship OneToOne {
+  AppUser{statistics} to UserStatistics{user required}
+}
+
+entity TripStatistics {
+  routeId Long required
+  vehicleType VehicleType required
+  occasionType OccasionType required
+  totalBookings Integer
+  totalRevenue BigDecimal
+  averagePrice BigDecimal
+  occupancyRate BigDecimal
+  popularSeatTypes String maxlength(200)
+  peakTravelTimes String maxlength(500)
+  cancellationRate BigDecimal
+  customerSatisfactionScore BigDecimal
+  monthlyTrend String maxlength(1000)
+  validFrom LocalDate required
+  validTo LocalDate
+  createdAt Instant required
+  updatedAt Instant
+  isDeleted Boolean
+  deletedAt Instant
+  deletedBy UUID
+}
+
+
+
+
+
+entity UserStatistics {
+  totalTrips Integer
+  totalSpent BigDecimal
+  favoriteRoutes String maxlength(1000)
+  preferredVehicleTypes String maxlength(200)
+  averageTripDuration Integer
+  lastTravelDate LocalDate
+  bookingFrequency String maxlength(50)
+  loyaltyPoints Integer
+  // Trip-specific statistics
+  mostFrequentOrigin String maxlength(200)
+  mostFrequentDestination String maxlength(200)
+  averageTripDistance BigDecimal
+  peakTravelTime String maxlength(50)
+  weekendTrips Integer
+  holidayTrips Integer
+  cancelledTrips Integer
+  onTimePerformanceRate BigDecimal
+  preferredSeatTypes String maxlength(200)
+  monthlyTripCount Integer
+  createdAt Instant required
+  updatedAt Instant
+  isDeleted Boolean
+  deletedAt Instant
+  deletedBy UUID
 }
 
 // =============================
@@ -471,6 +530,29 @@ relationship ManyToOne {
   SeatLock{trip required} to Trip
 }
 
+entity PricingTemplate {
+  vehicleType VehicleType required
+  seatType SeatType required
+  occasionType OccasionType required
+  baseFare BigDecimal required
+  vehicleFactor BigDecimal
+  floorFactor BigDecimal
+  seatFactor BigDecimal
+  occasionFactor BigDecimal required
+  finalPrice BigDecimal required
+  validFrom LocalDate required
+  validTo LocalDate
+  createdAt Instant required
+  updatedAt Instant
+  isDeleted Boolean
+  deletedAt Instant
+  deletedBy UUID
+}
+
+relationship ManyToOne {
+  PricingTemplate{route required} to Route
+}
+
 // =============================
 // ms_booking
 // =============================
@@ -750,9 +832,9 @@ relationship OneToMany {
 // Microservice mappings
 // ======================================================
 
-microservice AppUser, Profile, FileUser with ms_user
+microservice AppUser, Profile, FileUser, UserStatistics, TripStatistics with ms_user
 
-microservice Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, ScheduleOccasion, Trip, Staff, Driver, Attendant, SeatLock, FileRoute with ms_route
+microservice Province, District, Ward, Address, Station, Route, Vehicle, SeatMap, Floor, Seat, Schedule, ScheduleTimeSlot, ScheduleOccasion, Trip, Staff, Driver, Attendant, SeatLock, FileRoute, PricingTemplate with ms_route
 
 microservice Booking, Ticket, Invoice, PaymentTransaction, AppliedPromotion, PricingSnapshot, PaymentWebhookLog, FileBooking with ms_booking
 microservice Promotion, BuyNGetMFree, PercentOffTotal, ConditionByRoute, ConditionByDate, ConditionByLocation, ConditionRouteItem, ConditionDateItem, ConditionLocationItem, FilePromotion with ms_promotion
@@ -764,20 +846,12 @@ microservice Promotion, BuyNGetMFree, PercentOffTotal, ConditionByRoute, Conditi
 dto * with mapstruct
 service * with serviceImpl
 filter *
-paginate Route, Trip, Vehicle, Station, Booking, Promotion, Ward with infinite-scroll
-search Route, Station with elasticsearch
+paginate Route, Trip, Vehicle, Station, Booking, Promotion, Ward, PricingTemplate, UserStatistics, TripStatistics with infinite-scroll
+search Route, Station, TripStatistics with elasticsearch
 
 // ======================================================
 // Deployment (compose)
 // ======================================================
-
-deployment {
-  deploymentType docker-compose
-  serviceDiscoveryType consul
-  monitoring prometheus
-  appsFolders [gateway, ms_user, ms_route, ms_booking, ms_promotion]
-  dockerRepositoryName "ridehub"
-}
 
 // ===========================
 // NOTES (manual constraints)

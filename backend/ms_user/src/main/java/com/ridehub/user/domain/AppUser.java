@@ -6,6 +6,8 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -81,6 +83,21 @@ public class AppUser implements Serializable {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(unique = true)
     private Profile profile;
+
+    @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(unique = true)
+    private UserStatistics statistics;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @JsonIgnoreProperties(value = { "messages", "queries", "user" }, allowSetters = true)
+    private Set<ChatSession> chatSessions = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
+    private Set<TripRecommendation> recommendations = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -289,6 +306,81 @@ public class AppUser implements Serializable {
 
     public AppUser profile(Profile profile) {
         this.setProfile(profile);
+        return this;
+    }
+
+    public UserStatistics getStatistics() {
+        return this.statistics;
+    }
+
+    public void setStatistics(UserStatistics userStatistics) {
+        this.statistics = userStatistics;
+    }
+
+    public AppUser statistics(UserStatistics userStatistics) {
+        this.setStatistics(userStatistics);
+        return this;
+    }
+
+    public Set<ChatSession> getChatSessions() {
+        return this.chatSessions;
+    }
+
+    public void setChatSessions(Set<ChatSession> chatSessions) {
+        if (this.chatSessions != null) {
+            this.chatSessions.forEach(i -> i.setUser(null));
+        }
+        if (chatSessions != null) {
+            chatSessions.forEach(i -> i.setUser(this));
+        }
+        this.chatSessions = chatSessions;
+    }
+
+    public AppUser chatSessions(Set<ChatSession> chatSessions) {
+        this.setChatSessions(chatSessions);
+        return this;
+    }
+
+    public AppUser addChatSessions(ChatSession chatSession) {
+        this.chatSessions.add(chatSession);
+        chatSession.setUser(this);
+        return this;
+    }
+
+    public AppUser removeChatSessions(ChatSession chatSession) {
+        this.chatSessions.remove(chatSession);
+        chatSession.setUser(null);
+        return this;
+    }
+
+    public Set<TripRecommendation> getRecommendations() {
+        return this.recommendations;
+    }
+
+    public void setRecommendations(Set<TripRecommendation> tripRecommendations) {
+        if (this.recommendations != null) {
+            this.recommendations.forEach(i -> i.setUser(null));
+        }
+        if (tripRecommendations != null) {
+            tripRecommendations.forEach(i -> i.setUser(this));
+        }
+        this.recommendations = tripRecommendations;
+    }
+
+    public AppUser recommendations(Set<TripRecommendation> tripRecommendations) {
+        this.setRecommendations(tripRecommendations);
+        return this;
+    }
+
+    public AppUser addRecommendations(TripRecommendation tripRecommendation) {
+        this.recommendations.add(tripRecommendation);
+        tripRecommendation.setUser(this);
+        return this;
+    }
+
+    public AppUser removeRecommendations(TripRecommendation tripRecommendation) {
+        this.recommendations.remove(tripRecommendation);
+        tripRecommendation.setUser(null);
         return this;
     }
 

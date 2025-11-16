@@ -112,7 +112,7 @@
         <dependency>
             <groupId>com.ridehub.clients</groupId>
             <artifactId>client-open-feign-avro</artifactId>
-            <version>2.1.4</version>
+            <version>3.0.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/io.confluent/kafka-avro-serializer -->
         <dependency>
@@ -423,6 +423,12 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- Z AI SDK -->
+        <dependency>
+            <groupId>ai.z.openapi</groupId>
+            <artifactId>zai-sdk</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
     <build>

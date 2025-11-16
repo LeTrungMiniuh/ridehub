@@ -5,6 +5,7 @@ import com.ridehub.route.service.TripQueryService;
 import com.ridehub.route.service.TripService;
 import com.ridehub.route.service.criteria.TripCriteria;
 import com.ridehub.route.service.dto.TripDTO;
+import com.ridehub.route.service.dto.TripWithPricingDTO;
 import com.ridehub.route.service.vm.TripDetailVM;
 import com.ridehub.route.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -214,5 +215,25 @@ public class TripResource {
         LOG.debug("REST request to get Trip Detail: {}", id);
         Optional<TripDetailVM> vm = tripQueryService.findTripDetail(id);
         return ResponseUtil.wrapOrNotFound(vm);
+    }
+
+    /**
+     * {@code GET  /trips/with-pricing} : get all the trips with pricing templates.
+     *
+     * @param pageable the pagination information.
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of trips with pricing templates in body.
+     */
+    @GetMapping("/with-pricing")
+    public ResponseEntity<List<TripWithPricingDTO>> getAllTripsWithPricing(
+            TripCriteria criteria,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+        LOG.debug("REST request to get Trips with pricing by criteria: {}", criteria);
+
+        var page = tripQueryService.findWithPricingByCriteria(criteria, pageable);
+        HttpHeaders headers = PaginationUtil
+                .generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 }

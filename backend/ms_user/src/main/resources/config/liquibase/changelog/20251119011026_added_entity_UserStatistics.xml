@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <!--
+        Added the entity UserStatistics.
+    -->
+    <changeSet id="20251119011026-1" author="jhipster">
+        <createTable tableName="user_statistics">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1500">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="total_trips" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="total_spent" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="favorite_routes" type="varchar(1000)">
+                <constraints nullable="true" />
+            </column>
+            <column name="preferred_vehicle_types" type="varchar(200)">
+                <constraints nullable="true" />
+            </column>
+            <column name="average_trip_duration" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_travel_date" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="booking_frequency" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="loyalty_points" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="most_frequent_origin" type="varchar(200)">
+                <constraints nullable="true" />
+            </column>
+            <column name="most_frequent_destination" type="varchar(200)">
+                <constraints nullable="true" />
+            </column>
+            <column name="average_trip_distance" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="peak_travel_time" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="weekend_trips" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="holiday_trips" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="cancelled_trips" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="on_time_performance_rate" type="decimal(21,2)">
+                <constraints nullable="true" />
+            </column>
+            <column name="preferred_seat_types" type="varchar(200)">
+                <constraints nullable="true" />
+            </column>
+            <column name="monthly_trip_count" type="integer">
+                <constraints nullable="true" />
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated_at" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="is_deleted" type="boolean">
+                <constraints nullable="true" />
+            </column>
+            <column name="deleted_at" type="${datetimeType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="deleted_by" type="${uuidType}">
+                <constraints nullable="true" />
+            </column>
+            <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
+        </createTable>
+        <dropDefaultValue tableName="user_statistics" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="user_statistics" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="user_statistics" columnName="deleted_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
+
+    <!--
+        Load sample data generated with Faker.js
+        - This data can be easily edited using a CSV editor (or even MS Excel) and
+          is located in the 'src/main/resources/config/liquibase/fake-data' directory
+        - By default this data is applied when running with the JHipster 'dev' profile.
+          This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
+          Spring Boot configuration key.
+    -->
+    <changeSet id="20251119011026-1-data" author="jhipster" context="faker">
+        <loadData
+                  file="config/liquibase/fake-data/user_statistics.csv"
+                  separator=";"
+                  tableName="user_statistics"
+                  usePreparedStatements="true">
+            <column name="id" type="numeric"/>
+            <column name="total_trips" type="numeric"/>
+            <column name="total_spent" type="numeric"/>
+            <column name="favorite_routes" type="string"/>
+            <column name="preferred_vehicle_types" type="string"/>
+            <column name="average_trip_duration" type="numeric"/>
+            <column name="last_travel_date" type="date"/>
+            <column name="booking_frequency" type="string"/>
+            <column name="loyalty_points" type="numeric"/>
+            <column name="most_frequent_origin" type="string"/>
+            <column name="most_frequent_destination" type="string"/>
+            <column name="average_trip_distance" type="numeric"/>
+            <column name="peak_travel_time" type="string"/>
+            <column name="weekend_trips" type="numeric"/>
+            <column name="holiday_trips" type="numeric"/>
+            <column name="cancelled_trips" type="numeric"/>
+            <column name="on_time_performance_rate" type="numeric"/>
+            <column name="preferred_seat_types" type="string"/>
+            <column name="monthly_trip_count" type="numeric"/>
+            <column name="created_at" type="date"/>
+            <column name="updated_at" type="date"/>
+            <column name="is_deleted" type="boolean"/>
+            <column name="deleted_at" type="date"/>
+            <column name="deleted_by" type="string"/>
+            <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
+        </loadData>
+    </changeSet>
+</databaseChangeLog>

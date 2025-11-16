@@ -27,12 +27,13 @@
       "Driver",
       "Attendant",
       "SeatLock",
-      "FileRoute"
+      "FileRoute",
+      "PricingTemplate"
     ],
     "jhipsterVersion": "8.11.0",
-    "jwtSecretKey": "NjljMDQ1MTZiMjljNTk1NzlmNzIxYjU2OWJjN2ZmYWI2MzRlZDlhYjdlYWYxY2U2YzFhYjc3NTNkZTNkMDUyMGY1MTQxYTFmMmYyN2EzZGM1Nzg3NDA5NDBmMDY5YTBiYmViMDYwZDcyYzgwMzc1MThlOGI2MTIzNjhmMmFmMDU=",
+    "jwtSecretKey": "NmE3ZTc0NDg0MDYxNjI0MzRmZDcxZTJkNzRkMWNiMmQ5NTgwNTEyYTYzOGFhZWY1OWI5ZTkyOGFmYTA4YTY0NzdlZTEzZDE4OGNhZTgyMWM3YjZlMzZmMzViNWMwNzVlMzM4ODU5ZGQ1N2M4ODE3Y2M5NzQ3ZGI2ZTJiMDYzMTA=",
     "languages": ["en"],
-    "lastLiquibaseTimestamp": 1761713695000,
+    "lastLiquibaseTimestamp": 1763380037000,
     "messageBroker": "kafka",
     "monorepository": true,
     "nativeLanguage": "en",

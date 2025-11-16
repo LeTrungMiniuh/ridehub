@@ -12,12 +12,22 @@
     <property name="timeType" value="time(6)" dbms="mysql"/>
 
     <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/20250923135059_added_entity_AppUser.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/20250923135159_added_entity_Profile.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/20250923135259_added_entity_FileUser.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010326_added_entity_AppUser.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010426_added_entity_Profile.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010526_added_entity_FileUser.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010626_added_entity_ChatSession.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010726_added_entity_ChatMessage.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010826_added_entity_UserQuery.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010926_added_entity_TripRecommendation.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119011026_added_entity_UserStatistics.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119011126_added_entity_TripStatistics.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
-    <include file="config/liquibase/changelog/20250923135059_added_entity_constraints_AppUser.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/20250923135159_added_entity_constraints_Profile.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010326_added_entity_constraints_AppUser.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010426_added_entity_constraints_Profile.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010626_added_entity_constraints_ChatSession.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010726_added_entity_constraints_ChatMessage.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010826_added_entity_constraints_UserQuery.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20251119010926_added_entity_constraints_TripRecommendation.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
 </databaseChangeLog>

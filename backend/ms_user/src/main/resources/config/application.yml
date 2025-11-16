@@ -252,3 +252,27 @@ jhipster:
 # ===================================================================
 
 # application:
+
+# ===================================================================
+# Z AI Chatbot Configuration
+# ===================================================================
+zai:
+  chatbot:
+    # API key for Z AI platform (can be set via environment variable ZAI_API_KEY)
+    api-key: ${zai-api-key}
+    # Base URL for Z AI API
+    base-url: https://api.z.ai/api/paas/v4/
+    # Model to use for chat completion
+    model: glm-4.5-flash
+    # Temperature for response generation (0.0 to 2.0)
+    temperature: 0.3
+    # Maximum tokens in response
+    max-tokens: 1024
+    # Enable token caching
+    enable-token-cache: true
+    # Token expiration time in milliseconds (1 hour)
+    token-expire: 3600000
+    # Connection pool size
+    connection-pool-size: 10
+    # Connection pool keep alive time in milliseconds (5 minutes)
+    connection-pool-keep-alive: 300000

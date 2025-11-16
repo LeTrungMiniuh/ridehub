@@ -178,6 +178,8 @@ public class SecurityConfiguration {
                                                 .pathMatchers("/services/{svc}/api/authenticate",
                                                                 "/services/{svc}/api/auth/**")
                                                 .permitAll()
+                                                .pathMatchers("services/{svc}/api/payment/sepay/webhook").permitAll()
+                                                .pathMatchers("services/{svc}/api/payment/vnpay/webhook").permitAll()
                                                 .pathMatchers("/").permitAll()
                                                 .pathMatchers("/*.*").permitAll()
                                                 .pathMatchers("/api/authenticate").permitAll()

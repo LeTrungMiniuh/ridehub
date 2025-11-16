@@ -54,6 +54,12 @@ public class AppUserCriteria implements Serializable, Criteria {
 
     private LongFilter profileId;
 
+    private LongFilter statisticsId;
+
+    private LongFilter chatSessionsId;
+
+    private LongFilter recommendationsId;
+
     private Boolean distinct;
 
     public AppUserCriteria() {}
@@ -75,6 +81,9 @@ public class AppUserCriteria implements Serializable, Criteria {
         this.deletedAt = other.optionalDeletedAt().map(InstantFilter::copy).orElse(null);
         this.deletedBy = other.optionalDeletedBy().map(UUIDFilter::copy).orElse(null);
         this.profileId = other.optionalProfileId().map(LongFilter::copy).orElse(null);
+        this.statisticsId = other.optionalStatisticsId().map(LongFilter::copy).orElse(null);
+        this.chatSessionsId = other.optionalChatSessionsId().map(LongFilter::copy).orElse(null);
+        this.recommendationsId = other.optionalRecommendationsId().map(LongFilter::copy).orElse(null);
         this.distinct = other.distinct;
     }
 
@@ -387,6 +396,63 @@ public class AppUserCriteria implements Serializable, Criteria {
         this.profileId = profileId;
     }
 
+    public LongFilter getStatisticsId() {
+        return statisticsId;
+    }
+
+    public Optional<LongFilter> optionalStatisticsId() {
+        return Optional.ofNullable(statisticsId);
+    }
+
+    public LongFilter statisticsId() {
+        if (statisticsId == null) {
+            setStatisticsId(new LongFilter());
+        }
+        return statisticsId;
+    }
+
+    public void setStatisticsId(LongFilter statisticsId) {
+        this.statisticsId = statisticsId;
+    }
+
+    public LongFilter getChatSessionsId() {
+        return chatSessionsId;
+    }
+
+    public Optional<LongFilter> optionalChatSessionsId() {
+        return Optional.ofNullable(chatSessionsId);
+    }
+
+    public LongFilter chatSessionsId() {
+        if (chatSessionsId == null) {
+            setChatSessionsId(new LongFilter());
+        }
+        return chatSessionsId;
+    }
+
+    public void setChatSessionsId(LongFilter chatSessionsId) {
+        this.chatSessionsId = chatSessionsId;
+    }
+
+    public LongFilter getRecommendationsId() {
+        return recommendationsId;
+    }
+
+    public Optional<LongFilter> optionalRecommendationsId() {
+        return Optional.ofNullable(recommendationsId);
+    }
+
+    public LongFilter recommendationsId() {
+        if (recommendationsId == null) {
+            setRecommendationsId(new LongFilter());
+        }
+        return recommendationsId;
+    }
+
+    public void setRecommendationsId(LongFilter recommendationsId) {
+        this.recommendationsId = recommendationsId;
+    }
+
     public Boolean getDistinct() {
         return distinct;
     }
@@ -432,6 +498,9 @@ public class AppUserCriteria implements Serializable, Criteria {
             Objects.equals(deletedAt, that.deletedAt) &&
             Objects.equals(deletedBy, that.deletedBy) &&
             Objects.equals(profileId, that.profileId) &&
+            Objects.equals(statisticsId, that.statisticsId) &&
+            Objects.equals(chatSessionsId, that.chatSessionsId) &&
+            Objects.equals(recommendationsId, that.recommendationsId) &&
             Objects.equals(distinct, that.distinct)
         );
     }
@@ -455,6 +524,9 @@ public class AppUserCriteria implements Serializable, Criteria {
             deletedAt,
             deletedBy,
             profileId,
+            statisticsId,
+            chatSessionsId,
+            recommendationsId,
             distinct
         );
     }
@@ -479,6 +551,9 @@ public class AppUserCriteria implements Serializable, Criteria {
             optionalDeletedAt().map(f -> "deletedAt=" + f + ", ").orElse("") +
             optionalDeletedBy().map(f -> "deletedBy=" + f + ", ").orElse("") +
             optionalProfileId().map(f -> "profileId=" + f + ", ").orElse("") +
+            optionalStatisticsId().map(f -> "statisticsId=" + f + ", ").orElse("") +
+            optionalChatSessionsId().map(f -> "chatSessionsId=" + f + ", ").orElse("") +
+            optionalRecommendationsId().map(f -> "recommendationsId=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";
     }

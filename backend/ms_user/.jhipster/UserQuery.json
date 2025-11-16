@@ -1,0 +1,72 @@
+{
+  "annotations": {
+    "changelogDate": "20251119010826"
+  },
+  "applications": ["ms_user"],
+  "clientRootFolder": "ms_user",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "queryText",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "1000"
+    },
+    {
+      "fieldName": "queryType",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "parameters",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "1000"
+    },
+    {
+      "fieldName": "responseGenerated",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "responseTime",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "deletedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "deletedBy",
+      "fieldType": "UUID"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "ms_user",
+  "name": "UserQuery",
+  "relationships": [
+    {
+      "otherEntityName": "chatSession",
+      "otherEntityRelationshipName": "queries",
+      "relationshipName": "chatSession",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

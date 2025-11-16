@@ -86,7 +86,15 @@ public class AppUserQueryService extends QueryService<AppUser> {
                 buildSpecification(criteria.getIsDeleted(), AppUser_.isDeleted),
                 buildRangeSpecification(criteria.getDeletedAt(), AppUser_.deletedAt),
                 buildSpecification(criteria.getDeletedBy(), AppUser_.deletedBy),
-                buildSpecification(criteria.getProfileId(), root -> root.join(AppUser_.profile, JoinType.LEFT).get(Profile_.id))
+                buildSpecification(criteria.getProfileId(), root -> root.join(AppUser_.profile, JoinType.LEFT).get(Profile_.id)),
+                buildSpecification(criteria.getStatisticsId(), root -> root.join(AppUser_.statistics, JoinType.LEFT).get(UserStatistics_.id)
+                ),
+                buildSpecification(criteria.getChatSessionsId(), root ->
+                    root.join(AppUser_.chatSessions, JoinType.LEFT).get(ChatSession_.id)
+                ),
+                buildSpecification(criteria.getRecommendationsId(), root ->
+                    root.join(AppUser_.recommendations, JoinType.LEFT).get(TripRecommendation_.id)
+                )
             );
         }
         return specification;

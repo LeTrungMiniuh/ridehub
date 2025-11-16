@@ -56,7 +56,7 @@ public class Profile implements Serializable {
     @JoinColumn(unique = true)
     private FileUser avatar;
 
-    @JsonIgnoreProperties(value = { "profile" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "profile", "statistics", "chatSessions", "recommendations" }, allowSetters = true)
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "profile")
     private AppUser user;
 

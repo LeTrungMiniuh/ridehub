@@ -5,6 +5,7 @@ package com.ridehub.booking.domain.enumeration;
  */
 public enum PaymentMethod {
     VNPAY,
+    SEPAY,
     CREDIT_CARD,
     BANK_TRANSFER,
 }

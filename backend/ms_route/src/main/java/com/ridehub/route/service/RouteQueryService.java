@@ -189,7 +189,9 @@ public class RouteQueryService extends QueryService<Route> {
                                                                         .get(Station_.id)),
                                         buildSpecification(criteria.getDestinationId(),
                                                         root -> root.join(Route_.destination, JoinType.LEFT)
-                                                                        .get(Station_.id)));
+                                                                        .get(Station_.id)),
+                                        buildSpecification(criteria.getSchedulesId(), root -> root
+                                                        .join(Route_.schedules, JoinType.LEFT).get(Schedule_.id)));
 
                         // origin.districtCode
                         if (criteria.getOriginDistrictCode() != null) {

@@ -1,5 +1,5 @@
 @startuml
-title RideHub – 4 Microservices\n(Updated: baseFare moved to Route; Schedule-ScheduleOccasion ManyToOne relationship)
+title RideHub – 4 Microservices\n(Updated: baseFare moved to Route; Schedule-ScheduleOccasion ManyToOne relationship; Chatbot entities removed from ms_user)
 
 left to right direction
 hide methods
@@ -25,6 +25,9 @@ enum PaymentMethod {
   VNPAY
   CREDIT_CARD
   BANK_TRANSFER
+  MOMO
+  ZALOPAY
+  SEPAY
 }
 
 enum PaymentStatus {
@@ -104,6 +107,15 @@ enum AvroTicketStatus {
   BOOKED
   CANCELLED
   EXPIRED
+  EXCHANGE_REQUESTED
+  EXCHANGE_APPROVED
+  EXCHANGE_REJECTED
+  EXCHANGE_COMPLETED
+  REFUND_REQUESTED
+  REFUND_APPROVED
+  REFUND_REJECTED
+  REFUND_COMPLETED
+  REFUND_FAILED
 }
 
 enum AvroPaymentStatus {
@@ -116,6 +128,22 @@ enum AvroPaymentStatus {
 enum TransportType {
   TRAIN
   BUS
+}
+
+' Ticket management enums
+enum ExchangeStatus {
+  EXCHANGE_REQUESTED
+  EXCHANGE_APPROVED
+  EXCHANGE_REJECTED
+  EXCHANGE_COMPLETED
+}
+
+enum RefundStatus {
+  REFUND_REQUESTED
+  REFUND_APPROVED
+  REFUND_REJECTED
+  REFUND_COMPLETED
+  REFUND_FAILED
 }
 
 ' =============================
@@ -326,6 +354,20 @@ package "ms-route\n(Geography, Routes, Vehicles, Trips, Staff, SeatLock, Schedul
     +size: Long
   }
 
+  class PricingTemplate extends BaseEntity {
+    +vehicleType: VehicleType
+    +seatType: SeatType
+    +occasionType: OccasionType
+    +baseFare: BigDecimal
+    +vehicleFactor: BigDecimal
+    +floorFactor: BigDecimal
+    +seatFactor: BigDecimal
+    +occasionFactor: BigDecimal
+    +finalPrice: BigDecimal
+    +validFrom: LocalDate
+    +validTo: LocalDate
+  }
+
   class "RouteDB" as ROUTEDB
 
 }
@@ -369,6 +411,9 @@ Vehicle "1" o-- "0..1" FileRoute : "vehicleImg"
 SeatMap "1" o-- "0..1" FileRoute : "seatMapImg"
 FileRoute ..> MINIO : "stored in"
 
+' PricingTemplate relationship
+PricingTemplate "*" -- "1" Route : "for route"
+
 ' =============================
 '          MS-BOOKING
 ' =============================
@@ -395,6 +440,17 @@ package "ms-booking\n(Bookings, Tickets, Payments, Invoices)" as MS_BOOK {
     +timeFrom: Instant
     +timeTo: Instant
     +checkedIn: Boolean
+    +status: AvroTicketStatus
+    +exchangeStatus: ExchangeStatus
+    +refundStatus: RefundStatus
+    +exchangeReason: String
+    +refundReason: String
+    +exchangeRequestedAt: Instant
+    +exchangeCompletedAt: Instant
+    +refundRequestedAt: Instant
+    +refundCompletedAt: Instant
+    +refundAmount: BigDecimal
+    +refundTransactionId: String
     +tripId: Long
     +routeId: Long
     +seatId: Long
@@ -466,6 +522,8 @@ Booking "1" o-- "1..*" PricingSnapshot : "pricing snapshots"
 Booking "1" o-- "0..*" AppliedPromotion : "applied promos"
 PaymentTransaction "1" o-- "0..*" PaymentWebhookLog : "webhooks"
 Ticket "1" o-- "0..1" FileBooking : "qrCodeImg"
+Ticket "1" o-- "0..1" Ticket : "exchangedFrom"
+Ticket "1" o-- "0..1" Ticket : "exchangedTo"
 FileBooking ..> MINIO : "stored in"
 
 ' Cross-service references (Ticket stores IDs)
