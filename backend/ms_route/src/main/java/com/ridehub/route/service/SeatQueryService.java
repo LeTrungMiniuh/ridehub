@@ -1,20 +1,26 @@
 package com.ridehub.route.service;
 
 import com.ridehub.route.domain.*; // for static metamodels
+import com.ridehub.route.domain.enumeration.SeatType;
 import com.ridehub.route.repository.SeatRepository;
 import com.ridehub.route.service.criteria.SeatCriteria;
 import com.ridehub.route.service.dto.SeatDTO;
 import com.ridehub.route.service.mapper.SeatMapper;
 import jakarta.persistence.criteria.Join;
 
+import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.JoinType;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,7 +187,8 @@ public class SeatQueryService extends QueryService<Seat> {
 
     /**
      * Find seats by trip ID and seat numbers using Criteria API.
-     * This joins through the floor -> seatMap -> vehicle relationship and then filters by trip.
+     * This joins through the floor -> seatMap -> vehicle relationship and then
+     * filters by trip.
      */
     @Transactional(readOnly = true)
     public List<Seat> findByTripIdAndSeatNumbers(Long tripId, List<String> seatNumbers) {
@@ -241,20 +248,19 @@ public class SeatQueryService extends QueryService<Seat> {
         var tripSubquery = cq.subquery(Long.class);
         var trip = tripSubquery.from(Trip.class);
         tripSubquery.select(trip.get(Trip_.vehicle).get(Vehicle_.id))
-                     .where(cb.equal(trip.get(Trip_.id), tripId));
+                .where(cb.equal(trip.get(Trip_.id), tripId));
 
         cq.where(cb.and(
                 // Match vehicle from trip
                 cb.equal(seatMap.get(SeatMap_.id), tripSubquery),
-                
+
                 // Match seat number
                 cb.equal(seat.get(Seat_.seatNo), seatNumber),
-                
+
                 // Soft-delete guards
                 cb.or(cb.isFalse(seat.get(Seat_.isDeleted)), cb.isNull(seat.get(Seat_.isDeleted))),
                 cb.or(cb.isFalse(floor.get(Floor_.isDeleted)), cb.isNull(floor.get(Floor_.isDeleted))),
-                cb.or(cb.isFalse(seatMap.get(SeatMap_.isDeleted)), cb.isNull(seatMap.get(SeatMap_.isDeleted)))
-        ));
+                cb.or(cb.isFalse(seatMap.get(SeatMap_.isDeleted)), cb.isNull(seatMap.get(SeatMap_.isDeleted)))));
 
         try {
             Seat result = entityManager.createQuery(cq).getSingleResult();
@@ -262,6 +268,80 @@ public class SeatQueryService extends QueryService<Seat> {
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Find distinct seat types by seatMap ID using Criteria API.
+     * Single query to get all seat types for a vehicle's seat map.
+     */
+    @Transactional(readOnly = true)
+    public Set<SeatType> findDistinctSeatTypesBySeatMapId(Long seatMapId) {
+        if (seatMapId == null) {
+            return Set.of();
+        }
+
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createTupleQuery();
+
+        // Roots and joins
+        var seat = cq.from(Seat.class);
+        var floor = seat.join(Seat_.floor, JoinType.INNER);
+        var seatMap = floor.join(Floor_.seatMap, JoinType.INNER);
+
+        cq.multiselect(seat.get(Seat_.type)).distinct(true);
+
+        cq.where(cb.and(
+                cb.equal(seatMap.get(SeatMap_.id), seatMapId),
+                cb.or(cb.isFalse(seat.get(Seat_.isDeleted)), cb.isNull(seat.get(Seat_.isDeleted))),
+                cb.or(cb.isFalse(floor.get(Floor_.isDeleted)), cb.isNull(floor.get(Floor_.isDeleted))),
+                cb.or(cb.isFalse(seatMap.get(SeatMap_.isDeleted)), cb.isNull(seatMap.get(SeatMap_.isDeleted)))));
+
+        List<Tuple> results = entityManager.createQuery(cq).getResultList();
+
+        return results.stream()
+                .map(tuple -> (SeatType) tuple.get(0))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Find seat types with their price factors by seatMap ID.
+     * Returns Map<SeatType, BigDecimal> where value is the average price factor for
+     * that seat type.
+     */
+    @Transactional(readOnly = true)
+    public Map<SeatType, BigDecimal> findSeatTypesWithFactorsBySeatMapId(Long seatMapId) {
+        if (seatMapId == null) {
+            return Map.of();
+        }
+
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createTupleQuery();
+
+        // Roots and joins
+        var seat = cq.from(Seat.class);
+        var floor = seat.join(Seat_.floor, JoinType.INNER);
+        var seatMap = floor.join(Floor_.seatMap, JoinType.INNER);
+
+        cq.multiselect(
+                seat.get(Seat_.type),
+                cb.avg(seat.get(Seat_.priceFactor)));
+
+        cq.where(cb.and(
+                cb.equal(seatMap.get(SeatMap_.id), seatMapId),
+                cb.or(cb.isFalse(seat.get(Seat_.isDeleted)), cb.isNull(seat.get(Seat_.isDeleted))),
+                cb.or(cb.isFalse(floor.get(Floor_.isDeleted)), cb.isNull(floor.get(Floor_.isDeleted))),
+                cb.or(cb.isFalse(seatMap.get(SeatMap_.isDeleted)), cb.isNull(seatMap.get(SeatMap_.isDeleted)))));
+
+        cq.groupBy(seat.get(Seat_.type));
+
+        List<Tuple> results = entityManager.createQuery(cq).getResultList();
+
+        return results.stream()
+                .collect(Collectors.toMap(
+                        tuple -> (SeatType) tuple.get(0),
+                        tuple -> BigDecimal.valueOf(((Number) tuple.get(1)).doubleValue()),
+                        (existing, replacement) -> existing));
     }
 
 }

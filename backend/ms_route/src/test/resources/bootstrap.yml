@@ -1,8 +1,0 @@
-spring:
-  cloud:
-    vault:
-      enabled: false
-    consul:
-      enabled: false
-    config:
-      enabled: false
