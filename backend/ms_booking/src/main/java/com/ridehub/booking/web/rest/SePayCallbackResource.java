@@ -2,8 +2,11 @@ package com.ridehub.booking.web.rest;
 
 import com.ridehub.booking.service.PaymentService;
 import com.ridehub.booking.service.payment.sepay.SePayService;
+import com.ridehub.booking.service.payment.sepay.SePayService.SePayOrderDetail;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,12 +56,12 @@ public class SePayCallbackResource {
                 response.put("message", result.getMessage());
                 response.put("transactionId", result.getTransactionId());
                 response.put("paymentStatus", result.getStatus());
-                
+
                 LOG.info("SePay callback verified successfully for transaction: {}", result.getTransactionId());
             } else {
                 response.put("status", "error");
                 response.put("message", result.getMessage());
-                
+
                 LOG.warn("SePay callback verification failed: {}", result.getMessage());
             }
 
@@ -78,12 +81,12 @@ public class SePayCallbackResource {
      */
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestBody String payload,
-                                                @RequestHeader(value = "X-Signature", required = false) String signature) {
-        LOG.debug("Received SePay webhook");
+            @RequestHeader(value = "X-Signature", required = false) String signature) {
+        LOG.info("Received SePay webhook");
 
         try {
             String result = paymentService.processWebhook("SEPAY", payload, signature);
-            
+
             if ("SUCCESS".equals(result)) {
                 return ResponseEntity.ok("CONFIRMED");
             } else if ("ALREADY_PROCESSED".equals(result)) {
@@ -98,6 +101,39 @@ public class SePayCallbackResource {
         }
     }
 
+    @GetMapping("/query")
+    public ResponseEntity<Map<String, Object>> queryOrderDetail(@RequestParam("orderId") String transactionId) {
+        LOG.debug("REST request to query SePay order detail for orderId: {}", transactionId);
+
+        if (transactionId == null || transactionId.isBlank()) {
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("success", false);
+            errorBody.put("message", "orderId is required");
+            return ResponseEntity.badRequest().body(errorBody);
+        }
+
+        try {
+            SePayOrderDetail detail = sePayService.queryOrderDetail(transactionId);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("success", true);
+            body.put("orderId", transactionId);
+            body.put("data", detail);
+
+            return ResponseEntity.ok(body);
+        } catch (RuntimeException ex) {
+            LOG.error("Error querying SePay order detail for orderId {}", transactionId, ex);
+
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("success", false);
+            errorBody.put("orderId", transactionId);
+            errorBody.put("message", ex.getMessage());
+
+            // 502 because it's basically an upstream (SePay) failure
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorBody);
+        }
+    }
+
     /**
      * Get client IP address
      */
@@ -106,12 +142,12 @@ public class SePayCallbackResource {
         if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
             return xForwardedFor.split(",")[0].trim();
         }
-        
+
         String xRealIp = request.getHeader("X-Real-IP");
         if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
             return xRealIp;
         }
-        
+
         return request.getRemoteAddr();
     }
 }

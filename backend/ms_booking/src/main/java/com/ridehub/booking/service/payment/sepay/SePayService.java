@@ -84,13 +84,65 @@ public class SePayService {
         Map<String, String> params = parseQuery(payload);
 
         String transactionId = params.get("order_invoice_number");
-        String responseCode = params.get("response_code");
+        String responseCode = params.get("order_status");
         String amountStr = params.get("order_amount");
 
-        String status = "00".equals(responseCode) ? "SUCCESS" : "FAILED";
+        String status = "CAPTURED".equals(responseCode) ? "SUCCESS" : "FAILED";
         BigDecimal amount = amountStr != null ? new BigDecimal(amountStr) : BigDecimal.ZERO;
 
         return new SePayWebhookData(transactionId, status, amount, params);
+    }
+
+    /**
+     * Query order detail from SePay API
+     */
+    public SePayOrderDetail queryOrderDetail(String transactionId) {
+        LOG.info("Querying SePay order detail for order ID: {}", transactionId);
+
+        try {
+            String apiUrl = sePayConfig.getApiBaseUrl() + "/v1/order/detail/" + transactionId;
+
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(sePayConfig.getConnectTimeoutSeconds()))
+                    .build();
+            String auth = Base64.getEncoder()
+                    .encodeToString((sePayConfig.getMerchantId() + ":" + sePayConfig.getSecretKey()).getBytes());
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(
+                            apiUrl))
+                    .header("Authorization", "Basic " + auth)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            int statusCode = response.statusCode();
+            String responseBody = response.body();
+
+            LOG.info("SePay API response status: {}, body: {}", statusCode, responseBody);
+
+            if (statusCode == 200) {
+                return parseOrderDetailResponse(responseBody);
+            } else {
+                LOG.error("SePay API error - Status: {}, Body: {}", statusCode, responseBody);
+                throw new RuntimeException("Failed to query order detail: HTTP " + statusCode);
+            }
+
+        } catch (java.net.http.HttpTimeoutException e) {
+            LOG.error("SePay API timeout while querying order detail: {}", transactionId, e);
+            throw new RuntimeException("SePay service timeout - please try again", e);
+        } catch (java.net.ConnectException e) {
+            LOG.error("Failed to connect to SePay API while querying order detail: {}", transactionId, e);
+            throw new RuntimeException("Unable to connect to SePay service", e);
+        } catch (InterruptedException e) {
+            LOG.error("SePay API request interrupted while querying order detail: {}", transactionId, e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Order detail query was interrupted", e);
+        } catch (Exception e) {
+            LOG.error("Error querying SePay order detail: {}", transactionId, e);
+            throw new RuntimeException("Failed to query order detail", e);
+        }
     }
 
     /**
@@ -106,8 +158,8 @@ public class SePayService {
                 .substring(0, 16);
 
         String description = "Payment for booking: " + bookingCode;
-        String successUrl = sePayConfig.getSuccessUrl() != null ? sePayConfig.getSuccessUrl() :
-                "https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback";
+        String successUrl = sePayConfig.getSuccessUrl() != null ? sePayConfig.getSuccessUrl()
+                : "https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback";
         String errorUrl = sePayConfig.getErrorUrl() != null ? sePayConfig.getErrorUrl() : successUrl;
         String cancelUrl = sePayConfig.getCancelUrl() != null ? sePayConfig.getCancelUrl() : successUrl;
 
@@ -131,7 +183,8 @@ public class SePayService {
         // 3. Encode form body
         String body = buildFormUrlEncoded(formData);
 
-        // 4. HTTP client — FOLLOW redirects to capture checkout URL with configurable timeout
+        // 4. HTTP client — FOLLOW redirects to capture checkout URL with configurable
+        // timeout
         HttpClient client = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.ALWAYS)
                 .connectTimeout(java.time.Duration.ofSeconds(sePayConfig.getConnectTimeoutSeconds()))
@@ -148,22 +201,27 @@ public class SePayService {
         HttpResponse<String> response = null;
         int maxRetries = sePayConfig.getMaxRetries();
         int retryDelay = sePayConfig.getRetryDelayMillis();
-        
+
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                LOG.debug("Attempting SePay API call {}/{} for transaction: {}", attempt, maxRetries, orderInvoiceNumber);
+                LOG.debug("Attempting SePay API call {}/{} for transaction: {}", attempt, maxRetries,
+                        orderInvoiceNumber);
                 response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 break; // Success, exit retry loop
             } catch (java.net.http.HttpTimeoutException e) {
-                LOG.warn("SePay API timeout attempt {}/{} for transaction: {}", attempt, maxRetries, orderInvoiceNumber, e);
+                LOG.warn("SePay API timeout attempt {}/{} for transaction: {}", attempt, maxRetries, orderInvoiceNumber,
+                        e);
                 if (attempt == maxRetries) {
-                    LOG.error("SePay API timeout after {} attempts for transaction: {}", maxRetries, orderInvoiceNumber, e);
+                    LOG.error("SePay API timeout after {} attempts for transaction: {}", maxRetries, orderInvoiceNumber,
+                            e);
                     throw new RuntimeException("SePay service timeout - please try again", e);
                 }
             } catch (java.net.ConnectException e) {
-                LOG.warn("Failed to connect to SePay API attempt {}/{} for transaction: {}", attempt, maxRetries, orderInvoiceNumber, e);
+                LOG.warn("Failed to connect to SePay API attempt {}/{} for transaction: {}", attempt, maxRetries,
+                        orderInvoiceNumber, e);
                 if (attempt == maxRetries) {
-                    LOG.error("Failed to connect to SePay API after {} attempts for transaction: {}", maxRetries, orderInvoiceNumber, e);
+                    LOG.error("Failed to connect to SePay API after {} attempts for transaction: {}", maxRetries,
+                            orderInvoiceNumber, e);
                     throw new RuntimeException("Unable to connect to SePay service", e);
                 }
             } catch (InterruptedException e) {
@@ -171,12 +229,13 @@ public class SePayService {
                 Thread.currentThread().interrupt(); // Restore interrupt status
                 throw new RuntimeException("Payment request was interrupted", e);
             } catch (Exception e) {
-                LOG.error("Unexpected error calling SePay API attempt {}/{} for transaction: {}", attempt, maxRetries, orderInvoiceNumber, e);
+                LOG.error("Unexpected error calling SePay API attempt {}/{} for transaction: {}", attempt, maxRetries,
+                        orderInvoiceNumber, e);
                 if (attempt == maxRetries) {
                     throw new RuntimeException("Failed to create SePay payment", e);
                 }
             }
-            
+
             // Wait before retry (except on last attempt)
             if (attempt < maxRetries) {
                 try {
@@ -202,13 +261,12 @@ public class SePayService {
 
         // 7. Fallback - create mock URL for testing when SePay is unavailable
         String fallbackUrl = String.format(
-            "https://sepay-sandbox.com/checkout?merchant=%s&order=%s&amount=%s&signature=%s",
-            URLEncoder.encode(sePayConfig.getMerchantId(), StandardCharsets.UTF_8),
-            URLEncoder.encode(orderInvoiceNumber, StandardCharsets.UTF_8),
-            URLEncoder.encode(amountVnd.toPlainString(), StandardCharsets.UTF_8),
-            URLEncoder.encode(signature, StandardCharsets.UTF_8)
-        );
-        
+                "https://sepay-sandbox.com/checkout?merchant=%s&order=%s&amount=%s&signature=%s",
+                URLEncoder.encode(sePayConfig.getMerchantId(), StandardCharsets.UTF_8),
+                URLEncoder.encode(orderInvoiceNumber, StandardCharsets.UTF_8),
+                URLEncoder.encode(amountVnd.toPlainString(), StandardCharsets.UTF_8),
+                URLEncoder.encode(signature, StandardCharsets.UTF_8));
+
         LOG.warn("SePay service unavailable, using fallback URL: {}", fallbackUrl);
         LOG.debug("HTTP Status: {}, Response Body: {}", status, response.body());
         return fallbackUrl;
@@ -279,7 +337,7 @@ public class SePayService {
 
         // Generate expected signature
         String expectedSignature = generateSignature(paramsForValidation);
-        
+
         return receivedSignature.equals(expectedSignature);
     }
 
@@ -329,6 +387,151 @@ public class SePayService {
             }
         }
         return params;
+    }
+
+    /**
+     * Parse order detail response from SePay API
+     */
+    private SePayOrderDetail parseOrderDetailResponse(String responseBody) {
+        try {
+            // Simple JSON parsing using string manipulation (avoiding external
+            // dependencies)
+            // In production, consider using Jackson or Gson
+
+            String dataSection = extractJsonObject(responseBody, "data");
+            if (dataSection == null) {
+                throw new RuntimeException("Invalid response format: missing 'data' field");
+            }
+
+            String id = extractJsonField(dataSection, "id");
+            String customerId = extractJsonField(dataSection, "customer_id");
+            String orderId = extractJsonField(dataSection, "order_id");
+            String orderInvoiceNumber = extractJsonField(dataSection, "order_invoice_number");
+            String orderStatus = extractJsonField(dataSection, "order_status");
+            String orderAmount = extractJsonField(dataSection, "order_amount");
+            String orderCurrency = extractJsonField(dataSection, "order_currency");
+            String orderDescription = extractJsonField(dataSection, "order_description");
+            String authenticationStatus = extractJsonField(dataSection, "authentication_status");
+            String createdAt = extractJsonField(dataSection, "created_at");
+            String updatedAt = extractJsonField(dataSection, "updated_at");
+
+            List<SePayTransaction> transactions = parseTransactions(dataSection);
+
+            return new SePayOrderDetail(
+                    id, customerId, orderId, orderInvoiceNumber, orderStatus,
+                    orderAmount, orderCurrency, orderDescription, authenticationStatus,
+                    createdAt, updatedAt, transactions);
+
+        } catch (Exception e) {
+            LOG.error("Error parsing SePay order detail response: {}", responseBody, e);
+            throw new RuntimeException("Failed to parse order detail response", e);
+        }
+    }
+
+    /**
+     * Extract JSON field value from JSON string
+     */
+    private String extractJsonField(String json, String fieldName) {
+        String pattern = "\"" + fieldName + "\"\\s*:\\s*\"([^\"]*)\"";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {
+            return m.group(1);
+        }
+
+        // Try for null values
+        pattern = "\"" + fieldName + "\"\\s*:\\s*(null)";
+        p = java.util.regex.Pattern.compile(pattern);
+        m = p.matcher(json);
+        if (m.find()) {
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract JSON object from JSON string
+     */
+    private String extractJsonObject(String json, String fieldName) {
+        String pattern = "\"" + fieldName + "\"\\s*:\\s*\\{([^}]*)\\}";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {
+            return "{" + m.group(1) + "}";
+        }
+
+        // Try for nested objects (more complex)
+        pattern = "\"" + fieldName + "\"\\s*:\\s*(\\{.*?\\})(?=,|})";
+        p = java.util.regex.Pattern.compile(pattern, java.util.regex.Pattern.DOTALL);
+        m = p.matcher(json);
+        if (m.find()) {
+            return m.group(1);
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse transactions array from response
+     */
+    private List<SePayTransaction> parseTransactions(String dataSection) {
+        List<SePayTransaction> transactions = new ArrayList<>();
+
+        // Extract transactions array
+        String transactionsPattern = "\"transactions\"\\s*:\\s*\\[(.*?)\\]";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(transactionsPattern,
+                java.util.regex.Pattern.DOTALL);
+        java.util.regex.Matcher m = p.matcher(dataSection);
+
+        if (!m.find()) {
+            return transactions;
+        }
+
+        String transactionsArray = m.group(1);
+
+        // Split by }{ (between objects) and parse each transaction
+        String[] transactionObjects = transactionsArray.split("(?<=\\}),\\s*(?=\\{)");
+
+        for (String transactionObj : transactionObjects) {
+            try {
+                // Clean up the object string
+                transactionObj = transactionObj.trim();
+                if (!transactionObj.startsWith("{")) {
+                    transactionObj = "{" + transactionObj;
+                }
+                if (!transactionObj.endsWith("}")) {
+                    transactionObj = transactionObj + "}";
+                }
+
+                String id = extractJsonField(transactionObj, "id");
+                String paymentMethod = extractJsonField(transactionObj, "payment_method");
+                String transactionType = extractJsonField(transactionObj, "transaction_type");
+                String transactionAmount = extractJsonField(transactionObj, "transaction_amount");
+                String transactionCurrency = extractJsonField(transactionObj, "transaction_currency");
+                String transactionStatus = extractJsonField(transactionObj, "transaction_status");
+                String authStatus = extractJsonField(transactionObj, "authentication_status");
+                String cardNumber = extractJsonField(transactionObj, "card_number");
+                String cardHolderName = extractJsonField(transactionObj, "card_holder_name");
+                String cardExpiry = extractJsonField(transactionObj, "card_expiry");
+                String cardFundingMethod = extractJsonField(transactionObj, "card_funding_method");
+                String cardBrand = extractJsonField(transactionObj, "card_brand");
+                String transactionDate = extractJsonField(transactionObj, "transaction_date");
+                String transactionLastUpdatedDate = extractJsonField(transactionObj, "transaction_last_updated_date");
+
+                SePayTransaction transaction = new SePayTransaction(
+                        id, paymentMethod, transactionType, transactionAmount, transactionCurrency,
+                        transactionStatus, authStatus, cardNumber, cardHolderName, cardExpiry,
+                        cardFundingMethod, cardBrand, transactionDate, transactionLastUpdatedDate);
+
+                transactions.add(transaction);
+
+            } catch (Exception e) {
+                LOG.warn("Failed to parse transaction object: {}", transactionObj, e);
+            }
+        }
+
+        return transactions;
     }
 
     /**
@@ -394,6 +597,219 @@ public class SePayService {
 
         public Map<String, String> getRawParams() {
             return rawParams;
+        }
+    }
+
+    /**
+     * SePay order detail response
+     */
+    public static class SePayOrderDetail {
+        private final String id;
+        private final String customerId;
+        private final String orderId;
+        private final String orderInvoiceNumber;
+        private final String orderStatus;
+        private final String orderAmount;
+        private final String orderCurrency;
+        private final String orderDescription;
+        private final String authenticationStatus;
+        private final String createdAt;
+        private final String updatedAt;
+        private final List<SePayTransaction> transactions;
+
+        public SePayOrderDetail(String id, String customerId, String orderId, String orderInvoiceNumber,
+                String orderStatus, String orderAmount, String orderCurrency, String orderDescription,
+                String authenticationStatus, String createdAt, String updatedAt,
+                List<SePayTransaction> transactions) {
+            this.id = id;
+            this.customerId = customerId;
+            this.orderId = orderId;
+            this.orderInvoiceNumber = orderInvoiceNumber;
+            this.orderStatus = orderStatus;
+            this.orderAmount = orderAmount;
+            this.orderCurrency = orderCurrency;
+            this.orderDescription = orderDescription;
+            this.authenticationStatus = authenticationStatus;
+            this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+            this.transactions = transactions;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getCustomerId() {
+            return customerId;
+        }
+
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public String getOrderInvoiceNumber() {
+            return orderInvoiceNumber;
+        }
+
+        public String getOrderStatus() {
+            return orderStatus;
+        }
+
+        public String getOrderAmount() {
+            return orderAmount;
+        }
+
+        public String getOrderCurrency() {
+            return orderCurrency;
+        }
+
+        public String getOrderDescription() {
+            return orderDescription;
+        }
+
+        public String getAuthenticationStatus() {
+            return authenticationStatus;
+        }
+
+        public String getCreatedAt() {
+            return createdAt;
+        }
+
+        public String getUpdatedAt() {
+            return updatedAt;
+        }
+
+        public List<SePayTransaction> getTransactions() {
+            return transactions;
+        }
+
+        @Override
+        public String toString() {
+            return "SePayOrderDetail{" +
+                    "id='" + id + '\'' +
+                    ", orderId='" + orderId + '\'' +
+                    ", orderInvoiceNumber='" + orderInvoiceNumber + '\'' +
+                    ", orderStatus='" + orderStatus + '\'' +
+                    ", orderAmount='" + orderAmount + '\'' +
+                    ", orderCurrency='" + orderCurrency + '\'' +
+                    ", orderDescription='" + orderDescription + '\'' +
+                    ", authenticationStatus='" + authenticationStatus + '\'' +
+                    ", createdAt='" + createdAt + '\'' +
+                    ", updatedAt='" + updatedAt + '\'' +
+                    ", transactions=" + transactions.size() +
+                    '}';
+        }
+    }
+
+    /**
+     * SePay transaction detail
+     */
+    public static class SePayTransaction {
+        private final String id;
+        private final String paymentMethod;
+        private final String transactionType;
+        private final String transactionAmount;
+        private final String transactionCurrency;
+        private final String transactionStatus;
+        private final String authenticationStatus;
+        private final String cardNumber;
+        private final String cardHolderName;
+        private final String cardExpiry;
+        private final String cardFundingMethod;
+        private final String cardBrand;
+        private final String transactionDate;
+        private final String transactionLastUpdatedDate;
+
+        public SePayTransaction(String id, String paymentMethod, String transactionType,
+                String transactionAmount, String transactionCurrency, String transactionStatus,
+                String authenticationStatus, String cardNumber, String cardHolderName,
+                String cardExpiry, String cardFundingMethod, String cardBrand,
+                String transactionDate, String transactionLastUpdatedDate) {
+            this.id = id;
+            this.paymentMethod = paymentMethod;
+            this.transactionType = transactionType;
+            this.transactionAmount = transactionAmount;
+            this.transactionCurrency = transactionCurrency;
+            this.transactionStatus = transactionStatus;
+            this.authenticationStatus = authenticationStatus;
+            this.cardNumber = cardNumber;
+            this.cardHolderName = cardHolderName;
+            this.cardExpiry = cardExpiry;
+            this.cardFundingMethod = cardFundingMethod;
+            this.cardBrand = cardBrand;
+            this.transactionDate = transactionDate;
+            this.transactionLastUpdatedDate = transactionLastUpdatedDate;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getPaymentMethod() {
+            return paymentMethod;
+        }
+
+        public String getTransactionType() {
+            return transactionType;
+        }
+
+        public String getTransactionAmount() {
+            return transactionAmount;
+        }
+
+        public String getTransactionCurrency() {
+            return transactionCurrency;
+        }
+
+        public String getTransactionStatus() {
+            return transactionStatus;
+        }
+
+        public String getAuthenticationStatus() {
+            return authenticationStatus;
+        }
+
+        public String getCardNumber() {
+            return cardNumber;
+        }
+
+        public String getCardHolderName() {
+            return cardHolderName;
+        }
+
+        public String getCardExpiry() {
+            return cardExpiry;
+        }
+
+        public String getCardFundingMethod() {
+            return cardFundingMethod;
+        }
+
+        public String getCardBrand() {
+            return cardBrand;
+        }
+
+        public String getTransactionDate() {
+            return transactionDate;
+        }
+
+        public String getTransactionLastUpdatedDate() {
+            return transactionLastUpdatedDate;
+        }
+
+        @Override
+        public String toString() {
+            return "SePayTransaction{" +
+                    "id='" + id + '\'' +
+                    ", paymentMethod='" + paymentMethod + '\'' +
+                    ", transactionType='" + transactionType + '\'' +
+                    ", transactionAmount='" + transactionAmount + '\'' +
+                    ", transactionStatus='" + transactionStatus + '\'' +
+                    ", cardNumber='" + cardNumber + '\'' +
+                    ", cardHolderName='" + cardHolderName + '\'' +
+                    ", cardBrand='" + cardBrand + '\'' +
+                    ", transactionDate='" + transactionDate + '\'' +
+                    '}';
         }
     }
 }

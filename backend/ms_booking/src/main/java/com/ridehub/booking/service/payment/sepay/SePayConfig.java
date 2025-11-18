@@ -12,6 +12,8 @@ public class SePayConfig {
     
     private String merchantId;
     private String secretKey;
+    private String apiKey;
+    private String apiBaseUrl = "https://pgapi-sandbox.sepay.vn";
     private String initUrl = "https://pay-sandbox.sepay.vn/v1/checkout/init";
     private String successUrl;
     private String errorUrl;
@@ -38,6 +40,22 @@ public class SePayConfig {
     
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
+    }
+    
+    public String getApiKey() {
+        return apiKey;
+    }
+    
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+    
+    public String getApiBaseUrl() {
+        return apiBaseUrl;
+    }
+    
+    public void setApiBaseUrl(String apiBaseUrl) {
+        this.apiBaseUrl = apiBaseUrl;
     }
     
     public String getInitUrl() {
