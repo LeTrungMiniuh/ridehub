@@ -3,10 +3,16 @@ package com.ridehub.route.service;
 import com.ridehub.route.domain.enumeration.OccasionType;
 import com.ridehub.route.domain.enumeration.SeatType;
 import com.ridehub.route.domain.enumeration.VehicleType;
+import com.ridehub.route.service.PricingTemplateQueryService;
+import com.ridehub.route.service.TripService;
+import com.ridehub.route.service.SeatService;
 import com.ridehub.route.service.criteria.PricingTemplateCriteria;
 import com.ridehub.route.service.dto.PricingTemplateDTO;
 import com.ridehub.route.service.dto.TripDTO;
 import com.ridehub.route.service.dto.TripWithPricingDTO;
+import com.ridehub.route.service.dto.SeatDTO;
+import com.ridehub.route.web.rest.errors.BadRequestAlertException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +35,19 @@ public class TripPricingService {
     private final PricingTemplateQueryService pricingTemplateQueryService;
     private final FloorQueryService floorQueryService;
     private final SeatQueryService seatQueryService;
+    private final TripService tripService;
+    private final SeatService seatService;
 
     public TripPricingService(PricingTemplateQueryService pricingTemplateQueryService,
             FloorQueryService floorQueryService,
-            SeatQueryService seatQueryService) {
+            SeatQueryService seatQueryService,
+            TripService tripService,
+            SeatService seatService) {
         this.pricingTemplateQueryService = pricingTemplateQueryService;
         this.floorQueryService = floorQueryService;
         this.seatQueryService = seatQueryService;
+        this.tripService = tripService;
+        this.seatService = seatService;
     }
 
     /**
@@ -117,7 +129,8 @@ public class TripPricingService {
     /**
      * Create a new pricing template using factors from maps and trip data.
      */
-    private PricingTemplateDTO createNewPricingTemplate(VehicleType vehicleType, SeatType seatType,TripDTO tripDTO, BigDecimal seatFactor,
+    private PricingTemplateDTO createNewPricingTemplate(VehicleType vehicleType, SeatType seatType, TripDTO tripDTO,
+            BigDecimal seatFactor,
             BigDecimal floorFactor, BigDecimal vehicleFactor, BigDecimal occasionFactor) {
 
         PricingTemplateDTO template = new PricingTemplateDTO();
@@ -206,6 +219,91 @@ public class TripPricingService {
                 .multiply(floorFactor)
                 .multiply(occasionFactor)
                 .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculate pricing template for specific trip and seat combination.
+     * This method extracts the calculation logic for a single trip/seat pair.
+     */
+    public PricingTemplateDTO calculatePricingTemplateForTripAndSeat(TripDTO trip, SeatDTO seat) {
+        PricingTemplateDTO template = new PricingTemplateDTO();
+
+        // Set basic properties
+        template.setVehicleType(trip.getVehicle().getType());
+        template.setSeatType(seat.getType());
+        template.setRoute(trip.getRoute());
+
+        // Set factors from trip and seat
+        template.setVehicleFactor(trip.getVehicle().getTypeFactor());
+        template.setSeatFactor(seat.getPriceFactor() != null ? seat.getPriceFactor() : BigDecimal.ONE);
+        template.setFloorFactor(
+                seat.getFloor().getPriceFactorFloor() != null ? seat.getFloor().getPriceFactorFloor() : BigDecimal.ONE);
+        template.setOccasionFactor(trip.getOccasionFactor());
+
+        // Set base fare from route
+        template.setBaseFare(trip.getRoute().getBaseFare());
+
+        // Calculate final price
+        BigDecimal baseFare = Optional.ofNullable(template.getBaseFare()).orElse(BigDecimal.ZERO);
+        BigDecimal vehicleFactor = Optional.ofNullable(template.getVehicleFactor()).orElse(BigDecimal.ONE);
+        BigDecimal seatFactor = Optional.ofNullable(template.getSeatFactor()).orElse(BigDecimal.ONE);
+        BigDecimal floorFactor = Optional.ofNullable(template.getFloorFactor()).orElse(BigDecimal.ONE);
+        BigDecimal occasionFactor = Optional.ofNullable(template.getOccasionFactor()).orElse(BigDecimal.ONE);
+
+        BigDecimal finalPrice = baseFare.multiply(vehicleFactor)
+                .multiply(seatFactor)
+                .multiply(floorFactor)
+                .multiply(occasionFactor)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        template.setFinalPrice(finalPrice);
+
+        // Set timestamps
+        template.setCreatedAt(Instant.now());
+        template.setUpdatedAt(Instant.now());
+        template.setIsDeleted(false);
+
+        return template;
+    }
+
+    /**
+     * Get pricing template by trip ID and seat ID.
+     * If not exist, calculate using TripPricingService.
+     *
+     * @param tripId the ID of the trip.
+     * @param seatId the ID of the seat.
+     * @return the pricing template DTO.
+     * @throws BadRequestAlertException if trip or seat not found.
+     */
+    public PricingTemplateDTO getPricingTemplateByTripAndSeat(Long tripId, Long seatId) {
+        // Get trip and seat
+        var tripOpt = tripService.findOne(tripId);
+        var seatOpt = seatService.findOne(seatId);
+
+        if (tripOpt.isEmpty() || seatOpt.isEmpty()) {
+            throw new BadRequestAlertException("Trip or Seat not found", "msRoutePricingTemplate", "notfound");
+        }
+
+        TripDTO trip = tripOpt.get();
+        SeatDTO seat = seatOpt.get();
+
+        // Try to find existing pricing template
+        PricingTemplateCriteria criteria = new PricingTemplateCriteria();
+        criteria.routeId().setEquals(trip.getRoute().getId());
+        criteria.vehicleType().setEquals(trip.getVehicle().getType());
+        criteria.seatType().setEquals(seat.getType());
+        criteria.occasionFactor().setEquals(trip.getOccasionFactor());
+        criteria.isDeleted().setEquals(false);
+
+        List<PricingTemplateDTO> existingTemplates = pricingTemplateQueryService
+                .findByCriteria(criteria, Pageable.unpaged()).getContent();
+
+        if (!existingTemplates.isEmpty()) {
+            return existingTemplates.get(0);
+        }
+
+        // Calculate new pricing template
+        return calculatePricingTemplateForTripAndSeat(trip, seat);
     }
 
 }
