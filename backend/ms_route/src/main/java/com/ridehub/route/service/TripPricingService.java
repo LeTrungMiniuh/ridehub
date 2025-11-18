@@ -90,26 +90,23 @@ public class TripPricingService {
         Map<Integer, BigDecimal> floorFactors = floorQueryService.findFloorFactorsBySeatMapId(seatMapId);
 
         Set<SeatType> vehicleSeatTypes = seatTypeFactors.keySet();
-        Set<OccasionType> occasionTypes = EnumSet.allOf(OccasionType.class);
+        // Set<OccasionType> occasionTypes = EnumSet.allOf(OccasionType.class);
 
         // Loop through seatTypeFactors and floorFactors
         for (SeatType seatType : vehicleSeatTypes) {
             BigDecimal seatFactor = seatTypeFactors.get(seatType);
-            
+
             for (Integer floorNumber : floorFactors.keySet()) {
                 BigDecimal floorFactor = floorFactors.get(floorNumber);
-                
-                for (OccasionType occasionType : occasionTypes) {
-                    boolean exists = existingTemplates.stream()
-                            .anyMatch(t -> t.getVehicleType() == vehicleType &&
-                                    t.getSeatType() == seatType &&
-                                    t.getOccasionType() == occasionType);
 
-                    if (!exists) {
-                        result.add(createNewPricingTemplate(vehicleType, seatType, occasionType, tripDTO,
-                                seatFactor, floorFactor, 
-                                tripDTO.getVehicle().getTypeFactor(), tripDTO.getOccasionFactor()));
-                    }
+                boolean exists = existingTemplates.stream()
+                        .anyMatch(t -> t.getVehicleType() == vehicleType &&
+                                t.getSeatType() == seatType);
+
+                if (!exists) {
+                    result.add(createNewPricingTemplate(vehicleType, seatType, tripDTO,
+                            seatFactor, floorFactor,
+                            tripDTO.getVehicle().getTypeFactor(), tripDTO.getOccasionFactor()));
                 }
             }
         }
@@ -120,33 +117,32 @@ public class TripPricingService {
     /**
      * Create a new pricing template using factors from maps and trip data.
      */
-    private PricingTemplateDTO createNewPricingTemplate(VehicleType vehicleType, SeatType seatType, 
-            OccasionType occasionType, TripDTO tripDTO, BigDecimal seatFactor, 
+    private PricingTemplateDTO createNewPricingTemplate(VehicleType vehicleType, SeatType seatType,TripDTO tripDTO, BigDecimal seatFactor,
             BigDecimal floorFactor, BigDecimal vehicleFactor, BigDecimal occasionFactor) {
-        
+
         PricingTemplateDTO template = new PricingTemplateDTO();
-        
+
         // Set basic properties
         template.setVehicleType(vehicleType);
         template.setSeatType(seatType);
-        template.setOccasionType(occasionType);
+        // template.setOccasionType(occasionType);
         template.setRoute(tripDTO.getRoute());
-        
+
         // Set factors from parameters
         template.setVehicleFactor(vehicleFactor);
         template.setSeatFactor(seatFactor);
         template.setFloorFactor(floorFactor);
         template.setOccasionFactor(occasionFactor);
-        
+
         // Calculate base fare and final price
         template.setBaseFare(tripDTO.getRoute().getBaseFare());
         template.setFinalPrice(calculateFinalPrice(template));
-        
+
         // Set timestamps
         template.setCreatedAt(Instant.now());
         template.setUpdatedAt(Instant.now());
         template.setIsDeleted(false);
-        
+
         return template;
     }
 
@@ -160,11 +156,12 @@ public class TripPricingService {
 
         PricingTemplateCriteria criteria = new PricingTemplateCriteria();
         criteria.routeId().setEquals(tripDTO.getRoute().getId());
+        criteria.vehicleType().setEquals(tripDTO.getVehicle().getType());
+        criteria.occasionFactor().setEquals(tripDTO.getOccasionFactor());
         criteria.isDeleted().setEquals(false);
 
         return pricingTemplateQueryService.findByCriteria(criteria, Pageable.unpaged()).getContent();
     }
-
 
     /**
      * Calculate missing values for a pricing template.
@@ -191,51 +188,7 @@ public class TripPricingService {
         calculated.setDeletedAt(template.getDeletedAt());
         calculated.setDeletedBy(template.getDeletedBy());
         calculated.setRoute(template.getRoute());
-
-        // Calculate missing factors
-        if (calculated.getVehicleFactor() == null && calculated.getVehicleType() != null) {
-            calculated.setVehicleFactor(getFactor(calculated.getVehicleType(), null, null));
-        }
-
-        if (calculated.getSeatFactor() == null && calculated.getSeatType() != null) {
-            calculated.setSeatFactor(getFactor(null, calculated.getSeatType(), null));
-        }
-
-        if (calculated.getOccasionFactor() == null && calculated.getOccasionType() != null) {
-            calculated.setOccasionFactor(getFactor(null, null, calculated.getOccasionType()));
-        }
-
-        if (calculated.getBaseFare() == null) {
-            calculated.setBaseFare(calculateBaseFare(tripDTO));
-        }
-
-        // Calculate final price if needed
-        if (calculated.getFinalPrice() == null || needsRecalculation(calculated)) {
-            calculated.setFinalPrice(calculateFinalPrice(calculated));
-        }
-
         return calculated;
-    }
-
-
-    /**
-     * Calculate base fare based on route or default.
-     */
-    private BigDecimal calculateBaseFare(TripDTO tripDTO) {
-        if (tripDTO.getRoute() == null || tripDTO.getRoute().getId() == null) {
-            return new BigDecimal("100000");
-        }
-
-        PricingTemplateCriteria criteria = new PricingTemplateCriteria();
-        criteria.routeId().setEquals(tripDTO.getRoute().getId());
-        criteria.isDeleted().setEquals(false);
-
-        return pricingTemplateQueryService.findByCriteria(criteria, Pageable.unpaged())
-                .getContent().stream()
-                .map(PricingTemplateDTO::getBaseFare)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(new BigDecimal("100000"));
     }
 
     /**
@@ -255,43 +208,4 @@ public class TripPricingService {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Check if price should be recalculated.
-     */
-    private boolean needsRecalculation(PricingTemplateDTO template) {
-        return template.getVehicleFactor() == null ||
-                template.getSeatFactor() == null ||
-                template.getFloorFactor() == null ||
-                template.getOccasionFactor() == null;
-    }
-
-    /**
-     * Get factor from templates based on criteria.
-     */
-    private BigDecimal getFactor(VehicleType vehicleType, SeatType seatType, OccasionType occasionType) {
-        PricingTemplateCriteria criteria = new PricingTemplateCriteria();
-        criteria.isDeleted().setEquals(false);
-
-        if (vehicleType != null)
-            criteria.vehicleType().setEquals(vehicleType);
-        if (seatType != null)
-            criteria.seatType().setEquals(seatType);
-        if (occasionType != null)
-            criteria.occasionType().setEquals(occasionType);
-
-        return pricingTemplateQueryService.findByCriteria(criteria, Pageable.unpaged())
-                .getContent().stream()
-                .map(template -> {
-                    if (vehicleType != null)
-                        return template.getVehicleFactor();
-                    if (seatType != null)
-                        return template.getSeatFactor();
-                    if (occasionType != null)
-                        return template.getOccasionFactor();
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(BigDecimal.ONE);
-    }
 }
