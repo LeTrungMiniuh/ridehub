@@ -203,10 +203,10 @@ public class SePayService {
         // 7. Fallback - create mock URL for testing when SePay is unavailable
         String fallbackUrl = String.format(
             "https://sepay-sandbox.com/checkout?merchant=%s&order=%s&amount=%s&signature=%s",
-            URLEncoder.encode(sePayConfig.getMerchantId(), StandardCharsets.UTF_8.name()),
-            URLEncoder.encode(orderInvoiceNumber, StandardCharsets.UTF_8.name()),
-            URLEncoder.encode(amountVnd.toPlainString(), StandardCharsets.UTF_8.name()),
-            URLEncoder.encode(signature, StandardCharsets.UTF_8.name())
+            URLEncoder.encode(sePayConfig.getMerchantId(), StandardCharsets.UTF_8),
+            URLEncoder.encode(orderInvoiceNumber, StandardCharsets.UTF_8),
+            URLEncoder.encode(amountVnd.toPlainString(), StandardCharsets.UTF_8),
+            URLEncoder.encode(signature, StandardCharsets.UTF_8)
         );
         
         LOG.warn("SePay service unavailable, using fallback URL: {}", fallbackUrl);
@@ -294,11 +294,11 @@ public class SePayService {
                 if (sb.length() > 0) {
                     sb.append("&");
                 }
-                sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name()));
+                sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
                 sb.append("=");
                 sb.append(URLEncoder.encode(
                         entry.getValue() == null ? "" : entry.getValue(),
-                        StandardCharsets.UTF_8.name()));
+                        StandardCharsets.UTF_8));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -320,8 +320,8 @@ public class SePayService {
             String[] keyValue = pair.split("=", 2);
             if (keyValue.length == 2) {
                 try {
-                    String key = java.net.URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8.name());
-                    String value = java.net.URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8.name());
+                    String key = java.net.URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
+                    String value = java.net.URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
                     params.put(key, value);
                 } catch (Exception e) {
                     LOG.warn("Failed to decode query parameter: {}", pair, e);
