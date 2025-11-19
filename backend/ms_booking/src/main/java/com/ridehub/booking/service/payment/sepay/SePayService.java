@@ -41,7 +41,7 @@ public class SePayService {
         LOG.debug("Creating SePay payment URL for transaction: {}", transactionId);
 
         try {
-            String checkoutUrl = createCheckoutUrl(amount, orderRef);
+            String checkoutUrl = createCheckoutUrl(amount, transactionId);
             LOG.debug("SePay payment URL created successfully for transaction: {}", transactionId);
             return checkoutUrl;
         } catch (Exception e) {
@@ -81,16 +81,89 @@ public class SePayService {
     public SePayWebhookData parseWebhookPayload(String payload) {
         LOG.debug("Parsing SePay webhook payload");
 
-        Map<String, String> params = parseQuery(payload);
+        try {
+            // Try to parse as JSON first (new IPN format)
+            if (payload.trim().startsWith("{")) {
+                return parseJsonWebhookPayload(payload);
+            } else {
+                // Fallback to query string format (legacy)
+                Map<String, String> params = parseQuery(payload);
+                String transactionId = params.get("order_invoice_number");
+                String responseCode = params.get("order_status");
+                String amountStr = params.get("order_amount");
 
-        String transactionId = params.get("order_invoice_number");
-        String responseCode = params.get("order_status");
-        String amountStr = params.get("order_amount");
+                String status = "CAPTURED".equals(responseCode) ? "SUCCESS" : "FAILED";
+                BigDecimal amount = amountStr != null ? new BigDecimal(amountStr) : BigDecimal.ZERO;
 
-        String status = "CAPTURED".equals(responseCode) ? "SUCCESS" : "FAILED";
+                return new SePayWebhookData(transactionId, status, amount, params);
+            }
+        } catch (Exception e) {
+            LOG.error("Error parsing SePay webhook payload: {}", payload, e);
+            throw new RuntimeException("Failed to parse webhook payload", e);
+        }
+    }
+
+    /**
+     * Parse JSON webhook payload (new IPN format)
+     */
+    private SePayWebhookData parseJsonWebhookPayload(String payload) {
+        LOG.debug("Parsing JSON webhook payload");
+
+        String notificationType = extractJsonField(payload, "notification_type");
+        if (!"ORDER_PAID".equals(notificationType)) {
+            LOG.warn("Unexpected notification type: {}", notificationType);
+        }
+
+        // Extract order information
+        String orderSection = extractJsonObject(payload, "order");
+        if (orderSection == null) {
+            throw new RuntimeException("Invalid webhook format: missing 'order' section");
+        }
+
+        String orderInvoiceNumber = extractJsonField(orderSection, "order_invoice_number");
+        String orderStatus = extractJsonField(orderSection, "order_status");
+        String amountStr = extractJsonField(orderSection, "order_amount");
+        String orderId = extractJsonField(orderSection, "order_id");
+        String orderCurrency = extractJsonField(orderSection, "order_currency");
+        String orderDescription = extractJsonField(orderSection, "order_description");
+
+        // Extract transaction information
+        String transactionSection = extractJsonObject(payload, "transaction");
+        String transactionId = extractJsonField(transactionSection, "transaction_id");
+        String transactionStatus = extractJsonField(transactionSection, "transaction_status");
+        String paymentMethod = extractJsonField(transactionSection, "payment_method");
+        String cardNumber = extractJsonField(transactionSection, "card_number");
+        String cardHolderName = extractJsonField(transactionSection, "card_holder_name");
+
+        // Extract customer information
+        String customerSection = extractJsonObject(payload, "customer");
+        String customerId = extractJsonField(customerSection, "customer_id");
+
+        // Determine payment status
+        String status = "CAPTURED".equals(orderStatus) && "APPROVED".equals(transactionStatus) 
+            ? "SUCCESS" : "FAILED";
         BigDecimal amount = amountStr != null ? new BigDecimal(amountStr) : BigDecimal.ZERO;
 
-        return new SePayWebhookData(transactionId, status, amount, params);
+        // Create raw params map for compatibility
+        Map<String, String> rawParams = new HashMap<>();
+        rawParams.put("notification_type", notificationType);
+        rawParams.put("order_id", orderId);
+        rawParams.put("order_invoice_number", orderInvoiceNumber);
+        rawParams.put("order_status", orderStatus);
+        rawParams.put("order_amount", amountStr);
+        rawParams.put("order_currency", orderCurrency);
+        rawParams.put("order_description", orderDescription);
+        rawParams.put("transaction_id", transactionId);
+        rawParams.put("transaction_status", transactionStatus);
+        rawParams.put("payment_method", paymentMethod);
+        rawParams.put("card_number", cardNumber);
+        rawParams.put("card_holder_name", cardHolderName);
+        rawParams.put("customer_id", customerId);
+
+        LOG.debug("Parsed JSON webhook - Transaction: {}, Status: {}, Amount: {}", 
+            orderInvoiceNumber, status, amount);
+
+        return new SePayWebhookData(orderInvoiceNumber, status, amount, rawParams);
     }
 
     /**
@@ -148,16 +221,11 @@ public class SePayService {
     /**
      * Create checkout URL using SePay API
      */
-    private String createCheckoutUrl(BigDecimal amountVnd, String bookingCode)
+    private String createCheckoutUrl(BigDecimal amountVnd, String transactionId)
             throws Exception {
 
-        // 1. Build all form fields
-        String orderInvoiceNumber = "TXN-" + UUID.randomUUID()
-                .toString()
-                .replace("-", "")
-                .substring(0, 16);
 
-        String description = "Payment for booking: " + bookingCode;
+        String description = "Payment for booking: " + transactionId;
         String successUrl = sePayConfig.getSuccessUrl() != null ? sePayConfig.getSuccessUrl()
                 : "https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback";
         String errorUrl = sePayConfig.getErrorUrl() != null ? sePayConfig.getErrorUrl() : successUrl;
@@ -169,7 +237,7 @@ public class SePayService {
         formData.put("payment_method", "BANK_TRANSFER"); // Add missing payment_method field
         formData.put("order_amount", amountVnd.toPlainString());
         formData.put("currency", "VND");
-        formData.put("order_invoice_number", orderInvoiceNumber);
+        formData.put("order_invoice_number", transactionId);
         formData.put("order_description", description);
         formData.put("customer_id", "CUST_001");
         formData.put("success_url", successUrl);
@@ -205,32 +273,34 @@ public class SePayService {
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 LOG.debug("Attempting SePay API call {}/{} for transaction: {}", attempt, maxRetries,
-                        orderInvoiceNumber);
+                        transactionId);
                 response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 break; // Success, exit retry loop
             } catch (java.net.http.HttpTimeoutException e) {
-                LOG.warn("SePay API timeout attempt {}/{} for transaction: {}", attempt, maxRetries, orderInvoiceNumber,
+                LOG.warn("SePay API timeout attempt {}/{} for transaction: {}", attempt, maxRetries, 
+                        transactionId,
                         e);
                 if (attempt == maxRetries) {
-                    LOG.error("SePay API timeout after {} attempts for transaction: {}", maxRetries, orderInvoiceNumber,
+                    LOG.error("SePay API timeout after {} attempts for transaction: {}", maxRetries, 
+                            transactionId,
                             e);
                     throw new RuntimeException("SePay service timeout - please try again", e);
                 }
             } catch (java.net.ConnectException e) {
                 LOG.warn("Failed to connect to SePay API attempt {}/{} for transaction: {}", attempt, maxRetries,
-                        orderInvoiceNumber, e);
+                        transactionId, e);
                 if (attempt == maxRetries) {
                     LOG.error("Failed to connect to SePay API after {} attempts for transaction: {}", maxRetries,
-                            orderInvoiceNumber, e);
+                            transactionId, e);
                     throw new RuntimeException("Unable to connect to SePay service", e);
                 }
             } catch (InterruptedException e) {
-                LOG.error("SePay API request interrupted for transaction: {}", orderInvoiceNumber, e);
+                LOG.error("SePay API request interrupted for transaction: {}", transactionId, e);
                 Thread.currentThread().interrupt(); // Restore interrupt status
                 throw new RuntimeException("Payment request was interrupted", e);
             } catch (Exception e) {
                 LOG.error("Unexpected error calling SePay API attempt {}/{} for transaction: {}", attempt, maxRetries,
-                        orderInvoiceNumber, e);
+                        transactionId, e);
                 if (attempt == maxRetries) {
                     throw new RuntimeException("Failed to create SePay payment", e);
                 }
@@ -263,7 +333,8 @@ public class SePayService {
         String fallbackUrl = String.format(
                 "https://sepay-sandbox.com/checkout?merchant=%s&order=%s&amount=%s&signature=%s",
                 URLEncoder.encode(sePayConfig.getMerchantId(), StandardCharsets.UTF_8),
-                URLEncoder.encode(orderInvoiceNumber, StandardCharsets.UTF_8),
+                URLEncoder.encode(
+                        transactionId, StandardCharsets.UTF_8),
                 URLEncoder.encode(amountVnd.toPlainString(), StandardCharsets.UTF_8),
                 URLEncoder.encode(signature, StandardCharsets.UTF_8));
 

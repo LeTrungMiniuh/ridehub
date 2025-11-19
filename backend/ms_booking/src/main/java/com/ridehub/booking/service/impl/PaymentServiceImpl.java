@@ -4,6 +4,7 @@ import com.ridehub.booking.domain.Booking;
 import com.ridehub.booking.domain.PaymentTransaction;
 import com.ridehub.booking.domain.PaymentWebhookLog;
 import com.ridehub.booking.domain.Ticket;
+import com.ridehub.booking.domain.enumeration.AvroTicketStatus;
 import com.ridehub.booking.domain.enumeration.BookingStatus;
 import com.ridehub.booking.domain.enumeration.PaymentStatus;
 import com.ridehub.booking.repository.BookingRepository;
@@ -390,7 +391,7 @@ public class PaymentServiceImpl implements PaymentService {
             t.setSeatId(seatId);
             t.setCreatedAt(Instant.now());
             t.setBooking(booking);
-
+            t.setStatus(AvroTicketStatus.BOOKED);
             ticketRepository.save(t);
         }
     }
