@@ -79,8 +79,18 @@ public class CacheConfiguration {
     public JCacheManagerCustomizer cacheManagerCustomizer(javax.cache.configuration.Configuration<Object, Object> jcacheConfiguration) {
         return cm -> {
             createCache(cm, com.ridehub.user.domain.AppUser.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.AppUser.class.getName() + ".chatSessions", jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.AppUser.class.getName() + ".recommendations", jcacheConfiguration);
             createCache(cm, com.ridehub.user.domain.Profile.class.getName(), jcacheConfiguration);
             createCache(cm, com.ridehub.user.domain.FileUser.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.ChatSession.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.ChatSession.class.getName() + ".messages", jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.ChatSession.class.getName() + ".queries", jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.ChatMessage.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.UserQuery.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.TripRecommendation.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.UserStatistics.class.getName(), jcacheConfiguration);
+            createCache(cm, com.ridehub.user.domain.TripStatistics.class.getName(), jcacheConfiguration);
             // jhipster-needle-redis-add-entry
         };
     }

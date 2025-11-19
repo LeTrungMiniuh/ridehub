@@ -50,6 +50,8 @@ public class AppUserDTO implements Serializable {
 
     private ProfileDTO profile;
 
+    private UserStatisticsDTO statistics;
+
     public Long getId() {
         return id;
     }
@@ -178,6 +180,14 @@ public class AppUserDTO implements Serializable {
         this.profile = profile;
     }
 
+    public UserStatisticsDTO getStatistics() {
+        return statistics;
+    }
+
+    public void setStatistics(UserStatisticsDTO statistics) {
+        this.statistics = statistics;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -219,6 +229,7 @@ public class AppUserDTO implements Serializable {
             ", deletedAt='" + getDeletedAt() + "'" +
             ", deletedBy='" + getDeletedBy() + "'" +
             ", profile=" + getProfile() +
+            ", statistics=" + getStatistics() +
             "}";
     }
 }

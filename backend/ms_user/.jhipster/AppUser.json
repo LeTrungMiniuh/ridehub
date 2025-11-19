@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20250923135059"
+    "changelogDate": "20251119010326"
   },
   "applications": ["ms_user"],
   "clientRootFolder": "ms_user",
@@ -79,6 +79,27 @@
       "relationshipName": "profile",
       "relationshipSide": "left",
       "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "userStatistics",
+      "otherEntityRelationshipName": "user",
+      "relationshipName": "statistics",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "chatSession",
+      "otherEntityRelationshipName": "user",
+      "relationshipName": "chatSessions",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "tripRecommendation",
+      "otherEntityRelationshipName": "user",
+      "relationshipName": "recommendations",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
     }
   ],
   "searchEngine": "no",

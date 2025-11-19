@@ -212,7 +212,6 @@ entity TripStatistics {
 
 entity ChatSession {
   sessionId String required unique
-  userId UUID required
   startedAt Instant required
   endedAt Instant
   isActive Boolean required
@@ -252,7 +251,6 @@ entity UserQuery {
 }
 
 entity TripRecommendation {
-  userId UUID required
   origin String required maxlength(200)
   destination String required maxlength(200)
   travelDate LocalDate required
@@ -271,7 +269,6 @@ entity TripRecommendation {
 }
 
 entity UserStatistics {
-  userId UUID required unique
   totalTrips Integer
   totalSpent BigDecimal
   favoriteRoutes String maxlength(1000)

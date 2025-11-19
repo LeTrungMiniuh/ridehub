@@ -72,6 +72,7 @@ public class AppUserAsserts {
     public static void assertAppUserUpdatableRelationshipsEquals(AppUser expected, AppUser actual) {
         assertThat(actual)
             .as("Verify AppUser relationships")
-            .satisfies(a -> assertThat(a.getProfile()).as("check profile").isEqualTo(expected.getProfile()));
+            .satisfies(a -> assertThat(a.getProfile()).as("check profile").isEqualTo(expected.getProfile()))
+            .satisfies(a -> assertThat(a.getStatistics()).as("check statistics").isEqualTo(expected.getStatistics()));
     }
 }

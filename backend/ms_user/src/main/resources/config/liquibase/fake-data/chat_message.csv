@@ -1,0 +1,11 @@
+id;message_text;message_type;timestamp;intent;entities;confidence;created_at;updated_at;is_deleted;deleted_at;deleted_by;chat_session_id
+1;verve colorful service;clear-cut;2025-11-18T18:48:30;pace mob including;neck uh-huh draft;22284.67;2025-11-18T13:02:44;2025-11-18T20:43:09;true;2025-11-18T07:19:46;615b9092-73a5-43f6-8f7f-f5c59eeaea6f;1
+2;off drat;kindly;2025-11-18T05:23:29;loyally;apropos modulo tinderbox;20868.01;2025-11-18T10:57:38;2025-11-18T20:57:27;true;2025-11-18T02:24:32;a727428a-b32d-49ef-9099-2e63846115cc;2
+3;waft;of geez;2025-11-18T22:55:56;but so;vestment measly;1044.6;2025-11-18T16:13:09;2025-11-18T02:47:20;false;2025-11-18T05:32:16;55c13dcd-73ee-4d6d-a42f-cdd4e4c5786b;3
+4;under or;the thoughtfully joyfully;2025-11-18T05:08:04;hefty toward excepting;compassionate interesting offset;13304.32;2025-11-18T12:22:16;2025-11-18T09:46:51;true;2025-11-18T12:57:06;dbd798cc-3130-46da-86c4-3e188198b71b;4
+5;provided gosh;waterlogged fail;2025-11-18T12:08:06;swathe oof;geez orchestrate bug;22282.08;2025-11-18T13:31:02;2025-11-18T19:52:38;true;2025-11-18T05:04:55;fea661d3-6af6-46c3-842f-87e831d90e3b;5
+6;daily underneath;ha besides;2025-11-18T02:39:30;gee custody or;down rival very;20075.89;2025-11-18T04:28:41;2025-11-18T19:24:56;false;2025-11-18T12:58:47;fbb7ea48-e369-4978-a5bc-ff82fbc6e7ab;6
+7;solidly sandy collaboration;yahoo yahoo;2025-11-18T16:49:03;why solidly why;briskly;22876.34;2025-11-18T01:08:36;2025-11-18T07:15:55;true;2025-11-18T19:42:41;f5061e88-80fb-426e-9ad3-718262307bbd;7
+8;um variable afore;clinch yet fooey;2025-11-18T09:41:35;first;irritably;7076.08;2025-11-18T18:16:29;2025-11-18T11:28:28;true;2025-11-18T05:03:56;02ab8e5f-863d-427e-9f35-d481a9cac9c4;8
+9;correctly aha beside;jagged sesame;2025-11-18T17:15:53;minion until whoa;amid ick;30160.67;2025-11-18T12:24:08;2025-11-18T11:47:22;true;2025-11-18T01:56:00;a6346c1c-d6b7-4214-9daa-d19049dcacc9;9
+10;rebuke;that consequently;2025-11-18T18:04:46;kindheartedly mid;pulp orange birdbath;20363.07;2025-11-18T23:00:54;2025-11-18T03:01:17;true;2025-11-18T09:24:27;f4b75473-2843-4d3b-924a-a62b5f75cc7c;10
