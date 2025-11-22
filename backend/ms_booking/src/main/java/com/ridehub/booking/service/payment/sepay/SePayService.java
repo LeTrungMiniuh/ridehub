@@ -4,7 +4,10 @@ import com.ridehub.booking.domain.PaymentTransaction;
 import com.ridehub.booking.service.vm.InitiatePaymentRequestVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -75,6 +78,30 @@ public class SePayService {
                 isSuccess ? "Payment successful" : "Payment failed: " + responseCode);
     }
 
+    @GetMapping("/success")
+    public ResponseEntity<Map<String, Object>> handleSuccess(@RequestParam Map<String, String> params) {
+        LOG.info("SePay SUCCESS redirect received: {}", params);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
+        result.put("transactionId", params.get("order_invoice_number"));
+        result.put("message", "Payment success redirect");
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/error")
+    public ResponseEntity<Map<String, Object>> handleError(@RequestParam Map<String, String> params) {
+        LOG.info("SePay ERROR redirect received: {}", params);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "error");
+        result.put("transactionId", params.get("order_invoice_number"));
+        result.put("message", params.getOrDefault("message", "Payment error"));
+
+        return ResponseEntity.ok(result);
+    }
+
     /**
      * Parse SePay webhook payload
      */
@@ -140,8 +167,9 @@ public class SePayService {
         String customerId = extractJsonField(customerSection, "customer_id");
 
         // Determine payment status
-        String status = "CAPTURED".equals(orderStatus) && "APPROVED".equals(transactionStatus) 
-            ? "SUCCESS" : "FAILED";
+        String status = "CAPTURED".equals(orderStatus) && "APPROVED".equals(transactionStatus)
+                ? "SUCCESS"
+                : "FAILED";
         BigDecimal amount = amountStr != null ? new BigDecimal(amountStr) : BigDecimal.ZERO;
 
         // Create raw params map for compatibility
@@ -160,8 +188,8 @@ public class SePayService {
         rawParams.put("card_holder_name", cardHolderName);
         rawParams.put("customer_id", customerId);
 
-        LOG.debug("Parsed JSON webhook - Transaction: {}, Status: {}, Amount: {}", 
-            orderInvoiceNumber, status, amount);
+        LOG.debug("Parsed JSON webhook - Transaction: {}, Status: {}, Amount: {}",
+                orderInvoiceNumber, status, amount);
 
         return new SePayWebhookData(orderInvoiceNumber, status, amount, rawParams);
     }
@@ -224,7 +252,6 @@ public class SePayService {
     private String createCheckoutUrl(BigDecimal amountVnd, String transactionId)
             throws Exception {
 
-
         String description = "Payment for booking: " + transactionId;
         String successUrl = sePayConfig.getSuccessUrl() != null ? sePayConfig.getSuccessUrl()
                 : "https://apigateway.microservices.appf4s.io.vn/services/msbooking/api/payment/sepay/callback";
@@ -277,11 +304,11 @@ public class SePayService {
                 response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 break; // Success, exit retry loop
             } catch (java.net.http.HttpTimeoutException e) {
-                LOG.warn("SePay API timeout attempt {}/{} for transaction: {}", attempt, maxRetries, 
+                LOG.warn("SePay API timeout attempt {}/{} for transaction: {}", attempt, maxRetries,
                         transactionId,
                         e);
                 if (attempt == maxRetries) {
-                    LOG.error("SePay API timeout after {} attempts for transaction: {}", maxRetries, 
+                    LOG.error("SePay API timeout after {} attempts for transaction: {}", maxRetries,
                             transactionId,
                             e);
                     throw new RuntimeException("SePay service timeout - please try again", e);

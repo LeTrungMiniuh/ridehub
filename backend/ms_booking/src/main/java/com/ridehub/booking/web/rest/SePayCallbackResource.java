@@ -1,8 +1,10 @@
 package com.ridehub.booking.web.rest;
 
 import com.ridehub.booking.service.PaymentService;
+import com.ridehub.booking.service.payment.sepay.SePayConfig;
 import com.ridehub.booking.service.payment.sepay.SePayService;
 import com.ridehub.booking.service.payment.sepay.SePayService.SePayOrderDetail;
+import com.ridehub.booking.service.payment.vnpay.VNPayConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,17 +32,20 @@ public class SePayCallbackResource {
 
     private final PaymentService paymentService;
     private final SePayService sePayService;
+    private final SePayConfig sePayConfig;
 
-    public SePayCallbackResource(PaymentService paymentService, SePayService sePayService) {
+    public SePayCallbackResource(PaymentService paymentService, SePayService sePayService, SePayConfig sePayConfig) {
         this.paymentService = paymentService;
         this.sePayService = sePayService;
+        this.sePayConfig = sePayConfig;
     }
 
     /**
      * Handle SePay return callback (user redirected back to merchant site)
      */
     @GetMapping("/callback")
-    public ResponseEntity<Map<String, Object>> handleCallback(HttpServletRequest request) {
+    public void handleCallback(HttpServletRequest request, HttpServletResponse response) {
+
         LOG.debug("Received SePay callback");
 
         try {
@@ -50,30 +60,57 @@ public class SePayCallbackResource {
             // Verify the callback
             SePayService.SePayCallbackResult result = sePayService.verifyCallback(params);
 
-            Map<String, Object> response = new HashMap<>();
-            if (result.isValid()) {
-                response.put("status", "success");
-                response.put("message", result.getMessage());
-                response.put("transactionId", result.getTransactionId());
-                response.put("paymentStatus", result.getStatus());
+            String base = sePayConfig.getReturnFEURL();
 
-                LOG.info("SePay callback verified successfully for transaction: {}", result.getTransactionId());
-            } else {
-                response.put("status", "error");
-                response.put("message", result.getMessage());
+            // Build final redirect
+            String redirectUrl = base
+                    + "?status=" + URLEncoder.encode(result.isValid() ? "success" : "error", StandardCharsets.UTF_8)
+                    + "&message=" + URLEncoder.encode(result.getMessage(), StandardCharsets.UTF_8)
+                    + (result.isValid()
+                            ? "&transactionId=" + URLEncoder.encode(result.getTransactionId(), StandardCharsets.UTF_8)
+                                    + "&paymentStatus=" + URLEncoder.encode(result.getStatus(), StandardCharsets.UTF_8)
+                            : "");
 
-                LOG.warn("SePay callback verification failed: {}", result.getMessage());
-            }
-
-            return ResponseEntity.ok(response);
+            // Redirect to frontend
+            response.sendRedirect(redirectUrl);
 
         } catch (Exception e) {
-            LOG.error("Error processing SePay callback", e);
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", "Internal server error");
-            return ResponseEntity.internalServerError().body(errorResponse);
+            try {
+                response.sendRedirect(sePayConfig.getReturnFEURL() + "?status=error&message=server_error");
+            } catch (Exception ignore) {
+            }
         }
+    }
+
+    @GetMapping("/success")
+    public void handleSuccess(@RequestParam Map<String, String> params, HttpServletResponse response)
+            throws IOException {
+        LOG.info("SePay SUCCESS redirect received: {}", params);
+
+        String base = sePayConfig.getReturnFEURL();
+
+        String redirectUrl = base
+                + "?status=success"
+                + "&message=" + URLEncoder.encode("Payment successful", StandardCharsets.UTF_8)
+                + "&transactionId="
+                + URLEncoder.encode(params.getOrDefault("order_invoice_number", ""), StandardCharsets.UTF_8)
+                + "&paymentStatus=SUCCESS";
+
+        response.sendRedirect(redirectUrl);
+    }
+
+    @GetMapping("/error")
+    public void handleError(@RequestParam Map<String, String> params, HttpServletResponse response) throws IOException {
+        LOG.info("SePay ERROR redirect received: {}", params);
+
+        String base = sePayConfig.getReturnFEURL();
+
+        String redirectUrl = base
+                + "?status=error"
+                + "&message="
+                + URLEncoder.encode(params.getOrDefault("message", "Payment error"), StandardCharsets.UTF_8);
+
+        response.sendRedirect(redirectUrl);
     }
 
     /**
