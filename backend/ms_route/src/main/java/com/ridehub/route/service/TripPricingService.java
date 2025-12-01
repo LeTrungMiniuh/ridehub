@@ -276,16 +276,18 @@ public class TripPricingService {
      * @throws BadRequestAlertException if trip or seat not found.
      */
     public PricingTemplateDTO getPricingTemplateByTripAndSeat(Long tripId, Long seatId) {
-        // Get trip and seat
-        var tripOpt = tripService.findOne(tripId);
-        var seatOpt = seatService.findOne(seatId);
+        // Get trip and seat (dùng orElseThrow thay vì isEmpty + get)
+        TripDTO trip = tripService.findOne(tripId)
+                .orElseThrow(() -> new BadRequestAlertException(
+                        "Trip or Seat not found",
+                        "msRoutePricingTemplate",
+                        "notfound"));
 
-        if (tripOpt.isEmpty() || seatOpt.isEmpty()) {
-            throw new BadRequestAlertException("Trip or Seat not found", "msRoutePricingTemplate", "notfound");
-        }
-
-        TripDTO trip = tripOpt.get();
-        SeatDTO seat = seatOpt.get();
+        SeatDTO seat = seatService.findOne(seatId)
+                .orElseThrow(() -> new BadRequestAlertException(
+                        "Trip or Seat not found",
+                        "msRoutePricingTemplate",
+                        "notfound"));
 
         // Try to find existing pricing template
         PricingTemplateCriteria criteria = new PricingTemplateCriteria();
@@ -296,7 +298,8 @@ public class TripPricingService {
         criteria.isDeleted().setEquals(false);
 
         List<PricingTemplateDTO> existingTemplates = pricingTemplateQueryService
-                .findByCriteria(criteria, Pageable.unpaged()).getContent();
+                .findByCriteria(criteria, Pageable.unpaged())
+                .getContent();
 
         if (!existingTemplates.isEmpty()) {
             return existingTemplates.get(0);
