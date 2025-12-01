@@ -48,7 +48,9 @@ public class SeatLockServiceImpl implements SeatLockService {
         this.seatLockMapper = seatLockMapper;
     }
 
-    private static String normSeat(String s) { return s == null ? null : s.trim().toUpperCase(); }
+    private static String normSeat(String s) {
+        return s == null ? null : s.trim().toUpperCase();
+    }
 
     // Required interface methods from existing service
     @Override
@@ -106,19 +108,36 @@ public class SeatLockServiceImpl implements SeatLockService {
         List<String> seats = req.getSeatNumbers().stream()
                 .map(SeatLockServiceImpl::normSeat).filter(Objects::nonNull).distinct().toList();
         String group = req.getLockGroupId();
+        List<String> conflictingSeats = new ArrayList<>();
 
         // 1) Conflict check via Criteria: active HELD (not expired) OR COMMITTED
         if (hasAnyActiveConflict(trip.getId(), seats, now, group)) {
             // Find which seat conflicts to build a friendly message
             for (String seat : seats) {
                 if (isSeatConflicting(trip.getId(), seat, now, group)) {
-                    return new SeatHoldResponseDTO("REJECTED", "Seat not available: " + seat, null, null);
+                    conflictingSeats.add(seat);
                 }
             }
-            return new SeatHoldResponseDTO("REJECTED", "Seat(s) not available", null, null);
+
+            if (!conflictingSeats.isEmpty()) {
+                // Trả về message rõ ràng: Seat not available: A1, B2, C3
+                return new SeatHoldResponseDTO(
+                        "REJECTED",
+                        "Seat not available: " + String.join(", ", conflictingSeats),
+                        null,
+                        null);
+            }
+
+            // fallback nếu không detect seat nào (trường hợp hiếm)
+            return new SeatHoldResponseDTO(
+                    "REJECTED",
+                    "Seat(s) not available",
+                    null,
+                    null);
         }
 
-        // 2) Idempotency by group prefix — if already HELD and unexpired, just return them
+        // 2) Idempotency by group prefix — if already HELD and unexpired, just return
+        // them
         List<SeatLock> existing = findUnexpiredHeldByGroup(group, now);
         if (!existing.isEmpty()) {
             SeatHoldResponseDTO r = new SeatHoldResponseDTO();
@@ -137,7 +156,7 @@ public class SeatLockServiceImpl implements SeatLockService {
             lock.setUserId(req.getUserId());
             lock.setStatus(LockStatus.HELD);
             lock.setExpiresAt(expires);
-            lock.setIdempotencyKey(group + ":" + seat);   // <-- group prefix trick
+            lock.setIdempotencyKey(group + ":" + seat); // <-- group prefix trick
             lock.setBookingId(null);
             lock.setCreatedAt(now);
             lock.setUpdatedAt(now);
@@ -230,37 +249,44 @@ public class SeatLockServiceImpl implements SeatLockService {
 
         // tripId
         if (tripId != null) {
-            LongFilter f = new LongFilter(); f.setEquals(tripId);
+            LongFilter f = new LongFilter();
+            f.setEquals(tripId);
             c.setTripId(f);
         }
         // bookingId
         if (bookingId != null) {
-            LongFilter f = new LongFilter(); f.setEquals(bookingId);
+            LongFilter f = new LongFilter();
+            f.setEquals(bookingId);
             c.setBookingId(f);
         }
         // group prefix via contains "<group>:"
         if (lockGroupId != null && !lockGroupId.isBlank()) {
-            StringFilter f = new StringFilter(); f.setContains(lockGroupId + ":");
+            StringFilter f = new StringFilter();
+            f.setContains(lockGroupId + ":");
             c.setIdempotencyKey(f);
         }
         // active = (HELD & not expired) OR COMMITTED
-        // We'll return both and let caller filter; here we fetch both in two passes and merge.
+        // We'll return both and let caller filter; here we fetch both in two passes and
+        // merge.
 
         // HELD & not expired
         SeatLockCriteria hc = c.copy();
         SeatLockCriteria.LockStatusFilter s = new SeatLockCriteria.LockStatusFilter();
         s.setEquals(LockStatus.HELD);
         hc.setStatus(s);
-        InstantFilter exp = new InstantFilter(); exp.setGreaterThan(now);
+        InstantFilter exp = new InstantFilter();
+        exp.setGreaterThan(now);
         hc.setExpiresAt(exp);
-        List<SeatLock> held = queryService.findByCriteria(hc).stream().map(seatLockMapper::toEntity).collect(Collectors.toList());
+        List<SeatLock> held = queryService.findByCriteria(hc).stream().map(seatLockMapper::toEntity)
+                .collect(Collectors.toList());
 
         // COMMITTED (no expiry check)
         SeatLockCriteria cc = c.copy();
         SeatLockCriteria.LockStatusFilter s2 = new SeatLockCriteria.LockStatusFilter();
         s2.setEquals(LockStatus.COMMITTED);
         cc.setStatus(s2);
-        List<SeatLock> committed = queryService.findByCriteria(cc).stream().map(seatLockMapper::toEntity).collect(Collectors.toList());
+        List<SeatLock> committed = queryService.findByCriteria(cc).stream().map(seatLockMapper::toEntity)
+                .collect(Collectors.toList());
 
         // merge unique by id
         Map<Long, SeatLock> merged = new LinkedHashMap<>();
@@ -274,25 +300,33 @@ public class SeatLockServiceImpl implements SeatLockService {
 
     private boolean hasAnyActiveConflict(Long tripId, List<String> seats, Instant now, String groupPrefix) {
         for (String seat : seats) {
-            if (isSeatConflicting(tripId, seat, now, groupPrefix)) return true;
+            if (isSeatConflicting(tripId, seat, now, groupPrefix))
+                return true;
         }
         return false;
     }
 
     private boolean isSeatConflicting(Long tripId, String seat, Instant now, String groupPrefix) {
         // 1) active HELD & not expired, excluding our own group prefix
-        List<SeatLock> activeHeld = queryService.findActiveLocksByTripAndSeats(tripId, List.of(seat), LockStatus.HELD, now);
+        List<SeatLock> activeHeld = queryService.findActiveLocksByTripAndSeats(tripId, List.of(seat), LockStatus.HELD,
+                now);
         boolean heldConflict = activeHeld.stream()
                 .anyMatch(l -> l.getIdempotencyKey() == null || !l.getIdempotencyKey().startsWith(groupPrefix + ":"));
 
-        if (heldConflict) return true;
+        if (heldConflict)
+            return true;
 
         // 2) any COMMITTED for this seat
         SeatLockCriteria c = new SeatLockCriteria();
-        LongFilter tripF = new LongFilter(); tripF.setEquals(tripId); c.setTripId(tripF);
-        StringFilter seatF = new StringFilter(); seatF.setEquals(seat); c.setSeatNo(seatF);
+        LongFilter tripF = new LongFilter();
+        tripF.setEquals(tripId);
+        c.setTripId(tripF);
+        StringFilter seatF = new StringFilter();
+        seatF.setEquals(seat);
+        c.setSeatNo(seatF);
         SeatLockCriteria.LockStatusFilter statusF = new SeatLockCriteria.LockStatusFilter();
-        statusF.setEquals(LockStatus.COMMITTED); c.setStatus(statusF);
+        statusF.setEquals(LockStatus.COMMITTED);
+        c.setStatus(statusF);
 
         List<SeatLockDTO> committed = queryService.findByCriteria(c);
         return !committed.isEmpty();
@@ -301,13 +335,17 @@ public class SeatLockServiceImpl implements SeatLockService {
     private List<SeatLock> findUnexpiredHeldByGroup(String group, Instant now) {
         SeatLockCriteria c = new SeatLockCriteria();
 
-        StringFilter key = new StringFilter(); key.setContains(group + ":"); // LIKE %group:%
+        StringFilter key = new StringFilter();
+        key.setContains(group + ":"); // LIKE %group:%
         c.setIdempotencyKey(key);
 
         SeatLockCriteria.LockStatusFilter status = new SeatLockCriteria.LockStatusFilter();
-        status.setEquals(LockStatus.HELD); c.setStatus(status);
+        status.setEquals(LockStatus.HELD);
+        c.setStatus(status);
 
-        InstantFilter exp = new InstantFilter(); exp.setGreaterThan(now); c.setExpiresAt(exp);
+        InstantFilter exp = new InstantFilter();
+        exp.setGreaterThan(now);
+        c.setExpiresAt(exp);
 
         List<SeatLockDTO> dtos = queryService.findByCriteria(c);
         return dtos.stream().map(seatLockMapper::toEntity).toList();
@@ -316,7 +354,8 @@ public class SeatLockServiceImpl implements SeatLockService {
     private List<SeatLock> findUnexpiredHeldByBooking(Long bookingId, Instant now) {
         // Reuse existing helper:
         return queryService.findByBookingId(bookingId).stream()
-                .filter(l -> l.getStatus() == LockStatus.HELD && l.getExpiresAt() != null && l.getExpiresAt().isAfter(now))
+                .filter(l -> l.getStatus() == LockStatus.HELD && l.getExpiresAt() != null
+                        && l.getExpiresAt().isAfter(now))
                 .toList();
     }
 
@@ -325,7 +364,7 @@ public class SeatLockServiceImpl implements SeatLockService {
     @Override
     public SeatLockResponseDTO tryLockSeats(SeatLockRequestDTO request) {
         LOG.debug("Legacy tryLockSeats called - converting to tryHold");
-        
+
         // Convert legacy request to new format
         SeatHoldRequestDTO holdRequest = new SeatHoldRequestDTO();
         holdRequest.setTripId(request.getTripId());
@@ -336,7 +375,7 @@ public class SeatLockServiceImpl implements SeatLockService {
         holdRequest.setHoldTtlSec(request.getHoldTtlSec()); // Use default
 
         SeatHoldResponseDTO holdResponse = tryHold(holdRequest);
-        
+
         // Convert response back to legacy format
         SeatLockResponseDTO response = new SeatLockResponseDTO();
         response.setStatus(holdResponse.getStatus());
@@ -344,37 +383,38 @@ public class SeatLockServiceImpl implements SeatLockService {
         response.setBookingId(request.getBookingId());
         response.setTripId(request.getTripId());
         response.setLockId(holdResponse.getExpiresAt() != null ? holdResponse.getExpiresAt().toString() : null);
-        response.setExpiresAt(holdResponse.getExpiresAt() != null ? holdResponse.getExpiresAt().getEpochSecond() : null);
-        
+        response.setExpiresAt(
+                holdResponse.getExpiresAt() != null ? holdResponse.getExpiresAt().getEpochSecond() : null);
+
         return response;
     }
 
     @Override
     public SeatLockActionResponseDTO confirmSeatLocks(SeatLockActionRequestDTO request) {
         LOG.debug("Legacy confirmSeatLocks called - converting to confirmGroup");
-        
+
         ConfirmGroupRequestDTO confirmRequest = new ConfirmGroupRequestDTO();
         confirmRequest.setBookingId(request.getBookingId());
         confirmRequest.setLockGroupId(null); // Not available in legacy request
-        
+
         return confirmGroup(confirmRequest);
     }
 
     @Override
     public SeatLockActionResponseDTO cancelSeatLocks(SeatLockActionRequestDTO request) {
         LOG.debug("Legacy cancelSeatLocks called - converting to cancelGroup");
-        
+
         CancelGroupRequestDTO cancelRequest = new CancelGroupRequestDTO();
         cancelRequest.setBookingId(request.getBookingId());
         cancelRequest.setLockGroupId(null); // Not available in legacy request
-        
+
         return cancelGroup(cancelRequest);
     }
 
     @Override
     public SeatValidateLockResponseDTO validateAndLockSeats(SeatValidateLockRequestDTO request) {
         LOG.debug("Legacy validateAndLockSeats called - using tryHold with validation");
-        
+
         // Convert to hold request for now - this is a simplified implementation
         SeatHoldRequestDTO holdRequest = new SeatHoldRequestDTO();
         holdRequest.setTripId(request.getTripId());
@@ -385,40 +425,41 @@ public class SeatLockServiceImpl implements SeatLockService {
         holdRequest.setHoldTtlSec(null);
 
         SeatHoldResponseDTO holdResponse = tryHold(holdRequest);
-        
+
         // Convert to validate response
         SeatValidateLockResponseDTO response = new SeatValidateLockResponseDTO();
         response.setStatus(holdResponse.getStatus());
         response.setMessage(holdResponse.getMessage());
         response.setTripId(request.getTripId());
-        
+
         if ("HELD".equals(holdResponse.getStatus())) {
             response.setLockGroupId(request.getIdemKey());
             response.setExpiresAt(holdResponse.getExpiresAt());
             // Basic pricing info - would need actual pricing logic
             // response.setPricing(...);
         }
-        
+
         return response;
     }
 
     @Override
     public SeatValidateLockResponseDTO validateSeatsOnly(SeatValidateLockRequestDTO request) {
         LOG.debug("Legacy validateSeatsOnly called - basic validation");
-        
+
         try {
             // Check if trip exists
             tripRepository.findById(request.getTripId())
                     .orElseThrow(() -> new EntityNotFoundException("Trip not found: " + request.getTripId()));
-            
-            // For now, just return validated status - would need actual seat validation logic
+
+            // For now, just return validated status - would need actual seat validation
+            // logic
             SeatValidateLockResponseDTO response = new SeatValidateLockResponseDTO();
             response.setStatus("VALIDATED");
             response.setMessage("Seats validation completed");
             response.setTripId(request.getTripId());
-            
+
             return response;
-            
+
         } catch (EntityNotFoundException e) {
             return new SeatValidateLockResponseDTO("REJECTED", "Trip not found", request.getTripId());
         }
@@ -430,31 +471,30 @@ public class SeatLockServiceImpl implements SeatLockService {
         if (req.getBookingId() == null) {
             return new SeatLockActionResponseDTO("BAD_REQUEST", "Provide bookingId");
         }
-        
+
         Instant now = Instant.now();
-        
+
         // Find all seatlocks for the booking (regardless of status)
         List<SeatLock> bookingLocks = queryService.findByBookingId(req.getBookingId());
-        
+
         if (bookingLocks.isEmpty()) {
             return new SeatLockActionResponseDTO("NOT_FOUND", "No seat locks found for booking");
         }
-        
+
         List<SeatLock> reclaimedSeats = new ArrayList<>();
-        
+
         for (SeatLock bookingLock : bookingLocks) {
             // Find expired seatlocks with same seatNo and trip
             List<SeatLock> expiredLocks = findExpiredLocksOrHeldBySeatAndTrip(
-                bookingLock.getSeatNo(), 
-                bookingLock.getTrip().getId(), 
-                now
-            );
-            
+                    bookingLock.getSeatNo(),
+                    bookingLock.getTrip().getId(),
+                    now);
+
             for (SeatLock expiredLock : expiredLocks) {
                 // Check if expired lock is not held by other bookingId and is actually expired
-                if (expiredLock.getBookingId() == null || 
-                    expiredLock.getBookingId().equals(req.getBookingId())) {
-                    
+                if (expiredLock.getBookingId() == null ||
+                        expiredLock.getBookingId().equals(req.getBookingId())) {
+
                     // Reclaim the expired seat for current booking
                     expiredLock.setBookingId(req.getBookingId());
                     expiredLock.setStatus(LockStatus.HELD);
@@ -464,47 +504,47 @@ public class SeatLockServiceImpl implements SeatLockService {
                 }
             }
         }
-        
+
         if (reclaimedSeats.isEmpty()) {
             return new SeatLockActionResponseDTO("NOT_FOUND", "No expired seats available to reclaim");
         }
-        
+
         // Save all reclaimed seats
         seatLockRepository.saveAll(reclaimedSeats);
-        
-        return new SeatLockActionResponseDTO("RECLAIMED", 
-            "Reclaimed " + reclaimedSeats.size() + " expired seats");
+
+        return new SeatLockActionResponseDTO("RECLAIMED",
+                "Reclaimed " + reclaimedSeats.size() + " expired seats");
     }
 
     // Helper method to find expired locks by seat number and trip
     List<SeatLock> findExpiredLocksOrHeldBySeatAndTrip(String seatNo, Long tripId, Instant now) {
         SeatLockCriteria c = new SeatLockCriteria();
-        
+
         // Trip filter
-        LongFilter tripF = new LongFilter(); 
-        tripF.setEquals(tripId); 
+        LongFilter tripF = new LongFilter();
+        tripF.setEquals(tripId);
         c.setTripId(tripF);
-        
+
         // Seat number filter
-        StringFilter seatF = new StringFilter(); 
-        seatF.setEquals(seatNo); 
+        StringFilter seatF = new StringFilter();
+        seatF.setEquals(seatNo);
         c.setSeatNo(seatF);
-        
+
         // Status filter for expired or held locks
         SeatLockCriteria.LockStatusFilter statusF = new SeatLockCriteria.LockStatusFilter();
-        statusF.setIn(Arrays.asList(LockStatus.EXPIRED, LockStatus.HELD)); 
+        statusF.setIn(Arrays.asList(LockStatus.EXPIRED, LockStatus.HELD));
         c.setStatus(statusF);
-        
+
         // For HELD status, find only expired ones
-        InstantFilter exp = new InstantFilter(); 
+        InstantFilter exp = new InstantFilter();
         exp.setLessThan(now); // Expired before now
         c.setExpiresAt(exp);
-        
+
         // Not deleted filter
         BooleanFilter deletedF = new BooleanFilter();
         deletedF.setEquals(false);
         c.setIsDeleted(deletedF);
-        
+
         List<SeatLockDTO> dtos = queryService.findByCriteria(c);
         return dtos.stream().map(seatLockMapper::toEntity).toList();
     }

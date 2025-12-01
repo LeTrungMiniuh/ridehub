@@ -190,6 +190,7 @@ public class PricingService {
 
                 bestPercent = new AppliedPromotionDTO();
                 bestPercent.setPromotionCode(promo.getCode());
+                bestPercent.setPromotionId(promo.getId());
                 bestPercent.setPolicyType("PERCENT_OFF");
                 bestPercent.setPercent(best.getPercent());
                 bestPercent.setMaxOff(best.getMaxOff());
@@ -209,6 +210,7 @@ public class PricingService {
                 BigDecimal off = sorted.stream().limit(best.getGetM()).reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 bestBnm = new AppliedPromotionDTO();
+                bestBnm.setPromotionId(promo.getId());
                 bestBnm.setPromotionCode(promo.getCode());
                 bestBnm.setPolicyType("BUY_N_GET_M_FREE");
                 bestBnm.setDiscountAmount(off);
@@ -245,7 +247,8 @@ public class PricingService {
             SeatDTO seat = seatByNo.get(seatNo);
             if (seat == null)
                 throw new IllegalArgumentException("Unknown seat number: " + seatNo);
-            perSeat.add(pricingTemplateResourceMsrouteApi.getPricingTemplateByTripAndSeat(tripVM.getTripDTO().getId(),seat.getId()).getFinalPrice());
+            perSeat.add(pricingTemplateResourceMsrouteApi
+                    .getPricingTemplateByTripAndSeat(tripVM.getTripDTO().getId(), seat.getId()).getFinalPrice());
         }
         return perSeat;
     }
